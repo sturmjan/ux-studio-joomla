@@ -47,6 +47,22 @@ Stejné jako WP: tlačítko „Připojit k Centrální aplikaci“ v UX Studiu o
 | `bot-throttle/bans?since=` | GET | lokální bany pro CA |
 | `sso/issue`, `sso/revoke-all` | POST | jednorázový přihlašovací token → `login_url` = `{site}/administrator/index.php?uxstudio_sso=TOKEN` |
 
+**Závazné tvary odpovědí (doplněno po implementaci CA 2026-11-06):** CA je hotová na větvi
+`feature/joomla-sites` a normalizuje odpovědi přesně v tvaru referenčního stubu
+`D:\xampp\htdocs\_scratch-jconn\index.php` (jen ke čtení, testovací klíč v něm nepoužívat).
+Konektor musí vracet stejné klíče: `ping` (CA ho přijme jen s `connector:"uxjoomla"` a `cms:"joomla"`,
+jinak párování neprojde), `updates`, `php-errors {total_count,type_counts,errors[]}`,
+`vulnerabilities {available,vuln_count,severity_level,inventory[{type,slug,name,version,active}],vulnerabilities[]}`,
+`email-log {items,total}`, `ip-bans`, `ip-bans/sync` (POST `{bans:[]}`), `bot-throttle/bans {items[{id,ip_hash,reason,banned_at}],last_id}`,
+`sso/issue` (POST tělo `{operator_email, target_role, target_wp_role, cms}`, čti `target_role`; odpověď
+`{success,token,expires_in,login_url}`, `login_url` MUSÍ být na stejném schématu/hostu/portu jako web a cesta
+pod `/administrator/`, jinak ho CA odmítne), `sso/revoke-all {success,revoked}`.
+Párovací formulář může nést volitelné `site_id` (pak se podepisuje `site_url|site_name|timestamp|site_type|site_id`).
+
+**Podpis odpovědi:** konektor ke každé odpovědi přidá hlavičku `X-Content-Sync-Response-Signature`
+= `hex(hmac_sha256(nonce + "|" + sha256hex(tělo odpovědi), key))`. CA ji zatím neověřuje (úkol v CA PLAN §39.3b),
+ale konektor ji posílá od začátku.
+
 `capabilities` řídí, co CA u webu nabídne (`updates, php_errors, email_health, security_monitor,
 vulnerabilities, email_log, ip_bans, bot_bans, sso`). Obsahové funkce CA (články, média, AI přepisy)
 jsou v MVP mimo, Joomla je neohlásí.
