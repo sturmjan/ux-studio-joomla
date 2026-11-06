@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension type="component" method="upgrade">
+	<name>com_uxstudio</name>
+	<version>0.1.0</version>
+	<creationDate>2026-11</creationDate>
+	<author>UX1</author>
+	<authorEmail>info@ux1.cz</authorEmail>
+	<authorUrl>https://ux1.cz</authorUrl>
+	<copyright>(C) UX1</copyright>
+	<license>GNU General Public License version 2 or later</license>
+	<description>COM_UXSTUDIO_XML_DESCRIPTION</description>
+	<namespace path="src">Ux1\Component\UxStudio</namespace>
+	<scriptfile>script.php</scriptfile>
+	<media destination="com_uxstudio" folder="media">
+		<folder>js</folder>
+		<folder>css</folder>
+		<filename>joomla.asset.json</filename>
+	</media>
+	<administration>
+		<menu img="class:puzzle-piece" link="index.php?option=com_uxstudio">COM_UXSTUDIO</menu>
+		<files>
+			<filename>access.xml</filename>
+			<filename>config.xml</filename>
+			<filename>uxstudio.xml</filename>
+			<filename>script.php</filename>
+			<folder>services</folder>
+			<folder>src</folder>
+			<folder>tmpl</folder>
+			<folder>language</folder>
+		</files>
+	</administration>
+</extension>

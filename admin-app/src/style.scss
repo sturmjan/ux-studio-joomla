@@ -1,0 +1,139 @@
+/**
+ * UX Studio for Joomla - entry stylesheet.
+ * _base.scss = tokens + shell + shared components ported from the WordPress edition; this file adds what is
+ * Joomla-specific (Atum isolation, buttons helpers, overlays, toasts).
+ */
+@use './base';
+
+#uxs-root {
+	--uxs-top-offset: 0px;
+	text-align: left;
+	-webkit-font-smoothing: antialiased;
+
+	*, *::before, *::after { box-sizing: border-box; }
+
+	/* Atum / Bootstrap reset: our headings and links keep the UX Studio look. */
+	h1, h2, h3, h4 { font-family: var(--uxs-font); line-height: 1.3; }
+	a { color: var(--uxs-brand-text); }
+	button { font-family: var(--uxs-font); }
+	p { margin-top: 0; }
+	:focus-visible { outline: 2px solid var(--uxs-brand); outline-offset: 2px; }
+}
+
+/* The component area of Atum already has its own padding; let the shell breathe at the edges. */
+#uxs-root .uxs-shell { margin: 0; }
+
+#uxs-root .uxs-btn--small { padding: calc(var(--uxs-sp-1) + 2px) var(--uxs-sp-3); font-size: var(--uxs-fs-s); }
+
+#uxs-root .uxs-card {
+	background: var(--uxs-surface);
+	border: 1px solid var(--uxs-border);
+	border-radius: var(--uxs-radius);
+	padding: var(--uxs-sp-4);
+	display: flex;
+	flex-direction: column;
+	gap: var(--uxs-sp-2);
+}
+#uxs-root .uxs-cards { display: grid; gap: var(--uxs-sp-4); grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); margin-bottom: var(--uxs-sp-5); }
+#uxs-root .uxs-card__num { font-size: var(--uxs-fs-l); font-weight: 700; }
+#uxs-root .uxs-card__label { font-size: var(--uxs-fs-s); color: var(--uxs-text-soft); }
+
+#uxs-root .uxs-muted { color: var(--uxs-text-soft); }
+#uxs-root .uxs-table-wrap { margin-bottom: var(--uxs-sp-4); }
+#uxs-root .uxs-table td.is-empty { text-align: center; color: var(--uxs-text-soft); padding: var(--uxs-sp-5); }
+#uxs-root .uxs-table th button { all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: var(--uxs-sp-1); }
+#uxs-root .uxs-table th button:focus-visible { outline: 2px solid var(--uxs-brand); outline-offset: 2px; }
+#uxs-root .uxs-pager { display: flex; gap: var(--uxs-sp-3); align-items: center; justify-content: flex-end; color: var(--uxs-text-soft); font-size: var(--uxs-fs-s); }
+
+#uxs-root .uxs-theme-toggle { margin-top: auto; }
+#uxs-root .uxs-sidebar__foot { margin-top: auto; display: flex; flex-direction: column; gap: var(--uxs-sp-2); font-size: var(--uxs-fs-s); color: var(--uxs-text-soft); padding: var(--uxs-sp-3); }
+
+/* ---- Tabs (role=tablist) ---- */
+#uxs-root .uxs-tabs button {
+	background: none;
+	border: none;
+	border-bottom: 2px solid transparent;
+	padding: var(--uxs-sp-3) var(--uxs-sp-4);
+	color: var(--uxs-text-soft);
+	font-size: var(--uxs-fs);
+	font-weight: 600;
+	cursor: pointer;
+	&:hover { color: var(--uxs-text); }
+}
+
+/* ---- Text-like fields outside of a form row (module pages) ---- */
+#uxs-root .uxs-form__row .uxs-help-inline { color: var(--uxs-text-soft); font-size: var(--uxs-fs-s); }
+
+/* ---- Overlays (Modal / Confirm): rendered inside #uxs-root through the portal provider ---- */
+#uxs-root .uxs-overlay {
+	position: fixed;
+	inset: 0;
+	z-index: 10060;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: var(--uxs-sp-4);
+	background: rgb(15 20 32 / 60%);
+}
+#uxs-root .uxs-modal {
+	background: var(--uxs-surface);
+	color: var(--uxs-text);
+	border: 1px solid var(--uxs-border);
+	border-radius: var(--uxs-radius);
+	box-shadow: var(--uxs-shadow-2);
+	width: 100%;
+	max-width: 560px;
+	max-height: 90vh;
+	overflow: auto;
+	padding: var(--uxs-sp-5);
+	outline: none;
+
+	.uxs-modal__title { margin: 0 0 var(--uxs-sp-3); font-size: var(--uxs-fs-l); color: var(--uxs-text); }
+	.uxs-modal__body { color: var(--uxs-text-soft); margin: 0 0 var(--uxs-sp-3); }
+	&.is-wide { max-width: 860px; }
+}
+#uxs-root .uxs-modal__actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: var(--uxs-sp-3); margin-top: var(--uxs-sp-4); }
+
+/* ---- Toasts: state colours follow the theme tokens (light + dark) ---- */
+#uxs-root .uxs-toasts {
+	position: fixed;
+	right: var(--uxs-sp-5);
+	bottom: var(--uxs-sp-5);
+	z-index: 10070;
+	display: flex;
+	flex-direction: column;
+	gap: var(--uxs-sp-2);
+	max-width: 420px;
+}
+#uxs-root .uxs-toast {
+	display: flex;
+	align-items: center;
+	gap: var(--uxs-sp-2);
+	padding: var(--uxs-sp-3) var(--uxs-sp-4);
+	border-radius: var(--uxs-radius);
+	border: 1px solid var(--uxs-border);
+	background: var(--uxs-surface);
+	color: var(--uxs-text);
+	box-shadow: var(--uxs-shadow-2);
+	font-weight: 600;
+
+	&.is-success { border-color: var(--uxs-success); color: var(--uxs-success-text); }
+	&.is-error { border-color: var(--uxs-danger); color: var(--uxs-danger-text); }
+	.uxs-toast__msg { flex: 1 1 auto; }
+	.uxs-toast__close { display: inline-flex; background: none; border: none; padding: 2px; cursor: pointer; color: inherit; opacity: 0.7; &:hover { opacity: 1; } }
+	.uxs-toast__spin { animation: uxs-spin 0.9s linear infinite; }
+}
+
+#uxs-root .uxs-notice {
+	background: var(--uxs-surface);
+	border: 1px solid var(--uxs-border);
+	border-left: 3px solid var(--uxs-warning);
+	border-radius: var(--uxs-radius-s);
+	padding: var(--uxs-sp-4);
+	margin-bottom: var(--uxs-sp-4);
+	&.is-error { border-left-color: var(--uxs-danger); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	#uxs-root * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

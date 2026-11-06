@@ -3,3 +3,7 @@ node_modules/
 dist/
 *.zip
 .vite/
+.jadmin/
+packages/pkg_uxstudio.xml
+packages/com_uxstudio/media/*
+!packages/com_uxstudio/media/.gitkeep

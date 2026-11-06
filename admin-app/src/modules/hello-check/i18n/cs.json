@@ -1,0 +1,11 @@
+{
+	"Time": "Čas",
+	"Source": "Zdroj",
+	"Greeting": "Pozdrav",
+	"Heartbeats": "Tepy",
+	"Secret token": "Tajný token",
+	"Set": "Nastaven",
+	"Not set": "Nenastaven",
+	"Refresh": "Obnovit",
+	"No heartbeat yet. Run the scheduler task \"Hello check heartbeat\".": "Zatím žádný tep. Spusťte úlohu plánovače „Tep modulu Hello check“."
+}

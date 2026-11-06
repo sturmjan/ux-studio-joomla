@@ -1,0 +1,120 @@
+<?php
+
+namespace Ux1\UxStudio\Core;
+
+use Joomla\CMS\Application\CMSApplicationInterface;
+use Joomla\CMS\Factory;
+use Joomla\CMS\Log\Log;
+use Joomla\Database\DatabaseInterface;
+
+\defined('_JEXEC') or die;
+
+/**
+ * Entry point of the UX Studio core. plg_system_uxstudio calls Kernel::instance()->boot($app) in onAfterInitialise
+ * (site, administrator, cli); every enabled module then gets boot(ModuleContext).
+ */
+final class Kernel
+{
+    private static ?Kernel $instance = null;
+
+    private ?CMSApplicationInterface $app = null;
+    private bool $booted = false;
+    private ?DatabaseInterface $db = null;
+    private ?ModuleRegistry $registry = null;
+    private ?Settings $settings = null;
+    private ?Migrator $migrator = null;
+    private ?Scheduler $scheduler = null;
+
+    public static function instance(): self
+    {
+        return self::$instance ??= new self();
+    }
+
+    private function __construct()
+    {
+        Log::addLogger(['text_file' => 'uxstudio.php', 'text_entry_format' => '{DATETIME} {PRIORITY} {MESSAGE}'], Log::ALL, ['uxstudio']);
+    }
+
+    public function db(): DatabaseInterface
+    {
+        return $this->db ??= Factory::getContainer()->get(DatabaseInterface::class);
+    }
+
+    public function app(): CMSApplicationInterface
+    {
+        return $this->app ?? Factory::getApplication();
+    }
+
+    public function registry(): ModuleRegistry
+    {
+        return $this->registry ??= new ModuleRegistry($this->db(), __DIR__ . '/../Modules');
+    }
+
+    public function settings(): Settings
+    {
+        return $this->settings ??= new Settings($this->db(), $this->registry());
+    }
+
+    public function migrator(): Migrator
+    {
+        return $this->migrator ??= new Migrator($this->db(), $this->registry());
+    }
+
+    public function scheduler(): Scheduler
+    {
+        return $this->scheduler ??= new Scheduler($this->db(), $this->registry(), $this);
+    }
+
+    public function retention(): Retention
+    {
+        return new Retention($this->db(), $this->registry());
+    }
+
+    public function isBooted(): bool
+    {
+        return $this->booted;
+    }
+
+    /** Version of the installed library (read from its manifest), 'dev' when unknown. */
+    public static function version(): string
+    {
+        static $version = null;
+        if ($version === null) {
+            $version = 'dev';
+            $file    = JPATH_ADMINISTRATOR . '/manifests/libraries/uxstudio.xml';
+            if (is_file($file) && ($xml = @simplexml_load_file($file)) && isset($xml->version)) {
+                $version = (string) $xml->version;
+            }
+        }
+
+        return $version;
+    }
+
+    /** Idempotent. Never throws: a broken module must not take the site down. */
+    public function boot(CMSApplicationInterface $app): void
+    {
+        if ($this->booted) {
+            return;
+        }
+        $this->booted = true;
+        $this->app    = $app;
+
+        try {
+            Lang::loadCore($app);
+            foreach ($this->registry()->enabledIds() as $id) {
+                $module = $this->registry()->module($id);
+                if (!$module) {
+                    continue;
+                }
+                try {
+                    Lang::loadModule($app, $id, $module->path());
+                    $module->boot(new ModuleContext($id, $app, $this));
+                } catch (\Throwable $e) {
+                    Log::add(sprintf('Module %s failed to boot: %s', $id, $e->getMessage()), Log::ERROR, 'uxstudio');
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::add('UX Studio boot failed: ' . $e->getMessage(), Log::ERROR, 'uxstudio');
+        }
+    }
+}

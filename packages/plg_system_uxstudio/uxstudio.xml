@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension type="plugin" group="system" method="upgrade">
+	<name>plg_system_uxstudio</name>
+	<version>0.1.0</version>
+	<creationDate>2026-11</creationDate>
+	<author>UX1</author>
+	<authorEmail>info@ux1.cz</authorEmail>
+	<authorUrl>https://ux1.cz</authorUrl>
+	<copyright>(C) UX1</copyright>
+	<license>GNU General Public License version 2 or later</license>
+	<description>PLG_SYSTEM_UXSTUDIO_XML_DESCRIPTION</description>
+	<namespace path="src">Ux1\Plugin\System\UxStudio</namespace>
+	<files>
+		<folder plugin="uxstudio">services</folder>
+		<folder>src</folder>
+		<folder>language</folder>
+	</files>
+</extension>

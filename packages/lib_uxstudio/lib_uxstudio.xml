@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension type="library" method="upgrade">
+	<name>lib_uxstudio</name>
+	<libraryname>uxstudio</libraryname>
+	<version>0.1.0</version>
+	<creationDate>2026-11</creationDate>
+	<author>UX1</author>
+	<authorEmail>info@ux1.cz</authorEmail>
+	<authorUrl>https://ux1.cz</authorUrl>
+	<copyright>(C) UX1</copyright>
+	<license>GNU General Public License version 2 or later</license>
+	<description>LIB_UXSTUDIO_XML_DESCRIPTION</description>
+	<namespace path="src">Ux1\UxStudio</namespace>
+	<files>
+		<folder>src</folder>
+		<folder>language</folder>
+	</files>
+</extension>

@@ -8,11 +8,15 @@ Založeno 2026-11-06. Lokální testovací weby: http://localhost/joomla5 (5.4.1
 - [x] ARCHITECTURE.md (kontrakty jádra a modulů)
 
 ## F1 Jádro
-- [ ] Balíček pkg_uxstudio (lib, com, plg_system, plg_task) se instaluje na J5 i J6
-- [ ] Kernel, ModuleRegistry (auto-discovery), Settings (šifrovaná hesla), Migrator, Api endpoint s CSRF+ACL
-- [ ] Admin SPA: shell, mřížka modulů, zapnutí/vypnutí, generický settings renderer, dark mode, cs/en
-- [ ] Scheduler úlohy z modulů, Retention
-- [ ] bin/build.mjs, bin/dev-link.mjs, bin/jadmin.mjs
+- [x] Balíček pkg_uxstudio (lib, com, plg_system, plg_task) se instaluje na J5 i J6
+- [x] Kernel, ModuleRegistry (auto-discovery), Settings (šifrovaná hesla), Migrator, Api endpoint s CSRF+ACL
+- [x] Admin SPA: shell, mřížka modulů, zapnutí/vypnutí, generický settings renderer, dark mode, cs/en
+- [x] Scheduler úlohy z modulů, Retention
+- [x] bin/build.mjs, bin/dev-link.mjs, bin/jadmin.mjs
+- [ ] Průvodce nastavením (onboarding wizard jako WP verze: Core/Onboarding + src/app/wizard)
+
+## F1b Centrální aplikace
+- [ ] CMS adaptér v CA (WordPress vs Joomla), správa Joomla webů na úrovni WP (souhlas uživatele 2026-11-06)
 
 ## F2 Moduly (MVP)
 - [ ] E-mail: SMTP, log e-mailů, zdraví e-mailu (SPF/DKIM/DMARC)
