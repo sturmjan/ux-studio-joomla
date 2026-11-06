@@ -1,0 +1,136 @@
+# UX Studio pro Joomla 5 a 6 - architektura (závazná)
+
+Port WordPress pluginu UX Studio (referenční kód: `D:\xampp\htdocs\_uxs-wt-csp`, jen ke čtení,
+NIKDY tam nezapisovat). Neportujeme 1:1: přebíráme logiku, UI a vzhled, PHP vrstvu píšeme
+nativně proti Joomla API. Jeden kód musí běžet na **Joomla 5.4 i 6.x** beze změn.
+
+## 1. Cílové prostředí
+
+| | Joomla 5 | Joomla 6 |
+|---|---|---|
+| Lokální web | http://localhost/joomla5 (`D:\xampp\htdocs\joomla5`) | http://localhost/joomla6 (`D:\xampp\htdocs\joomla6`) |
+| DB | `joomla5`, prefix `jos_` | `joomla6`, prefix `jos_` |
+| Admin | přihlašovací údaje v `.env.local` (gitignored, nikdy nevypisovat) | stejné |
+
+- PHP: `D:\xampp\php\php.exe` (8.4). Kód musí jít na **PHP 8.1+** (min. pro J5), na J6 je min. 8.3.
+- MySQL klient: `D:\xampp\mysql\bin\mysql.exe -uroot --default-character-set=utf8mb4`.
+- Joomla CLI: `php <site>/cli/joomla.php extension:install --path=...`, `extension:discover`,
+  `extension:discover:install`, `cache:clean`.
+- Composer není nainstalovaný; běhové závislosti PHP nepoužíváme (Joomla framework stačí).
+
+### Kompatibilita J5/J6 - zakázáno
+`CMSObject`, `JFactory`/`J*` aliasy, `Factory::getUser()`, `Factory::getDbo()`, `Factory::getSession()`,
+`Factory::getDocument()` (použij `$app->getDocument()`), `JRequest`, `Joomla\CMS\Filesystem\*`
+(použij `Joomla\Filesystem\*`), cokoli `@deprecated` v J5. Vše musí fungovat na J6 i s vypnutými
+pluginy „Behaviour - Backward Compatibility“. DB vždy `Factory::getContainer()->get(DatabaseInterface::class)`
+nebo `DatabaseAwareTrait`, uživatel `$app->getIdentity()`.
+
+## 2. Struktura repozitáře
+
+```
+ux-studio-joomla/
+├── ARCHITECTURE.md, PLAN.md, README.md
+├── packages/
+│   ├── lib_uxstudio/                 # knihovna = jádro + všechny moduly (PHP)
+│   │   ├── lib_uxstudio.xml          # <namespace path="src">Ux1\UxStudio</namespace>
+│   │   └── src/
+│   │       ├── Core/                 # jádro (Kernel, ModuleRegistry, Settings, Migrator, Http, Api, ...)
+│   │       └── Modules/<Name>/       # jeden adresář = jeden modul (viz §4)
+│   ├── com_uxstudio/                 # admin komponenta: mount React SPA + JSON API endpoint
+│   ├── plg_system_uxstudio/          # bootuje zapnuté moduly, předává jim Joomla eventy
+│   ├── plg_task_uxstudio/            # Joomla Scheduler úlohy, které deklarují moduly
+│   ├── mod_uxstudio_<x>/             # frontendové Joomla moduly (pozice šablony), vlastní je konkrétní feature modul
+│   └── pkg_uxstudio.xml              # GENEROVANÝ build skriptem z obsahu packages/
+├── admin-app/                        # React 19 + TypeScript (strict) + Vite
+│   └── src/
+│       ├── app/                      # shell, routing, api klient, sdílené komponenty, i18n
+│       └── modules/<id>/             # vlastní obrazovky modulů (auto-discovery přes import.meta.glob)
+└── bin/
+    ├── build.mjs                     # build SPA + zip pkg_uxstudio-<ver>.zip do dist/
+    ├── dev-link.mjs                  # junctiony repa do joomla5 a joomla6 (vývoj bez reinstalace)
+    └── jadmin.mjs                    # přihlášení do administrace (cookie + CSRF token) pro testy API curlem/node
+```
+
+## 3. Jádro (Core)
+
+- **Kernel**: singleton, načte `ModuleRegistry`, pro zapnuté moduly zavolá `boot()`. Volá ho
+  `plg_system_uxstudio` v `onAfterInitialise`. Admin i site.
+- **ModuleRegistry**: auto-discovery `src/Modules/*/meta.json` (žádný centrální seznam, nic se
+  needituje při přidání modulu). Stav zapnutí v tabulce `#__uxstudio_modules (id, enabled, updated_at)`.
+- **Settings**: tabulka `#__uxstudio_settings (module VARCHAR(64) PK, data MEDIUMTEXT JSON, updated_at)`.
+  Validace a sanitizace podle `settingsSchema()` (stejné typy polí jako WP verze:
+  toggle | text | textarea | css | number | select | multiselect | color | media | datetime | richtext | password).
+  Typ `password` (API klíče, SMTP heslo) se ukládá šifrovaně (sodium secretbox, klíč odvozený z
+  `$secret` v configuration.php) a do SPA se nikdy nevrací v čisté podobě (jen `"__set__"`).
+- **Migrator**: `#__uxstudio_migrations (module, version, applied_at)`. Každý modul vrací
+  `migrations(): array<int, string[]>` (verze => SQL příkazy s `#__` prefixem). Spouští se při
+  zapnutí modulu a při update balíčku (install script komponenty). Žádné SQL soubory v manifestech.
+- **Api**: jediný endpoint `administrator/index.php?option=com_uxstudio&task=api.dispatch&format=json&route=<module>/<path>`.
+  Ověřuje: přihlášený admin, `core.manage` na `com_uxstudio` (modul může požadovat přísnější
+  akci, např. `core.admin`), CSRF token v hlavičce `X-CSRF-Token` (Session::checkToken), metoda.
+  Odpověď vždy JSON `{ok:true,data}` / `{ok:false,error:{code,message}}` se správným HTTP kódem.
+  Jádro samo vystavuje `core/modules` (seznam + toggle), `core/settings/<id>` (GET/POST), `core/meta`.
+- **Http**: wrapper nad `Joomla\Http\HttpFactory` s timeoutem, User-Agentem a SSRF guardem
+  (zákaz privátních/loopback IP u URL zadaných uživatelem).
+- **Scheduler**: `plg_task_uxstudio` vystaví routinu `uxstudio.run` s parametrem `job`; moduly
+  deklarují `tasks(): array` (job id => [label, callable, default interval]). Jádro při zapnutí
+  modulu úlohu založí v `#__scheduler_tasks`, při vypnutí ji vypne.
+- **Language**: PHP řetězce v `src/Modules/<Name>/language/{en-GB,cs-CZ}/uxs_<id>.ini`, jádro je
+  načte pro zapnutý modul. Jádro má vlastní `lib_uxstudio.ini`. Klíče `UXS_<ID>_...`.
+- **Logy/retence**: `Core\Retention` - moduly s log tabulkami deklarují `retention(): array` (tabulka, sloupec data, dny).
+
+## 4. Kontrakt modulu
+
+```
+packages/lib_uxstudio/src/Modules/<Name>/       # Name = PascalCase, id = kebab-case
+  meta.json        # {id, name, description, group, icon (lucide název), settings:true|false, requires?: []}
+  Module.php       # final class Module extends \Ux1\UxStudio\Core\BaseModule
+  Api.php          # volitelně: handler rout modulu
+  language/en-GB/uxs_<id>.ini, language/cs-CZ/uxs_<id>.ini
+  ...další třídy v namespace Ux1\UxStudio\Modules\<Name>
+admin-app/src/modules/<id>/
+  Page.tsx         # volitelně, default export; bez něj se vykreslí generický settings renderer
+  i18n/en.json, i18n/cs.json
+packages/mod_uxstudio_<x>/                      # volitelně, frontendový Joomla modul
+```
+
+`BaseModule` metody (všechny kromě `boot` mají default):
+
+| Metoda | Účel |
+|---|---|
+| `boot(ModuleContext $ctx): void` | registrace listenerů: `$ctx->on('onAfterRender', [$this,'x'], priority)` |
+| `settingsSchema(): array` | pole nastavení (formát jako WP `settings_schema`) |
+| `routes(): array` | `['GET logs' => [$this,'listLogs'], 'POST test' => ...]`, handler dostane `ApiRequest`, vrací pole |
+| `migrations(): array` | verze => SQL |
+| `tasks(): array` | cron úlohy pro Scheduler |
+| `retention(): array` | čištění logů |
+| `onEnable()/onDisable(): void` | vedlejší efekty (.htaccess bloky apod.); data se při vypnutí NEMAŽOU |
+| `acl(): string` | výchozí `core.manage`, rizikové moduly `core.admin` |
+| `dashboardWidget(): ?array` | volitelná karta na přehledu UX Studia |
+
+## 5. Admin SPA
+
+- Vite + React 19 + TS strict (žádné `any`), `@tanstack/react-query`, `lucide-react`,
+  `react-aria-components`. Výstup do `packages/com_uxstudio/media/` (registrováno přes `joomla.asset.json`).
+- **Vzhled převzít z WP verze**: tokeny `--uxs-*`, dark mode, komponenty (`ModuleGrid`, `PageHead`,
+  `DataTable`, `Modal`, `Tabs`, `Toast`, `Confirm`, `ToggleSwitch`, `SettingsForm`...) portovat z
+  `_uxs-wt-csp/src/app` a `src/style.scss`. Pravidla viz `_uxs-wt-csp/DESIGN.md` (platí i tady, kromě
+  WP-specifických tříd: tlačítka jsou vlastní `uxs-btn` třídy, ne Bootstrap Atum). CSS je scoped pod
+  `#uxs-root`, aby se nebilo s Atum šablonou.
+- Moduly: `import.meta.glob('../modules/*/Page.tsx')` (lazy), překlady `import.meta.glob('../modules/*/i18n/*.json')`.
+- i18n: zdroj anglicky, `t('key')` z `app/i18n`, jazyk podle jazyka administrace (cs-CZ → cs, jinak en).
+- API klient: `app/api.ts` - `api.get/post(route, body)`, CSRF token a URL z `Joomla.getOptions('uxstudio')`.
+
+## 6. Pravidla
+
+- Bezpečnost: parametrizované dotazy (`$query->bind`/`whereIn` s typy), escapování výstupu
+  (`htmlspecialchars` / `HTMLHelper`), validace na serveru podle schématu, CSRF a ACL na každé
+  zapisující routě, žádné tajné údaje v kódu ani gitu, rate limiting u veřejných (site) endpointů.
+- Frontendové výstupy (popupy, lišty, formuláře) musí respektovat CSP: žádné inline `onclick`,
+  skripty přes WebAssetManager.
+- Komentáře v kódu anglicky, uživatelské texty přes překlady (cs + en povinně).
+- **Paralelní práce**: modulový agent smí měnit JEN svoje adresáře (`src/Modules/<Name>/`,
+  `admin-app/src/modules/<id>/`, `packages/mod_uxstudio_<x>/`, `docs/modules/<id>.md`).
+  Potřebuje-li změnu jádra, NEMĚNÍ ho, ale popíše ji ve výstupu (`core_requests`). Necommituje.
+- Každá funkce se ověřuje živě na J5 **i** J6 (instalace, API curlem přes `bin/jadmin.mjs`,
+  frontend curlem), `php -l` na všech PHP souborech, `npm run typecheck` pro SPA.
