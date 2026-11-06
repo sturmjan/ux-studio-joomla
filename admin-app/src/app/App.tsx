@@ -10,6 +10,7 @@ import { t } from './i18n';
 import { ModuleGrid } from './ModuleGrid';
 import { ModuleIcon } from './moduleIcons';
 import { ModulePage } from './ModulePage';
+import { hasCustomPage } from './registry';
 import { getSidebarHidden, getTheme, setSidebarHidden, setTheme, type Theme } from './prefs';
 import { currentRoute, hashParam, navigate } from './route';
 import { useModules } from './useModules';
@@ -116,10 +117,10 @@ export function App(): JSX.Element {
 							<LayoutGrid size={ 20 } aria-hidden="true" /> { t( 'Modules' ) }
 						</button>
 						{ ( modules ?? [] )
-							.filter( ( m ) => m.enabled && m.settings )
+							.filter( ( m ) => m.enabled && ( m.settings || hasCustomPage( m.id ) ) )
 							.map( ( m ) => (
 								<button key={ m.id } type="button" className={ `uxs-sidebar__item${ activeId === m.id ? ' is-active' : '' }` } onClick={ () => go( 'module', { id: m.id } ) }>
-									<ModuleIcon name={ m.icon } size={ 20 } /> { m.name }
+									<ModuleIcon name={ m.icon } moduleId={ m.id } size={ 20 } /> { m.name }
 								</button>
 							) ) }
 					</nav>

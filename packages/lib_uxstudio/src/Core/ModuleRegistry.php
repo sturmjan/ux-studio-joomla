@@ -95,7 +95,7 @@ final class ModuleRegistry
         $this->enabled = [];
         try {
             $rows = $this->db->setQuery(
-                $this->db->getQuery(true)->select([$this->db->quoteName('id'), $this->db->quoteName('enabled')])->from($this->db->quoteName('#__uxstudio_modules'))
+                $this->db->createQuery()->select([$this->db->quoteName('id'), $this->db->quoteName('enabled')])->from($this->db->quoteName('#__uxstudio_modules'))
             )->loadAssocList();
             foreach ($rows as $row) {
                 $this->enabled[$row['id']] = (bool) $row['enabled'];
@@ -123,17 +123,17 @@ final class ModuleRegistry
         $db  = $this->db;
         $now = Factory::getDate()->toSql();
         $exists = (int) $db->setQuery(
-            $db->getQuery(true)->select('COUNT(*)')->from($db->quoteName('#__uxstudio_modules'))->where($db->quoteName('id') . ' = :id')->bind(':id', $id)
+            $db->createQuery()->select('COUNT(*)')->from($db->quoteName('#__uxstudio_modules'))->where($db->quoteName('id') . ' = :id')->bind(':id', $id)
         )->loadResult();
 
         $flag = $enabled ? 1 : 0;
         if ($exists) {
-            $q = $db->getQuery(true)->update($db->quoteName('#__uxstudio_modules'))
+            $q = $db->createQuery()->update($db->quoteName('#__uxstudio_modules'))
                 ->set($db->quoteName('enabled') . ' = :en')->set($db->quoteName('updated_at') . ' = :ts')
                 ->where($db->quoteName('id') . ' = :id')
                 ->bind(':en', $flag, \Joomla\Database\ParameterType::INTEGER)->bind(':ts', $now)->bind(':id', $id);
         } else {
-            $q = $db->getQuery(true)->insert($db->quoteName('#__uxstudio_modules'))
+            $q = $db->createQuery()->insert($db->quoteName('#__uxstudio_modules'))
                 ->columns($db->quoteName(['id', 'enabled', 'updated_at']))
                 ->values(':id, :en, :ts')
                 ->bind(':id', $id)->bind(':en', $flag, \Joomla\Database\ParameterType::INTEGER)->bind(':ts', $now);

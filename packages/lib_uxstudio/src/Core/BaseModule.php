@@ -13,6 +13,28 @@ abstract class BaseModule
     /** @var array<string,mixed> meta.json contents plus 'dir' and 'path'. */
     private array $meta = [];
 
+    private ?ModuleContext $ctx = null;
+
+    /** Called by the kernel before boot(). */
+    final public function setContext(ModuleContext $ctx): void
+    {
+        $this->ctx = $ctx;
+    }
+
+    /**
+     * The module's context for route handlers, jobs and listeners. Available even on requests where boot() did not
+     * run (API, scheduler, CLI): it is created lazily. Use this instead of keeping your own copy.
+     */
+    final protected function ctx(): ModuleContext
+    {
+        if ($this->ctx === null) {
+            $kernel    = Kernel::instance();
+            $this->ctx = new ModuleContext($this->id(), $kernel->app(), $kernel);
+        }
+
+        return $this->ctx;
+    }
+
     /** Called by the registry right after construction. */
     final public function setMeta(array $meta): void
     {
@@ -56,10 +78,29 @@ abstract class BaseModule
     /**
      * API routes: ['GET logs' => [$this, 'listLogs'], 'POST items/{id}' => [$this, 'save']].
      * A handler receives an ApiRequest and returns an array (the JSON "data").
+     * A route may require a stricter ACL action than acl(): 'POST purge' => ['handler' => [$this, 'purge'], 'acl' => 'core.admin'].
      *
-     * @return array<string,callable>
+     * @return array<string,callable|array{handler:callable,acl?:string}>
      */
     public function routes(): array
+    {
+        return [];
+    }
+
+    /**
+     * Public (site) endpoint routes for visitors and external systems (forms, consent, webhooks, Central App):
+     *   index.php?option=com_uxstudio&task=public.dispatch&format=json&route=<module-id>/<path>
+     * Format: ['POST subscribe' => ['handler' => [$this, 'subscribe'], 'auth' => 'none', 'limit' => [10, 60], 'max_body' => 16384]].
+     *   - auth: 'none' (default; browsers only: a present Origin header must be this site) | 'token' (Authorization: Bearer <secret>)
+     *     | 'hmac' (X-UXS-Timestamp + X-UXS-Signature = hex hmac_sha256("<timestamp>.<raw body>", secret), 5 minute window).
+     *   - secret: string or callable returning the secret (token / hmac; an empty secret denies every request).
+     *   - limit: [max requests, window in seconds] per client IP and route (default [30, 60]); exceeding it returns 429.
+     *   - max_body: maximum request body in bytes (default 65536), larger returns 413.
+     * No Joomla session, ACL or CSRF token is involved, so a handler must validate everything itself.
+     *
+     * @return array<string,array<string,mixed>>
+     */
+    public function publicRoutes(): array
     {
         return [];
     }

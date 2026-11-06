@@ -3,7 +3,10 @@
 namespace Ux1\UxStudio\Core;
 
 use Joomla\CMS\Application\CMSApplicationInterface;
+use Joomla\CMS\Document\HtmlDocument;
 use Joomla\CMS\Language\Text;
+use Joomla\CMS\Uri\Uri;
+use Joomla\CMS\WebAsset\WebAssetManager;
 use Joomla\Database\DatabaseInterface;
 use Joomla\Event\Priority;
 
@@ -86,5 +89,77 @@ final class ModuleContext
     public function http(): Http
     {
         return new Http();
+    }
+
+    /**
+     * Front-end assets of the module live in packages/lib_uxstudio/media/modules/<module-id>/ and are published to
+     * media/lib_uxstudio/modules/<module-id>/. This returns the site-relative URL of one file (path inside that folder).
+     */
+    public function assetUrl(string $file): string
+    {
+        $this->assertAssetName($file);
+
+        return Uri::root(true) . '/media/lib_uxstudio/modules/' . $this->moduleId . '/' . $file;
+    }
+
+    /**
+     * Registers and enqueues a script of the module through the WebAssetManager (CSP friendly: no inline code, the
+     * nonce is handled by Joomla). Does nothing for non-HTML documents.
+     *
+     * @param array<string,mixed> $attributes script attributes, e.g. ['type' => 'module'] (default ['defer' => true])
+     * @param string[]            $dependencies names of other registered assets
+     */
+    public function useScript(string $file, array $attributes = [], array $dependencies = []): void
+    {
+        $wa = $this->assets();
+        if ($wa === null) {
+            return;
+        }
+        $wa->registerAndUseScript($this->assetName($file), $this->assetPath($file), ['version' => $this->assetVersion($file)], $attributes ?: ['defer' => true], $dependencies);
+    }
+
+    /** Registers and enqueues a stylesheet of the module (see useScript()). */
+    public function useStyle(string $file, array $attributes = [], array $dependencies = []): void
+    {
+        $wa = $this->assets();
+        if ($wa === null) {
+            return;
+        }
+        $wa->registerAndUseStyle($this->assetName($file), $this->assetPath($file), ['version' => $this->assetVersion($file)], $attributes, $dependencies);
+    }
+
+    /** Root-relative path: WebAssetManager resolves a file below the site root as given (it must exist, else it is skipped). */
+    private function assetPath(string $file): string
+    {
+        $this->assertAssetName($file);
+
+        return 'media/lib_uxstudio/modules/' . $this->moduleId . '/' . $file;
+    }
+
+    private function assets(): ?WebAssetManager
+    {
+        $document = $this->app->getDocument();
+
+        return $document instanceof HtmlDocument ? $document->getWebAssetManager() : null;
+    }
+
+    private function assetName(string $file): string
+    {
+        return 'uxs.' . $this->moduleId . '.' . $file;
+    }
+
+    private function assetVersion(string $file): string
+    {
+        $path = JPATH_ROOT . '/media/lib_uxstudio/modules/' . $this->moduleId . '/' . $file;
+        $seed = is_file($path) ? (int) filemtime($path) . ':' . (int) filesize($path) : Kernel::version();
+
+        return substr(md5($seed), 0, 10);
+    }
+
+    private function assertAssetName(string $file): void
+    {
+        if (!preg_match('#^[A-Za-z0-9_][A-Za-z0-9_./-]*\.(js|mjs|css|svg|png|jpg|webp|woff2)$#', $file) || str_contains($file, '..')) {
+            throw new \InvalidArgumentException('Invalid asset file name.');
+        }
     }
 }

@@ -39,7 +39,7 @@ final class Retention
                 }
                 $cutoff = Factory::getDate('-' . $days . ' days')->toSql();
                 try {
-                    $query = $this->db->getQuery(true)->delete($this->db->quoteName($table))
+                    $query = $this->db->createQuery()->delete($this->db->quoteName($table))
                         ->where($this->db->quoteName($column) . ' < :cut')->bind(':cut', $cutoff);
                     $this->db->setQuery($query)->execute();
                     $report[$id . ':' . $table] = $this->db->getAffectedRows();

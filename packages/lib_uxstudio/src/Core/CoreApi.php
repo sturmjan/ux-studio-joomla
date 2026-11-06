@@ -176,13 +176,16 @@ final class CoreApi
         return $widgets;
     }
 
-    /** Run pending migrations of all enabled modules (useful after dev-link of new code). */
+    /** Run pending migrations of all enabled modules and re-sync scheduler tasks (useful after dev-link of new code). */
     public function migrate(ApiRequest $r): array
     {
         if (!$r->user()->authorise('core.admin', Api::COMPONENT)) {
             throw new ApiException(Text::_('UXS_CORE_ERR_FORBIDDEN'), 403, 'forbidden');
         }
 
-        return $this->kernel->migrator()->runAll();
+        $applied = $this->kernel->migrator()->runAll();
+        $this->kernel->scheduler()->syncAll();
+
+        return $applied;
     }
 }

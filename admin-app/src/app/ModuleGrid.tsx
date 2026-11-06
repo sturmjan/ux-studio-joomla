@@ -132,7 +132,7 @@ export function ModuleGrid(): JSX.Element {
 						>
 							<div className="uxs-tile__head">
 								<span className="uxs-tile__icon">
-									<ModuleIcon name={ m.icon } />
+									<ModuleIcon name={ m.icon } moduleId={ m.id } />
 								</span>
 								<span className="uxs-tile__name" title={ m.name } style={ { flex: '0 1 260px', whiteSpace: 'normal', overflow: 'visible', textOverflow: 'clip', lineHeight: 1.3 } }>
 									{ m.name }

@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { RefreshCw } from 'lucide-react';
 import { api, type ModuleInfo } from '../../app/api';
-import { formatDate, t } from '../../app/i18n';
+import { createT, formatDate } from '../../app/i18n';
 import { SettingsPanel } from '../../app/SettingsForm';
 import { DataTable, Loading, TabPanel, Tabs, type Column } from '../../app/ui';
 
@@ -22,6 +22,9 @@ interface Ping {
 }
 
 type Row = Ping[ 'latest' ][ number ];
+
+// Module translator: own dictionary (modules/hello-check/i18n) first, then the core one.
+const { t } = createT( 'hello-check' );
 
 export default function Page( { module }: { module: ModuleInfo } ): JSX.Element {
 	const [ tab, setTab ] = useState( 'overview' );

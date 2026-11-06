@@ -37,9 +37,29 @@ function joomlaAssets(): Plugin {
 	};
 }
 
+/**
+ * Production builds leave dev-only modules (meta.json "dev": true, ids in UXS_EXCLUDE_MODULES) out of the bundle:
+ * their screens and dictionaries are replaced by empty stubs.
+ */
+function excludeDevModules(): Plugin {
+	const ids = (process.env.UXS_EXCLUDE_MODULES ?? '').split(',').filter(Boolean);
+	return {
+		name: 'uxstudio-exclude-dev-modules',
+		enforce: 'pre',
+		load(id) {
+			const path = id.split('?')[0]?.replaceAll('\\', '/') ?? '';
+			const m = /\/src\/modules\/([a-z0-9-]+)\/(Page\.tsx|i18n\/[a-z]+\.json)$/.exec(path);
+			if (!m || !ids.includes(m[1] as string)) {
+				return null;
+			}
+			return m[2] === 'Page.tsx' ? 'export default function Page() { return null; }' : '{}';
+		},
+	};
+}
+
 export default defineConfig({
 	base: './',
-	plugins: [react(), joomlaAssets()],
+	plugins: [excludeDevModules(), react(), joomlaAssets()],
 	define: { 'process.env.NODE_ENV': JSON.stringify('production') },
 	build: {
 		outDir,

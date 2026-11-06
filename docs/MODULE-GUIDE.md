@@ -11,6 +11,11 @@ vzorový modul je `packages/lib_uxstudio/src/Modules/HelloCheck` (id `hello-chec
   jádra, popiš ji ve výstupu jako `core_requests`.
 - Nepoužívej nic z `ARCHITECTURE.md` §1 "zakázáno" (CMSObject, JFactory, `Factory::getDbo()`, `Factory::getUser()`,
   `Joomla\CMS\Filesystem\*` ...). DB: `$ctx->db()`, uživatel: `$request->user()`.
+- **Zakázaná (deprecated) volání** - použij náhradu:
+  `$db->getQuery(true)` -> `$db->createQuery()`; `Factory::getDbo()` -> `$ctx->db()`; `Factory::getUser()` -> `$request->user()` / `$app->getIdentity()`;
+  `Factory::getDocument()` -> `$app->getDocument()`; `Factory::getSession()` -> `$app->getSession()`; `CMSObject`, `JFactory`, `J*` aliasy, `JRequest`;
+  `Joomla\CMS\Filesystem\*` -> `Joomla\Filesystem\*`; plugin vytvářený s `DispatcherInterface` jako 1. argumentem (od J5.4 deprecated).
+- Necommituj a **nikdy nepoužívej `git add -A`** (v repu pracují souběžně další moduly): kdyby sis commit přece dělal, přidávej jen své soubory.
 - Kód musí běžet na PHP 8.1+ a Joomla 5.4 i 6.x beze změn. Komentáře anglicky, texty uživateli přes překlady (cs + en).
 - Žádná tajemství v kódu, dotazy jen parametrizované (`$query->bind(...)`), výstup escapovat, na zapisujících routách
   je CSRF a ACL zajištěná jádrem (viz níže), validace patří na server.
@@ -44,8 +49,9 @@ packages/lib_uxstudio/src/Modules/<Name>/          # Name = PascalCase, id = keb
 ```
 
 - `group`: `security | communication | marketing | content | performance | admin | developer` (jiná hodnota spadne do "Other").
-- `icon`: název lucide ikony v kebab-case. Seznam podporovaných je v `admin-app/src/app/moduleIcons.tsx`; chybí-li ti
-  ikona, napiš `core_request` (neznámá se vykreslí jako Puzzle).
+- `icon`: název lucide ikony v kebab-case ze sdíleného seznamu `admin-app/src/app/moduleIcons.tsx`. Potřebuješ jinou? Žádný `core_request`:
+  vytvoř `admin-app/src/modules/<id>/icon.tsx` s `import { Fingerprint } from 'lucide-react'; export default Fingerprint;` (má přednost; bez obojího Puzzle).
+- `dev`: `true` pro vzorové a testovací moduly - nejdou do produkčního zipu ani do SPA bundlu (`bin/build.mjs`, `--with-dev` je zahrne).
 - `settings: true` znamená, že řádek v seznamu modulů je klikací a vede na obrazovku modulu (generický formulář
   nastavení, nebo tvoje `Page.tsx`).
 - `requires`: id modulů, které musí být zapnuté (jádro hlídá zapnutí i vypnutí).
@@ -70,7 +76,15 @@ proto jen registruj listenery a nic těžkého nedělej. Výjimka v `boot()` jen
 (`administrator/logs/uxstudio.php`) a web běží dál.
 
 `ModuleContext` nabízí: `id()`, `app()`, `db()`, `client()`, `isAdmin()`, `isSite()`, `on($event, $callable, $priority)`,
-`setting($key, $default)`, `settings()`, `t($key, ...$args)`, `http()`.
+`setting($key, $default)`, `settings()`, `t($key, ...$args)`, `http()`, `useScript($file)`, `useStyle($file)`, `assetUrl($file)`.
+
+**Kontext mimo `boot()`:** handlery rout, úlohy plánovače i CLI běží na požadavku, kde `boot()` neproběhl. Použij `$this->ctx()`
+(`final protected` v `BaseModule`, vytvoří se líně) a nekopíruj si vlastní privátní `context()`.
+
+**Frontendové assety (JS/CSS):** soubory dej do `packages/lib_uxstudio/media/modules/<id>/` (publikují se do
+`media/lib_uxstudio/modules/<id>/`) a z listeneru (např. `onBeforeCompileHead`) zavolej `$this->ctx()->useScript('muj.js')`
+nebo `useStyle('muj.css')` (WebAssetManager, verze podle souboru, CSP-friendly, bez inline kódu). Atributy: `useScript('x.js', ['type' => 'module'])`.
+Soubory v `media/modules/<id>/` musí existovat (jinak se asset tiše přeskočí). `dev-link` složku nalinkuje do `media/lib_uxstudio`.
 
 ## 2. Nastavení (`settingsSchema()`)
 
@@ -127,6 +141,34 @@ Neošetřená výjimka vrátí 500 s obecnou zprávou (detail jde jen do logu `u
 
 Handler vždy sám validuje vstup (typy, délky, whitelist) a používá parametrizované dotazy.
 
+**Přísnější ACL na jedné routě:** `acl()` modulu platí pro všechny routy; rizikovou akci zpřísníš tvarem
+`'POST purge' => ['handler' => [$this, 'purge'], 'acl' => 'core.admin']` (musí projít ACL modulu i routy).
+
+### Veřejné (site) routy - `publicRoutes()`
+
+Pro formuláře, consent, webhooky a Centrální aplikaci (bez přihlášení): jeden endpoint
+`index.php?option=com_uxstudio&task=public.dispatch&format=json&route=<module-id>/<path>` (stejná JSON obálka).
+
+```php
+public function publicRoutes(): array
+{
+	return [
+		// browser form: no auth, rate limited, a present Origin header must be this site
+		'POST subscribe' => ['handler' => [$this, 'subscribe'], 'auth' => 'none', 'limit' => [10, 60], 'max_body' => 16384],
+		// signed server-to-server call
+		'POST webhook' => ['handler' => [$this, 'webhook'], 'auth' => 'hmac', 'secret' => fn () => (string) $this->ctx()->setting('secret', '')],
+		// bearer token (also accepted in the X-UXS-Token header when the host strips Authorization)
+		'GET status' => ['handler' => [$this, 'status'], 'auth' => 'token', 'secret' => fn () => (string) $this->ctx()->setting('secret', '')],
+	];
+}
+```
+
+- `auth`: `none` (výchozí) | `token` (`Authorization: Bearer <secret>`) | `hmac` (`X-UXS-Timestamp` + `X-UXS-Signature` = hex `hmac_sha256("<timestamp>.<raw body>", secret)`, tolerance 5 minut).
+  Prázdné `secret` odmítne každý požadavek. Handler dostane `ApiRequest`; surové tělo je v `$r->raw()`.
+- `limit`: `[počet, okno v sekundách]` na IP a routu (výchozí `[30, 60]`), po překročení 429 + `Retry-After`. `max_body`: bajty (výchozí 65536), jinak 413.
+  Vlastní limity jinde: `(new \Ux1\UxStudio\Core\RateLimiter($ctx->db()))->hit('klic', 5, 600)` vrací 0 (povoleno) nebo počet sekund do konce okna.
+- Není tu session, ACL ani CSRF token: handler musí vše validovat sám a nikdy nevracet interní data. Vstup je nedůvěryhodný.
+
 ## 4. Migrace (`migrations()`)
 
 ```php
@@ -142,8 +184,9 @@ public function migrations(): array
 - Verze jsou celá čísla; každá se provede jednou (záznam v `#__uxstudio_migrations`), v pořadí. Hotové verze **nikdy neupravuj**, přidej novou.
 - Jeden příkaz = jedna položka pole (žádné víceřádkové dávky). Používej `IF NOT EXISTS` kde to jde.
 - Tabulky pojmenuj `#__uxstudio_<modul>_<něco>` (retention čistí jen tabulky s prefixem `#__uxstudio_`).
-- Spouští se při zapnutí modulu a při instalaci/update balíčku (pro zapnuté moduly). Po `dev-linku` nového kódu
-  s migrací zavolej `node bin/jadmin.mjs j5 POST core/migrate` (potřebuje `core.admin`), nebo modul vypni a zapni.
+- Spouští se při zapnutí modulu a **líně při prvním požadavku do administrace nebo CLI po instalaci/update balíčku i po změně souborů
+  modulu** (`Core\Upgrader`: otisk verze, `Module.php`/`meta.json`, verzí migrací a deklarovaných úloh; instalační skript nic nemigruje,
+  protože v jeho požadavku jsou ještě staré třídy). Ruční spuštění: `node bin/jadmin.mjs j5 POST core/migrate` (potřebuje `core.admin`).
 
 ## 5. Eventy
 
@@ -175,7 +218,8 @@ public function tasks(): array
 
 `interval`: ISO 8601 (`PT15M`, `PT6H`, `P1D`) nebo počet hodin. Při zapnutí modulu jádro založí řádek v `#__scheduler_tasks`
 (typ `uxstudio.run`, parametr `job` = `<id modulu>.<id úlohy>`), při vypnutí ho vypne (stav 0). Interval si admin může
-změnit v Systém - Plánované úlohy. Callable vrací text pro log (nebo nic); výjimka = úloha selhala.
+změnit v Systém - Plánované úlohy; po aktualizaci se hodnota přepíše jen tehdy, když jsi v kódu změnil deklarovaný interval nebo název.
+Nová úloha zapnutého modulu se po aktualizaci založí sama, úloha, kterou modul přestal deklarovat, jde do koše. Callable vrací text pro log (nebo nic); výjimka = úloha selhala.
 Ruční spuštění: `php <site>/cli/joomla.php scheduler:run --id=<id úlohy>`.
 
 `retention()` vrací pravidla `[['table' => '#__uxstudio_x_log', 'column' => 'created', 'days' => 90]]` (`days` může být
@@ -188,7 +232,10 @@ i callable). Denní úloha jádra `core.retention` smaže starší řádky. Slou
 - SPA: `admin-app/src/modules/<id>/i18n/en.json` a `cs.json`. Zdrojové řetězce jsou anglicky a zároveň klíče:
   `t('Save')` vrátí českou hodnotu z `cs.json`, jinak se zobrazí klíč. `en.json` může být `{}`. Placeholdery `t('Hi {name}', {name})`,
   množné číslo `tn('{n} item', '{n} items', n)` (klíč ve slovníku `"{n} item|{n} items"`, česky tři tvary `1|2-4|5+`).
-  Pro modulové texty používej dostatečně jedinečné věty, slovníky všech modulů se slévají do jednoho.
+  **Slovník modulu je oddělený** od jádra i od ostatních modulů: v `Page.tsx` na úrovni modulu napiš
+  `const { t, tn } = createT( '<id>' );` (`import { createT } from '../../app/i18n'`). `t('Greeting')` hledá nejdřív v
+  `modules/<id>/i18n/cs.json`, pak ve slovníku jádra (obecná slova jako Save, Refresh, Time jádro přeložená má), jinak vrátí klíč.
+  Globální `t` z `app/i18n` vidí jen jádro: modulové texty jím nepřeložíš.
 
 ## 8. Obrazovka v administraci (SPA)
 
@@ -212,6 +259,12 @@ Nastavení zdroje dat čti z UX Studia (`Kernel::instance()->settings()->get('<i
 
 ## 10. Testování přes `bin/jadmin.mjs`
 
+> **POZOR: na nalinkovaný web (dev-link) se zip neinstaluje ani neaktualizuje.** Instalátor Joomly před kopírováním starou
+> knihovnu odinstaluje (`removeFiles`) a přes junction by smazal zdrojové soubory v repu, tedy jádro i všechny moduly, i necommitnuté.
+> Instalační skripty to poznají a instalaci odmítnou. Potřebuješ-li otestovat instalaci zipu: `node bin/dev-link.mjs --unlink`
+> (odstraní junctiony, zkopíruje soubory zpět), nainstaluj, a pak znovu `node bin/dev-link.mjs`. Pro běžné ověřování funkcí instalaci
+> nepotřebuješ: stačí dev-link a `jadmin.mjs`.
+
 `jadmin.mjs` se přihlásí do administrace (`.env.local`), uloží cookie a posílá požadavky s CSRF tokenem jako SPA:
 
 ```bash
@@ -228,6 +281,7 @@ Každou funkci ověř na **J5 i J6**. Navíc:
 - Úlohy: `php D:/xampp/htdocs/joomla5/cli/joomla.php scheduler:run --id=<id>`; tabulky kontroluj
   `D:\xampp\mysql\bin\mysql.exe -uroot --default-character-set=utf8mb4 joomla5 -e "SHOW TABLES LIKE 'jos_uxstudio%'"`.
 - Frontend: `curl -s http://localhost/joomla5/ | grep 'UX Studio hello-check'`.
+- Veřejné routy: `curl -s "http://localhost/joomla5/index.php?option=com_uxstudio&task=public.dispatch&format=json&route=hello-check/hello"`.
 - Na J6 zkontroluj, že nic nepotřebuje plugin "Behaviour - Backward Compatibility" (vypni ho a test zopakuj).
 - Po změně PHP tříd se může hodit `php <site>/cli/joomla.php cache:clean`.
 

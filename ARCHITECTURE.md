@@ -21,7 +21,7 @@ nativně proti Joomla API. Jeden kód musí běžet na **Joomla 5.4 i 6.x** beze
 ### Kompatibilita J5/J6 - zakázáno
 `CMSObject`, `JFactory`/`J*` aliasy, `Factory::getUser()`, `Factory::getDbo()`, `Factory::getSession()`,
 `Factory::getDocument()` (použij `$app->getDocument()`), `JRequest`, `Joomla\CMS\Filesystem\*`
-(použij `Joomla\Filesystem\*`), cokoli `@deprecated` v J5. Vše musí fungovat na J6 i s vypnutými
+(použij `Joomla\Filesystem\*`), cokoli `@deprecated` v J5 (např. `$db->getQuery(true)` - používej `$db->createQuery()`; plugin s `DispatcherInterface` v konstruktoru - `new Plugin((array) PluginHelper::getPlugin(...))`). Vše musí fungovat na J6 i s vypnutými
 pluginy „Behaviour - Backward Compatibility“. DB vždy `Factory::getContainer()->get(DatabaseInterface::class)`
 nebo `DatabaseAwareTrait`, uživatel `$app->getIdentity()`.
 
@@ -33,10 +33,11 @@ ux-studio-joomla/
 ├── packages/
 │   ├── lib_uxstudio/                 # knihovna = jádro + všechny moduly (PHP)
 │   │   ├── lib_uxstudio.xml          # <namespace path="src">Ux1\UxStudio</namespace>
+│   │   ├── media/modules/<id>/       # frontendové assety modulu (JS/CSS), publikují se do media/lib_uxstudio/modules/<id>/
 │   │   └── src/
-│   │       ├── Core/                 # jádro (Kernel, ModuleRegistry, Settings, Migrator, Http, Api, ...)
+│   │       ├── Core/                 # jádro (Kernel, ModuleRegistry, Settings, Migrator, Upgrader, Http, Api, PublicApi, RateLimiter, ...)
 │   │       └── Modules/<Name>/       # jeden adresář = jeden modul (viz §4)
-│   ├── com_uxstudio/                 # admin komponenta: mount React SPA + JSON API endpoint
+│   ├── com_uxstudio/                 # admin komponenta (mount React SPA + JSON API) a site/ (veřejný JSON endpoint)
 │   ├── plg_system_uxstudio/          # bootuje zapnuté moduly, předává jim Joomla eventy
 │   ├── plg_task_uxstudio/            # Joomla Scheduler úlohy, které deklarují moduly
 │   ├── mod_uxstudio_<x>/             # frontendové Joomla moduly (pozice šablony), vlastní je konkrétní feature modul
@@ -68,10 +69,19 @@ ux-studio-joomla/
 - **Api**: jediný endpoint `administrator/index.php?option=com_uxstudio&task=api.dispatch&format=json&route=<module>/<path>`.
   Ověřuje: přihlášený admin, `core.manage` na `com_uxstudio` (modul může požadovat přísnější
   akci, např. `core.admin`), CSRF token v hlavičce `X-CSRF-Token` (Session::checkToken), metoda.
+  Routa může mít přísnější ACL než modul: `'POST purge' => ['handler' => [...], 'acl' => 'core.admin']` (musí projít obojí).
   Odpověď vždy JSON `{ok:true,data}` / `{ok:false,error:{code,message}}` se správným HTTP kódem.
   Jádro samo vystavuje `core/modules` (seznam + toggle), `core/settings/<id>` (GET/POST), `core/meta`.
+- **PublicApi** (site endpoint, `BaseModule::publicRoutes()`): `index.php?option=com_uxstudio&task=public.dispatch&format=json&route=<module>/<path>`.
+  Bez session/CSRF; každá routa deklaruje `auth` (`none` + kontrola Origin | `token` Bearer | `hmac` X-UXS-Timestamp + X-UXS-Signature),
+  `limit` [požadavků, okno s] na IP a routu (`Core\RateLimiter`, tabulka `#__uxstudio_ratelimit`, 429 + Retry-After) a `max_body` (413).
+- **Upgrader**: po instalaci/update jen příznak (`markDirty`); migrace a `Scheduler::syncAll()` (úlohy modulů: založit, změnit interval/název,
+  odebrané úlohy do koše) běží líně při prvním požadavku administrace/CLI, když se změnil otisk (verze, soubory modulů, migrace, úlohy).
+- **Frontendové assety modulu**: `packages/lib_uxstudio/media/modules/<id>/` (publikuje se do `media/lib_uxstudio/modules/<id>/`),
+  `$ctx->useScript('file.js')` / `useStyle()` přes WebAssetManager.
 - **Http**: wrapper nad `Joomla\Http\HttpFactory` s timeoutem, User-Agentem a SSRF guardem
-  (zákaz privátních/loopback IP u URL zadaných uživatelem).
+  (zákaz privátních/loopback IP u URL zadaných uživatelem; ověřená IP se připíná přes CURLOPT_RESOLVE proti DNS rebindingu, IPv4/IPv6 rozsahy
+  jsou explicitní CIDR seznam, jen http/https, strop velikosti odpovědi).
 - **Scheduler**: `plg_task_uxstudio` vystaví routinu `uxstudio.run` s parametrem `job`; moduly
   deklarují `tasks(): array` (job id => [label, callable, default interval]). Jádro při zapnutí
   modulu úlohu založí v `#__scheduler_tasks`, při vypnutí ji vypne.
@@ -92,6 +102,7 @@ admin-app/src/modules/<id>/
   Page.tsx         # volitelně, default export; bez něj se vykreslí generický settings renderer
   i18n/en.json, i18n/cs.json
 packages/mod_uxstudio_<x>/                      # volitelně, frontendový Joomla modul
+packages/lib_uxstudio/media/modules/<id>/       # volitelně, frontendové assety (JS/CSS) přes $ctx->useScript()/useStyle()
 ```
 
 `BaseModule` metody (všechny kromě `boot` mají default):
@@ -100,7 +111,9 @@ packages/mod_uxstudio_<x>/                      # volitelně, frontendový Jooml
 |---|---|
 | `boot(ModuleContext $ctx): void` | registrace listenerů: `$ctx->on('onAfterRender', [$this,'x'], priority)` |
 | `settingsSchema(): array` | pole nastavení (formát jako WP `settings_schema`) |
-| `routes(): array` | `['GET logs' => [$this,'listLogs'], 'POST test' => ...]`, handler dostane `ApiRequest`, vrací pole |
+| `routes(): array` | `['GET logs' => [$this,'listLogs'], 'POST test' => ...]`, handler dostane `ApiRequest`, vrací pole; routa může být i `['handler'=>..,'acl'=>'core.admin']` |
+| `publicRoutes(): array` | veřejné (site) routy s `auth`, `limit`, `max_body` (viz PublicApi) |
+| `ctx(): ModuleContext` | (protected, final) kontext modulu i při API/CLI požadavku, kdy `boot()` neběžel |
 | `migrations(): array` | verze => SQL |
 | `tasks(): array` | cron úlohy pro Scheduler |
 | `retention(): array` | čištění logů |
@@ -118,7 +131,10 @@ packages/mod_uxstudio_<x>/                      # volitelně, frontendový Jooml
   WP-specifických tříd: tlačítka jsou vlastní `uxs-btn` třídy, ne Bootstrap Atum). CSS je scoped pod
   `#uxs-root`, aby se nebilo s Atum šablonou.
 - Moduly: `import.meta.glob('../modules/*/Page.tsx')` (lazy), překlady `import.meta.glob('../modules/*/i18n/*.json')`.
-- i18n: zdroj anglicky, `t('key')` z `app/i18n`, jazyk podle jazyka administrace (cs-CZ → cs, jinak en).
+- i18n: zdroj anglicky, jazyk podle jazyka administrace (cs-CZ → cs, jinak en). Jádro: `t('key')` z `app/i18n`. Moduly mají VLASTNÍ slovník
+  (`createT('<id>')` → `{t, tn}`: nejdřív slovník modulu, pak jádra); slovníky modulů se nikdy nesléváji do globálního `t`.
+- Ikona modulu: `admin-app/src/modules/<id>/icon.tsx` (default export lucide ikony), jinak název z `meta.json` ze sdíleného seznamu, jinak Puzzle.
+- Vývojové moduly (`"dev": true` v `meta.json`) se do produkčního zipu a SPA bundlu nedostanou (`bin/build.mjs`; `--with-dev` je zahrne).
 - API klient: `app/api.ts` - `api.get/post(route, body)`, CSRF token a URL z `Joomla.getOptions('uxstudio')`.
 
 ## 6. Pravidla
@@ -131,6 +147,7 @@ packages/mod_uxstudio_<x>/                      # volitelně, frontendový Jooml
 - Komentáře v kódu anglicky, uživatelské texty přes překlady (cs + en povinně).
 - **Paralelní práce**: modulový agent smí měnit JEN svoje adresáře (`src/Modules/<Name>/`,
   `admin-app/src/modules/<id>/`, `packages/mod_uxstudio_<x>/`, `docs/modules/<id>.md`).
-  Potřebuje-li změnu jádra, NEMĚNÍ ho, ale popíše ji ve výstupu (`core_requests`). Necommituje.
+  Potřebuje-li změnu jádra, NEMĚNÍ ho, ale popíše ji ve výstupu (`core_requests`). Necommituje
+  (a nikdy nepoužívá `git add -A`: přidává jen vlastní soubory).
 - Každá funkce se ověřuje živě na J5 **i** J6 (instalace, API curlem přes `bin/jadmin.mjs`,
   frontend curlem), `php -l` na všech PHP souborech, `npm run typecheck` pro SPA.

@@ -36,10 +36,22 @@ D:/xampp/php/php.exe D:/xampp/htdocs/joomla5/cli/joomla.php extension:install --
 D:/xampp/php/php.exe D:/xampp/htdocs/joomla6/cli/joomla.php extension:install --path=D:/xampp/htdocs/ux-studio-joomla/dist/pkg_uxstudio-0.1.0.zip
 ```
 
-Instalace vytvoří tabulky jádra (`#__uxstudio_modules`, `_settings`, `_migrations`), zapne oba pluginy a založí úlohu plánovače
-pro retenci logů. Komponenta je v menu Komponenty - UX Studio (`index.php?option=com_uxstudio`).
+Instalace vytvoří tabulky jádra (`#__uxstudio_modules`, `_settings`, `_migrations`, `_ratelimit`) a zapne oba pluginy. Migrace modulů a
+úlohy plánovače (včetně retence logů) se po instalaci i po každé aktualizaci dorovnají líně při prvním požadavku do administrace nebo
+CLI (`Core\Upgrader`, s čerstvě nahranými třídami). Komponenta je v menu Komponenty - UX Studio (`index.php?option=com_uxstudio`).
+
+Produkční zip neobsahuje vývojové moduly (`"dev": true` v `meta.json`, např. `hello-check`); pro lokální testovací instalaci
+sestav `node bin/build.mjs --with-dev`.
+
+**Odinstalace:** smaže se kód a řádky `uxstudio.run` v plánovači. Tabulky `#__uxstudio_*` (nastavení modulů, logy, stav migrací)
+a hodnoty v nich ZŮSTÁVAJÍ, aby se při opětovné instalaci nic neztratilo. Pokud je chceš pryč, smaž je ručně
+(`DROP TABLE` všech `#__uxstudio_*`).
 
 ## Vývoj bez reinstalace (dev-link)
+
+**Na nalinkovaný web se zip neinstaluje a neaktualizuje!** Instalátor Joomly před kopírováním starou verzi smaže, a přes junction
+by tak smazal soubory v repu. Instalační skripty to poznají a instalaci odmítnou. Chceš-li zip nainstalovat, nejdřív
+`node bin/dev-link.mjs --unlink` (odstraní junctiony a zkopíruje soubory zpět).
 
 Po první instalaci zipu:
 
@@ -48,7 +60,8 @@ node bin/dev-link.mjs        # oba weby (nebo: node bin/dev-link.mjs j5)
 ```
 
 Nahradí nainstalované složky junctiony do repa (`libraries/uxstudio`, `administrator/components/com_uxstudio`,
-`media/com_uxstudio`, `plugins/system/uxstudio`, `plugins/task/uxstudio`, `modules/mod_uxstudio_*`). Skript je idempotentní,
+`components/com_uxstudio` (site část), `media/com_uxstudio`, `media/lib_uxstudio`, `plugins/system/uxstudio`,
+`plugins/task/uxstudio`, `modules/mod_uxstudio_*` a media složky z `<media>` v manifestech). Skript je idempotentní,
 nové `mod_uxstudio_*` sám nalinkuje a nainstaluje (`extension:discover` + `extension:discover:install`) a vyčistí cache.
 Po změně SPA stačí `npm run build:spa` (nebo `npm run watch -w admin-app`) a obnovit stránku.
 

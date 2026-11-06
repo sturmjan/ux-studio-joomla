@@ -79,7 +79,7 @@ final class Api
                 throw new ApiException(Text::_('UXS_CORE_ERR_FORBIDDEN'), 403, 'forbidden');
             }
 
-            [$handler, $params, $allowed] = $this->match($handlers, $method, $path);
+            [$handler, $params, $allowed, $routeAcl] = $this->match($handlers, $method, $path);
             if (!$handler) {
                 if ($allowed) {
                     throw new ApiException(Text::_('UXS_CORE_ERR_METHOD'), 405, 'method_not_allowed');
@@ -87,12 +87,17 @@ final class Api
                 throw new ApiException(Text::_('UXS_CORE_ERR_NOT_FOUND'), 404, 'not_found');
             }
 
+            // A route may be stricter than the module (module ACL was checked above, both must pass).
+            if ($routeAcl !== null && !$user->authorise($routeAcl, self::COMPONENT)) {
+                throw new ApiException(Text::_('UXS_CORE_ERR_FORBIDDEN'), 403, 'forbidden');
+            }
+
             $request = new ApiRequest($method, $path, $params, $this->query($input), $this->body($input, $method), $user);
             $data    = $handler($request);
 
             return [200, ['ok' => true, 'data' => $data], []];
         } catch (ApiException $e) {
-            $headers = $e->status() === 405 ? ['Allow' => 'GET, POST'] : [];
+            $headers = $e->headers() + ($e->status() === 405 ? ['Allow' => 'GET, POST'] : []);
 
             return [$e->status() ?: 400, ['ok' => false, 'error' => ['code' => $e->errorCode(), 'message' => $e->getMessage()]], $headers];
         } catch (\Throwable $e) {
@@ -105,13 +110,13 @@ final class Api
     }
 
     /**
-     * @param array<string,callable> $handlers
-     * @return array{0:?callable,1:array<string,string>,2:bool} handler, path params, whether the path exists for another method
+     * @param array<string,callable|array{handler:callable,acl?:string}> $handlers
+     * @return array{0:?callable,1:array<string,string>,2:bool,3:?string} handler, path params, whether the path exists for another method, route ACL
      */
     private function match(array $handlers, string $method, string $path): array
     {
         $pathExists = false;
-        foreach ($handlers as $pattern => $handler) {
+        foreach ($handlers as $pattern => $definition) {
             [$m, $p] = array_pad(explode(' ', (string) $pattern, 2), 2, '');
             $regex = '#^' . preg_replace('/\\\{([a-z_]+)\\\}/', '(?P<$1>[^/]+)', preg_quote(trim($p, '/'), '#')) . '$#';
             if (!preg_match($regex, $path, $found)) {
@@ -119,13 +124,19 @@ final class Api
             }
             $pathExists = true;
             if (strtoupper($m) === $method) {
-                $params = array_filter($found, 'is_string', ARRAY_FILTER_USE_KEY);
+                $params  = array_filter($found, 'is_string', ARRAY_FILTER_USE_KEY);
+                $handler = $definition;
+                $acl     = null;
+                if (\is_array($definition) && isset($definition['handler'])) {
+                    $handler = $definition['handler'];
+                    $acl     = isset($definition['acl']) ? (string) $definition['acl'] : null;
+                }
 
-                return [$handler, $params, true];
+                return [\is_callable($handler) ? $handler : null, $params, true, $acl];
             }
         }
 
-        return [null, [], $pathExists];
+        return [null, [], $pathExists, null];
     }
 
     /** @return array<string,mixed> */

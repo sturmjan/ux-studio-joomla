@@ -36,7 +36,7 @@ final class Settings
         $data = [];
         try {
             $json = $this->db->setQuery(
-                $this->db->getQuery(true)->select($this->db->quoteName('data'))->from($this->db->quoteName('#__uxstudio_settings'))
+                $this->db->createQuery()->select($this->db->quoteName('data'))->from($this->db->quoteName('#__uxstudio_settings'))
                     ->where($this->db->quoteName('module') . ' = :m')->bind(':m', $moduleId)
             )->loadResult();
             $decoded = json_decode((string) $json, true);
@@ -172,16 +172,16 @@ final class Settings
         $db   = $this->db;
 
         $exists = (int) $db->setQuery(
-            $db->getQuery(true)->select('COUNT(*)')->from($db->quoteName('#__uxstudio_settings'))->where($db->quoteName('module') . ' = :m')->bind(':m', $moduleId)
+            $db->createQuery()->select('COUNT(*)')->from($db->quoteName('#__uxstudio_settings'))->where($db->quoteName('module') . ' = :m')->bind(':m', $moduleId)
         )->loadResult();
 
         if ($exists) {
-            $q = $db->getQuery(true)->update($db->quoteName('#__uxstudio_settings'))
+            $q = $db->createQuery()->update($db->quoteName('#__uxstudio_settings'))
                 ->set($db->quoteName('data') . ' = :d')->set($db->quoteName('updated_at') . ' = :ts')
                 ->where($db->quoteName('module') . ' = :m')
                 ->bind(':d', $json)->bind(':ts', $now)->bind(':m', $moduleId);
         } else {
-            $q = $db->getQuery(true)->insert($db->quoteName('#__uxstudio_settings'))
+            $q = $db->createQuery()->insert($db->quoteName('#__uxstudio_settings'))
                 ->columns($db->quoteName(['module', 'data', 'updated_at']))->values(':m, :d, :ts')
                 ->bind(':m', $moduleId)->bind(':d', $json)->bind(':ts', $now);
         }
@@ -206,6 +206,9 @@ final class Settings
                     throw new ApiException($key . ': not a number', 422, 'invalid_value');
                 }
                 $n = $value + 0;
+                if (!is_finite((float) $n)) {
+                    throw new ApiException($key . ': not a finite number', 422, 'invalid_value');
+                }
                 if (isset($field['min']) && $n < $field['min']) {
                     $n = $field['min'];
                 }
@@ -262,7 +265,10 @@ final class Settings
                 return $this->limit($field, trim(strip_tags(str_replace("\0", '', $value))));
 
             case 'password':
-                $value = (string) (\is_scalar($value) ? $value : '');
+                // Only an explicit string can set / clear a secret; null or structures are rejected (never a silent wipe).
+                if (!\is_string($value)) {
+                    throw new ApiException($key . ': invalid value', 422, 'invalid_value');
+                }
                 if ($value === self::SECRET_MARKER) {
                     return \is_string($previous) ? $previous : '';
                 }

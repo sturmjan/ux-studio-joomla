@@ -97,45 +97,161 @@ final class Scheduler
         $this->ensureTask('core.retention', 'UX Studio: Clean up old log records', 'PT24H', true);
     }
 
-    private function ensureTask(string $job, string $title, string $interval, bool $enable): void
+    /** Stable text describing the declared jobs of a module (ids, intervals, labels), used to detect changes after an update. */
+    public function signatureOf(BaseModule $module): string
+    {
+        $parts = [];
+        foreach ($module->tasks() as $jobId => $def) {
+            $parts[] = $jobId . '=' . self::normalizeInterval($def['interval'] ?? $def[2] ?? 'PT24H') . '=' . (string) ($def['label'] ?? $def[0] ?? '');
+        }
+        sort($parts);
+
+        return implode(';', $parts);
+    }
+
+    /**
+     * Reconcile #__scheduler_tasks with the jobs declared NOW by an enabled module: create missing rows, update title
+     * and interval when the module changed them (an interval edited by the admin is kept otherwise) and trash the
+     * rows of jobs the module no longer declares, so the scheduler does not keep failing on them.
+     */
+    public function syncModule(string $moduleId): void
+    {
+        $module = $this->registry->module($moduleId);
+        if (!$module) {
+            return;
+        }
+        $declared = [];
+        foreach ($this->jobsOf($module) as $jobId => $def) {
+            $declared[$moduleId . '.' . $jobId] = true;
+            $this->ensureTask($moduleId . '.' . $jobId, 'UX Studio: ' . $def['label'], $def['interval'], false, true);
+        }
+        foreach ($this->rows() as $row) {
+            $job = (string) ($row['params']['job'] ?? '');
+            if (str_starts_with($job, $moduleId . '.') && !isset($declared[$job]) && (int) $row['state'] !== -2) {
+                $this->setRowState((int) $row['id'], -2);
+            }
+        }
+    }
+
+    /** Core job + every enabled module; tasks of modules that no longer exist on disk are trashed. */
+    public function syncAll(): void
+    {
+        $this->syncCore();
+        foreach ($this->registry->enabledIds() as $id) {
+            $this->syncModule($id);
+        }
+        foreach ($this->rows() as $row) {
+            $job    = (string) ($row['params']['job'] ?? '');
+            $module = explode('.', $job, 2)[0];
+            if ($module !== '' && $module !== 'core' && !$this->registry->has($module) && (int) $row['state'] !== -2) {
+                $this->setRowState((int) $row['id'], -2);
+            }
+        }
+    }
+
+    /** @return array<int,array<string,mixed>> all uxstudio.run rows with decoded params */
+    private function rows(): array
     {
         try {
-            $db = $this->db;
+            $db   = $this->db;
             $type = self::ROUTINE;
-            $like = '%"job":' . json_encode($job) . '%';
-            $row = $db->setQuery(
-                $db->getQuery(true)->select([$db->quoteName('id'), $db->quoteName('state')])->from($db->quoteName('#__scheduler_tasks'))
-                    ->where($db->quoteName('type') . ' = :t')->where($db->quoteName('params') . ' LIKE :p')
-                    ->bind(':t', $type)->bind(':p', $like)
-            )->loadAssoc();
+            $rows = $db->setQuery(
+                $db->createQuery()->select($db->quoteName(['id', 'state', 'title', 'params']))->from($db->quoteName('#__scheduler_tasks'))
+                    ->where($db->quoteName('type') . ' = :t')->bind(':t', $type)
+            )->loadAssocList() ?: [];
+        } catch (\Throwable $e) {
+            return [];
+        }
+        foreach ($rows as &$row) {
+            $decoded       = json_decode((string) $row['params'], true);
+            $row['params'] = \is_array($decoded) ? $decoded : [];
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    private function setRowState(int $id, int $state): void
+    {
+        $db = $this->db;
+        $db->setQuery(
+            $db->createQuery()->update($db->quoteName('#__scheduler_tasks'))->set($db->quoteName('state') . ' = :s')
+                ->where($db->quoteName('id') . ' = :id')->bind(':s', $state, ParameterType::INTEGER)->bind(':id', $id, ParameterType::INTEGER)
+        )->execute();
+    }
+
+    /**
+     * @param bool $forceEnable set state to 1 for an existing row (module just enabled)
+     * @param bool $reconcile   update title / interval of an existing row when the module changed them
+     */
+    private function ensureTask(string $job, string $title, string $interval, bool $forceEnable, bool $reconcile = false): void
+    {
+        try {
+            $db  = $this->db;
+            $row = null;
+            foreach ($this->rows() as $candidate) {
+                if (($candidate['params']['job'] ?? null) === $job) {
+                    $row = $candidate;
+                    break;
+                }
+            }
 
             if ($row) {
-                if ($enable && (int) $row['state'] !== 1) {
-                    $id = (int) $row['id'];
-                    $db->setQuery($db->getQuery(true)->update($db->quoteName('#__scheduler_tasks'))->set($db->quoteName('state') . ' = 1')
-                        ->where($db->quoteName('id') . ' = :id')->bind(':id', $id, ParameterType::INTEGER))->execute();
+                $id  = (int) $row['id'];
+                $set = [];
+                if ($forceEnable && (int) $row['state'] !== 1) {
+                    $set[] = $db->quoteName('state') . ' = 1';
+                }
+                if ($reconcile) {
+                    $params          = $row['params'];
+                    $changedInterval = isset($params['declared_interval']) && $params['declared_interval'] !== $interval;
+                    $changedTitle    = isset($params['declared_title']) && $params['declared_title'] !== $title;
+                    if (($params['declared_interval'] ?? null) !== $interval || ($params['declared_title'] ?? null) !== $title) {
+                        $params['declared_interval'] = $interval;
+                        $params['declared_title']    = $title;
+                        $set[] = $db->quoteName('params') . ' = ' . $db->quote(json_encode($params, JSON_UNESCAPED_SLASHES));
+                    }
+                    if ($changedInterval) {
+                        [$exec, $exp] = self::rulesFor($interval);
+                        $set[] = $db->quoteName('execution_rules') . ' = ' . $db->quote(json_encode($exec));
+                        $set[] = $db->quoteName('cron_rules') . ' = ' . $db->quote(json_encode(['type' => 'interval', 'exp' => $exp]));
+                    }
+                    if ($changedTitle) {
+                        $set[] = $db->quoteName('title') . ' = ' . $db->quote($title);
+                    }
+                    if ((int) $row['state'] === -2) {
+                        // The module declares the job again.
+                        $set[] = $db->quoteName('state') . ' = 0';
+                    }
+                }
+                if ($set) {
+                    $db->setQuery(
+                        $db->createQuery()->update($db->quoteName('#__scheduler_tasks'))->set($set)
+                            ->where($db->quoteName('id') . ' = :id')->bind(':id', $id, ParameterType::INTEGER)
+                    )->execute();
                 }
 
                 return;
             }
 
             [$exec, $exp] = self::rulesFor($interval);
-            $now    = Factory::getDate();
             $next   = Factory::getDate('+' . self::minutesOf($interval) . ' minutes')->toSql();
             $params = json_encode([
-                'job'           => $job,
-                'individual_log' => false,
-                'log_file'      => '',
-                'notifications' => ['success_mail' => '0', 'failure_mail' => '1', 'fatal_failure_mail' => '1', 'orphan_mail' => '1'],
+                'job'               => $job,
+                'declared_interval' => $interval,
+                'declared_title'    => $title,
+                'individual_log'    => false,
+                'log_file'          => '',
+                'notifications'     => ['success_mail' => '0', 'failure_mail' => '1', 'fatal_failure_mail' => '1', 'orphan_mail' => '1'],
             ], JSON_UNESCAPED_SLASHES);
             $execJson = json_encode($exec);
             $cronJson = json_encode(['type' => 'interval', 'exp' => $exp]);
-            $created  = $now->toSql();
-            $state    = $enable ? 1 : 0;
+            $created  = Factory::getDate()->toSql();
+            $state    = 1;
             $userId   = (int) Factory::getApplication()->getIdentity()?->id;
             $type     = self::ROUTINE;
 
-            $query = $db->getQuery(true)->insert($db->quoteName('#__scheduler_tasks'))
+            $query = $db->createQuery()->insert($db->quoteName('#__scheduler_tasks'))
                 ->columns($db->quoteName(['title', 'type', 'execution_rules', 'cron_rules', 'state', 'next_execution', 'params', 'created', 'created_by']))
                 ->values(':title, :type, :exec, :cron, :state, :next, :params, :created, :by')
                 ->bind(':title', $title)->bind(':type', $type)->bind(':exec', $execJson)->bind(':cron', $cronJson)
@@ -169,7 +285,7 @@ final class Scheduler
             $like = substr($like, 0, -2) . '%';
             $type = self::ROUTINE;
             $db->setQuery(
-                $db->getQuery(true)->update($db->quoteName('#__scheduler_tasks'))->set($db->quoteName('state') . ' = :s')
+                $db->createQuery()->update($db->quoteName('#__scheduler_tasks'))->set($db->quoteName('state') . ' = :s')
                     ->where($db->quoteName('type') . ' = :t')->where($db->quoteName('params') . ' LIKE :p')
                     ->bind(':s', $state, ParameterType::INTEGER)->bind(':t', $type)->bind(':p', $like)
             )->execute();

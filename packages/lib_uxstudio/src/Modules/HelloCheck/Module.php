@@ -19,16 +19,19 @@ use Ux1\UxStudio\Core\ModuleContext;
  */
 final class Module extends BaseModule
 {
-    private ?ModuleContext $ctx = null;
-
     public function boot(ModuleContext $ctx): void
     {
-        $this->ctx = $ctx;
-
         // Demonstrates event wiring: add an HTML comment with the greeting to every site page.
         if ($ctx->isSite()) {
             $ctx->on('onAfterRender', [$this, 'stamp']);
+            $ctx->on('onBeforeCompileHead', [$this, 'assets']);
         }
+    }
+
+    /** onBeforeCompileHead listener: front-end asset from media/lib_uxstudio/modules/hello-check/. */
+    public function assets(Event $event): void
+    {
+        $this->ctx()->useScript('hello-check.js');
     }
 
     public function settingsSchema(): array
@@ -55,7 +58,37 @@ final class Module extends BaseModule
     {
         return [
             'GET ping' => [$this, 'ping'],
+            // Per-route ACL example: reading needs core.manage (module default), this needs core.admin.
+            'POST heartbeat' => ['handler' => [$this, 'beat'], 'acl' => 'core.admin'],
         ];
+    }
+
+    /** Public (site) routes: index.php?option=com_uxstudio&task=public.dispatch&format=json&route=hello-check/hello */
+    public function publicRoutes(): array
+    {
+        return [
+            'GET hello' => ['handler' => [$this, 'hello'], 'auth' => 'none', 'limit' => [20, 60]],
+            // Signed server-to-server call (X-UXS-Timestamp + X-UXS-Signature), secret = the encrypted "secret_token" setting.
+            'POST webhook' => ['handler' => [$this, 'webhook'], 'auth' => 'hmac', 'secret' => fn (): string => (string) $this->ctx()->setting('secret_token', ''), 'limit' => [60, 60], 'max_body' => 4096],
+            // Bearer token variant of the same secret.
+            'GET status' => ['handler' => [$this, 'hello'], 'auth' => 'token', 'secret' => fn (): string => (string) $this->ctx()->setting('secret_token', '')],
+        ];
+    }
+
+    public function webhook(ApiRequest $r): array
+    {
+        return ['bytes' => \strlen($r->raw()), 'keys' => array_keys($r->body())];
+    }
+
+    public function hello(ApiRequest $r): array
+    {
+        return ['greeting' => (string) $this->ctx()->setting('greeting', '')];
+    }
+
+    /** POST hello-check/heartbeat - writes one heartbeat row now (core.admin only). */
+    public function beat(ApiRequest $r): array
+    {
+        return ['message' => $this->heartbeat()];
     }
 
     public function migrations(): array
@@ -93,7 +126,7 @@ final class Module extends BaseModule
     /** GET hello-check/ping - read-only state of the module; the secret is never returned. */
     public function ping(ApiRequest $r): array
     {
-        $ctx = $this->context();
+        $ctx = $this->ctx();
 
         return [
             'greeting'   => (string) $ctx->setting('greeting', ''),
@@ -110,11 +143,11 @@ final class Module extends BaseModule
     /** Scheduler job hello-check.heartbeat */
     public function heartbeat(): string
     {
-        $db   = $this->context()->db();
+        $db   = $this->ctx()->db();
         $now  = Factory::getDate()->toSql();
         $note = 'scheduler';
         $db->setQuery(
-            $db->getQuery(true)->insert($db->quoteName('#__uxstudio_hello_check'))
+            $db->createQuery()->insert($db->quoteName('#__uxstudio_hello_check'))
                 ->columns($db->quoteName(['created', 'note']))->values(':c, :n')
                 ->bind(':c', $now)->bind(':n', $note)
         )->execute();
@@ -125,40 +158,29 @@ final class Module extends BaseModule
     /** onAfterRender listener. */
     public function stamp(Event $event): void
     {
-        $app  = $this->context()->app();
+        $app  = $this->ctx()->app();
         $body = $app->getBody();
         if (!\is_string($body) || stripos($body, '</body>') === false || $app->getDocument()?->getType() !== 'html') {
             return;
         }
-        $text = str_replace('--', '- -', htmlspecialchars((string) $this->context()->setting('greeting', ''), ENT_QUOTES, 'UTF-8'));
+        $text = str_replace('--', '- -', htmlspecialchars((string) $this->ctx()->setting('greeting', ''), ENT_QUOTES, 'UTF-8'));
         $app->setBody(str_ireplace('</body>', '<!-- UX Studio hello-check: ' . $text . ' -->' . "\n</body>", $body));
-    }
-
-    private function context(): ModuleContext
-    {
-        if ($this->ctx) {
-            return $this->ctx;
-        }
-        // Routes and jobs may run on a request where boot() was skipped: build the context lazily.
-        $kernel = \Ux1\UxStudio\Core\Kernel::instance();
-
-        return $this->ctx = new ModuleContext($this->id(), $kernel->app(), $kernel);
     }
 
     private function count(): int
     {
-        $db = $this->context()->db();
+        $db = $this->ctx()->db();
 
-        return (int) $db->setQuery($db->getQuery(true)->select('COUNT(*)')->from($db->quoteName('#__uxstudio_hello_check')))->loadResult();
+        return (int) $db->setQuery($db->createQuery()->select('COUNT(*)')->from($db->quoteName('#__uxstudio_hello_check')))->loadResult();
     }
 
     /** @return array<int,array<string,mixed>> */
     private function latest(): array
     {
-        $db = $this->context()->db();
+        $db = $this->ctx()->db();
 
         return $db->setQuery(
-            $db->getQuery(true)->select($db->quoteName(['id', 'created', 'note']))->from($db->quoteName('#__uxstudio_hello_check'))
+            $db->createQuery()->select($db->quoteName(['id', 'created', 'note']))->from($db->quoteName('#__uxstudio_hello_check'))
                 ->order($db->quoteName('id') . ' DESC'),
             0,
             10

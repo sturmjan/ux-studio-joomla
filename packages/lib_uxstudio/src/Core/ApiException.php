@@ -11,10 +11,21 @@ class ApiException extends \RuntimeException
 {
     private string $errorCode;
 
-    public function __construct(string $message, int $status = 400, string $errorCode = 'bad_request', ?\Throwable $previous = null)
+    /** @var array<string,string> */
+    private array $headers;
+
+    /** @param array<string,string> $headers extra response headers (e.g. Retry-After) */
+    public function __construct(string $message, int $status = 400, string $errorCode = 'bad_request', ?\Throwable $previous = null, array $headers = [])
     {
         parent::__construct($message, $status, $previous);
         $this->errorCode = $errorCode;
+        $this->headers   = $headers;
+    }
+
+    /** @return array<string,string> */
+    public function headers(): array
+    {
+        return $this->headers;
     }
 
     public function status(): int

@@ -4,6 +4,8 @@
  *   1. builds the admin SPA into packages/com_uxstudio/media (skip with --skip-spa)
  *   2. generates packages/pkg_uxstudio.xml from the contents of packages/ (lib_*, com_*, plg_*_*, mod_*)
  *   3. zips every extension and the whole package into dist/pkg_uxstudio-<version>.zip
+ * Modules whose meta.json has "dev": true (samples, test fixtures) are left out of the zip and of the SPA bundle;
+ * pass --with-dev to keep them (local test installs).
  * Version comes from the root package.json and is written into every extension manifest inside the zips.
  */
 import { spawnSync } from 'node:child_process';
@@ -16,6 +18,29 @@ const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const PACKAGES = join(ROOT, 'packages');
 const DIST = join(ROOT, 'dist');
 const args = new Set(process.argv.slice(2));
+
+const withDev = args.has('--with-dev');
+
+/** Dev-only modules: { id, dir } from packages/lib_uxstudio/src/Modules/<Dir>/meta.json ("dev": true). */
+function devModules() {
+	const base = join(PACKAGES, 'lib_uxstudio', 'src', 'Modules');
+	const out = [];
+	for (const dir of readdirSync(base)) {
+		try {
+			const meta = JSON.parse(readFileSync(join(base, dir, 'meta.json'), 'utf8'));
+			if (meta.dev === true && typeof meta.id === 'string') {
+				out.push({ id: meta.id, dir });
+			}
+		} catch {
+			// not a module folder
+		}
+	}
+	return out;
+}
+const excluded = withDev ? [] : devModules();
+if (excluded.length) {
+	console.log(`> Leaving out dev modules: ${excluded.map((m) => m.id).join(', ')}`);
+}
 
 const version = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).version;
 
@@ -76,6 +101,7 @@ function describe(name) {
 
 if (!args.has('--skip-spa')) {
 	console.log('> Building admin SPA');
+	process.env.UXS_EXCLUDE_MODULES = excluded.map((m) => m.id).join(',');
 	run('npm', ['run', 'build', '-w', 'admin-app']);
 }
 
@@ -100,6 +126,9 @@ const zips = [];
 for (const ext of exts) {
 	const files = {};
 	for (const rel of walk(ext.dir)) {
+		if (ext.name === 'lib_uxstudio' && excluded.some((m) => rel.startsWith(`src/Modules/${m.dir}/`) || rel.startsWith(`media/modules/${m.id}/`))) {
+			continue;
+		}
 		let data = readFileSync(join(ext.dir, rel));
 		if (rel === ext.manifestFile) {
 			data = enc.encode(ext.manifestText.replace(/<version>[^<]*<\/version>/, `<version>${version}</version>`));

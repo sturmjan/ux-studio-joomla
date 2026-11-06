@@ -108,13 +108,27 @@ final class Kernel
                 }
                 try {
                     Lang::loadModule($app, $id, $module->path());
-                    $module->boot(new ModuleContext($id, $app, $this));
+                    $ctx = new ModuleContext($id, $app, $this);
+                    $module->setContext($ctx);
+                    $module->boot($ctx);
                 } catch (\Throwable $e) {
                     Log::add(sprintf('Module %s failed to boot: %s', $id, $e->getMessage()), Log::ERROR, 'uxstudio');
                 }
             }
         } catch (\Throwable $e) {
             Log::add('UX Studio boot failed: ' . $e->getMessage(), Log::ERROR, 'uxstudio');
+        }
+
+        // After an update (or a dev-link of new code): pending migrations and scheduler sync, with fresh classes.
+        if ($app->isClient('administrator') || $app->isClient('cli')) {
+            try {
+                (new Upgrader($this))->runIfNeeded();
+            } catch (\Throwable $e) {
+                Log::add('UX Studio upgrade step failed: ' . $e->getMessage(), Log::ERROR, 'uxstudio');
+                if ($app->isClient('administrator')) {
+                    $app->enqueueMessage('UX Studio: ' . $e->getMessage(), 'error');
+                }
+            }
         }
     }
 }

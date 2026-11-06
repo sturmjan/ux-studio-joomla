@@ -7,7 +7,6 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\DI\Container;
 use Joomla\DI\ServiceProviderInterface;
-use Joomla\Event\DispatcherInterface;
 use Ux1\Plugin\System\UxStudio\Extension\UxStudio;
 
 return new class () implements ServiceProviderInterface {
@@ -16,10 +15,8 @@ return new class () implements ServiceProviderInterface {
         $container->set(
             PluginInterface::class,
             function (Container $container) {
-                $plugin = new UxStudio(
-                    $container->get(DispatcherInterface::class),
-                    (array) PluginHelper::getPlugin('system', 'uxstudio')
-                );
+                // No dispatcher argument: passing it is deprecated since Joomla 5.4 and unsupported in 7.0.
+                $plugin = new UxStudio((array) PluginHelper::getPlugin('system', 'uxstudio'));
                 $plugin->setApplication(Factory::getApplication());
 
                 return $plugin;

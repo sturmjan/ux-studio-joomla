@@ -17,6 +17,7 @@ final class ApiRequest
      * @param array<string,string> $params  Path placeholders ({id}).
      * @param array<string,mixed>  $query   Query string values.
      * @param array<string,mixed>  $body    Decoded JSON body.
+     * @param string               $raw     Raw request body (public routes only; needed to verify signatures of your own).
      */
     public function __construct(
         private string $method,
@@ -24,8 +25,15 @@ final class ApiRequest
         private array $params,
         private array $query,
         private array $body,
-        private User $user
+        private User $user,
+        private string $raw = ''
     ) {
+    }
+
+    /** Raw request body as received (public routes only, empty for administrator routes). */
+    public function raw(): string
+    {
+        return $this->raw;
     }
 
     public function method(): string

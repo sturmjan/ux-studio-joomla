@@ -34,6 +34,11 @@ final class Migrator
                 'CREATE TABLE IF NOT EXISTS `#__uxstudio_settings` ('
                 . '`module` VARCHAR(64) NOT NULL, `data` MEDIUMTEXT NOT NULL, `updated_at` DATETIME NOT NULL, PRIMARY KEY (`module`))' . self::TABLE_OPTIONS,
             ],
+            2 => [
+                // Fixed-window counters of the public endpoint (Core\RateLimiter).
+                'CREATE TABLE IF NOT EXISTS `#__uxstudio_ratelimit` ('
+                . '`bucket` CHAR(40) NOT NULL, `hits` INT UNSIGNED NOT NULL DEFAULT 0, `window_start` INT UNSIGNED NOT NULL, PRIMARY KEY (`bucket`), KEY `idx_window` (`window_start`))' . self::TABLE_OPTIONS,
+            ],
         ];
     }
 
@@ -88,7 +93,7 @@ final class Migrator
         $db = $this->db;
 
         return array_map('intval', $db->setQuery(
-            $db->getQuery(true)->select($db->quoteName('version'))->from($db->quoteName('#__uxstudio_migrations'))
+            $db->createQuery()->select($db->quoteName('version'))->from($db->quoteName('#__uxstudio_migrations'))
                 ->where($db->quoteName('module') . ' = :m')->bind(':m', $moduleId)
         )->loadColumn() ?: []);
     }
@@ -120,7 +125,7 @@ final class Migrator
             }
             $now = Factory::getDate()->toSql();
             $this->db->setQuery(
-                $this->db->getQuery(true)->insert($this->db->quoteName('#__uxstudio_migrations'))
+                $this->db->createQuery()->insert($this->db->quoteName('#__uxstudio_migrations'))
                     ->columns($this->db->quoteName(['module', 'version', 'applied_at']))->values(':m, :v, :t')
                     ->bind(':m', $moduleId)->bind(':v', $version, ParameterType::INTEGER)->bind(':t', $now)
             )->execute();

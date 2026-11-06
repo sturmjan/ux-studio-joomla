@@ -10,6 +10,11 @@ export function getTheme(): Theme {
 	if ( stored === 'dark' || stored === 'light' ) {
 		return stored;
 	}
+	// No saved choice: follow the Joomla administrator template (Atum sets data-color-scheme="dark|light"), then the OS.
+	const atum = document.documentElement.dataset[ 'colorScheme' ];
+	if ( atum === 'dark' || atum === 'light' ) {
+		return atum;
+	}
 	return window.matchMedia( '(prefers-color-scheme: dark)' ).matches ? 'dark' : 'light';
 }
 

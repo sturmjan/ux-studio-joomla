@@ -1,7 +1,11 @@
 /**
- * Maps a module's kebab-case icon name (meta.json `icon`) to a lucide-react component. Only icons listed here are
- * bundled (tree-shaking); an unknown name falls back to Puzzle. A module that needs a new icon requests an
- * addition here (core_requests) - modules never edit this file.
+ * Icon of a module. Resolution order:
+ *   1. admin-app/src/modules/<id>/icon.tsx - default export = any lucide-react icon, e.g.
+ *        import { Fingerprint } from 'lucide-react'; export default Fingerprint;
+ *      (the module owns it, no core change needed; only the icons modules actually import are bundled)
+ *   2. the kebab-case `icon` name of meta.json when it is in the shared list below
+ *   3. Puzzle
+ * (lucide's fully dynamic icon loader is deliberately not used: it would ship ~1700 chunk files.)
  */
 import type { ComponentType } from 'react';
 import {
@@ -118,7 +122,10 @@ const ICONS: Record< string, ComponentType< LucideProps > > = {
 	zap: Zap,
 };
 
-export function ModuleIcon( { name, size = 20 }: { name: string; size?: number } ): JSX.Element {
-	const Icon = ICONS[ name ] ?? Puzzle;
+const moduleIcons = import.meta.glob< { default: ComponentType< LucideProps > } >( '../modules/*/icon.tsx', { eager: true } );
+
+export function ModuleIcon( { name, moduleId, size = 20 }: { name: string; moduleId?: string; size?: number } ): JSX.Element {
+	const own = moduleId ? moduleIcons[ `../modules/${ moduleId }/icon.tsx` ]?.default : undefined;
+	const Icon = own ?? ICONS[ name ] ?? Puzzle;
 	return <Icon size={ size } aria-hidden="true" />;
 }

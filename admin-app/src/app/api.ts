@@ -3,6 +3,7 @@
  * URL, CSRF token and locale come from Joomla.getOptions('uxstudio') (set by the component view).
  */
 import { QueryClient } from '@tanstack/react-query';
+import { t } from './i18n';
 
 export interface UxsOptions {
 	apiUrl: string;
@@ -77,6 +78,13 @@ async function request< T >( method: 'GET' | 'POST', route: string, body?: unkno
 		// Not JSON (for example a Joomla login page after the session expired).
 	}
 	if ( ! res.ok || ! json || ! json.ok ) {
+		// Our own envelope always has a boolean "ok". Anything else (Joomla's {"error":true,"code":403} JSON or an HTML login page)
+		// after the session expired is explained instead of showing a bare "HTTP 403".
+		if ( ! json || typeof json.ok !== 'boolean' ) {
+			if ( ! json || res.status === 401 || res.status === 403 ) {
+				throw new ApiError( t( 'Your session has expired. Reload the page and sign in again.' ), 'session_expired', res.status );
+			}
+		}
 		throw new ApiError( json?.error?.message ?? `HTTP ${ res.status }`, json?.error?.code ?? 'http_error', res.status );
 	}
 	return json.data as T;

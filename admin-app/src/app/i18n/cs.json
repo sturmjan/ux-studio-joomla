@@ -54,5 +54,6 @@
 	"Something went wrong.": "Něco se nepovedlo.",
 	"UX Studio {version}": "UX Studio {version}",
 	"Joomla {joomla}, PHP {php}": "Joomla {joomla}, PHP {php}",
-	"{total} modules, {on} enabled.": "Modulů celkem {total}, zapnuto {on}."
+	"{total} modules, {on} enabled.": "Modulů celkem {total}, zapnuto {on}.",
+	"Your session has expired. Reload the page and sign in again.": "Platnost přihlášení vypršela. Načtěte stránku znovu a přihlaste se."
 }

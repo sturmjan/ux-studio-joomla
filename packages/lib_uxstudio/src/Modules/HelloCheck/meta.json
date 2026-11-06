@@ -4,5 +4,6 @@
 	"description": "Sample module and smoke test of the UX Studio core (settings, API route, migration, scheduler job).",
 	"group": "developer",
 	"icon": "hand",
-	"settings": true
+	"settings": true,
+	"dev": true
 }

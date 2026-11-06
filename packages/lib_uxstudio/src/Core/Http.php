@@ -9,16 +9,34 @@ use Joomla\Http\HttpFactory;
 
 /**
  * Outbound HTTP for modules: Joomla HTTP client with a timeout, a User-Agent and an SSRF guard.
- * Redirects are followed manually (max 3 hops) and every hop is validated again.
- * Limitation: the host is resolved by the guard and again by cURL (DNS rebinding window); do not use for
- * URLs that must be trusted beyond this check.
+ *
+ * The guard resolves the host itself, rejects non-public addresses (explicit IPv4 / IPv6 CIDR lists, independent of the
+ * PHP version) and PINS the verified address for the connection (CURLOPT_RESOLVE), so a DNS answer that changes between
+ * the check and the connection (DNS rebinding) cannot redirect the request. Redirects are followed manually (max 3 hops)
+ * and every hop is validated and pinned again. Only http(s) is allowed on every hop and the response size is capped.
  */
 final class Http
 {
     public const USER_AGENT = 'UXStudio-Joomla/1.0 (+https://ux1.cz)';
 
+    /** Default cap of the response body in bytes. */
+    public const MAX_BYTES = 5242880;
+
+    /** Never reachable from the outside: IPv4 CIDRs. */
+    private const BLOCKED_V4 = [
+        '0.0.0.0/8', '10.0.0.0/8', '100.64.0.0/10', '127.0.0.0/8', '169.254.0.0/16', '172.16.0.0/12', '192.0.0.0/24',
+        '192.0.2.0/24', '192.88.99.0/24', '192.168.0.0/16', '198.18.0.0/15', '198.51.100.0/24', '203.0.113.0/24',
+        '224.0.0.0/4', '240.0.0.0/4',
+    ];
+
+    /** Never reachable from the outside: IPv6 CIDRs. */
+    private const BLOCKED_V6 = [
+        '::/128', '::1/128', '::ffff:0:0/96', '64:ff9b::/96', '64:ff9b:1::/48', '100::/64', '2001::/32', '2001:db8::/32',
+        '2002::/16', 'fc00::/7', 'fe80::/10', 'fec0::/10', 'ff00::/8',
+    ];
+
     /**
-     * @param array{headers?:array<string,string>,body?:array|string,timeout?:int,allow_private?:bool,json?:bool} $options
+     * @param array{headers?:array<string,string>,body?:array|string,timeout?:int,allow_private?:bool,json?:bool,max_bytes?:int} $options
      *        body array => form-encoded (or JSON when json=true). allow_private=true skips the guard (ONLY for fixed trusted URLs).
      * @return array{status:int,headers:array<string,string>,body:string}
      * @throws ApiException when the URL is rejected by the SSRF guard
@@ -26,11 +44,17 @@ final class Http
      */
     public function request(string $method, string $url, array $options = []): array
     {
-        $method  = strtoupper($method);
-        $timeout = (int) ($options['timeout'] ?? 10);
-        $headers = $options['headers'] ?? [];
-        $body    = $options['body'] ?? null;
-        $allow   = !empty($options['allow_private']);
+        $method   = strtoupper($method);
+        $timeout  = (int) ($options['timeout'] ?? 10);
+        $headers  = $options['headers'] ?? [];
+        $body     = $options['body'] ?? null;
+        $allow    = !empty($options['allow_private']);
+        $maxBytes = max(1024, (int) ($options['max_bytes'] ?? self::MAX_BYTES));
+
+        if (!\function_exists('curl_init')) {
+            // Without cURL the verified address cannot be pinned: refuse instead of running an unguarded request.
+            throw new \RuntimeException('The PHP cURL extension is required.');
+        }
 
         if (\is_array($body)) {
             if (!empty($options['json'])) {
@@ -41,12 +65,29 @@ final class Http
             }
         }
 
-        $client = (new HttpFactory())->getHttp(['timeout' => $timeout, 'userAgent' => self::USER_AGENT, 'follow_location' => false]);
-
         for ($hop = 0; $hop <= 3; $hop++) {
+            $curl = [
+                CURLOPT_PROTOCOLS       => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+                CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
+                CURLOPT_MAXFILESIZE     => $maxBytes,
+                CURLOPT_NOPROGRESS      => false,
+                // Abort once more than $maxBytes arrived (Content-Length may be absent or a lie).
+                CURLOPT_PROGRESSFUNCTION => static fn ($ch, $dlTotal, $dlNow) => $dlNow > $maxBytes ? 1 : 0,
+            ];
             if (!$allow) {
-                self::assertPublicUrl($url);
+                $pin = self::assertPublicUrl($url);
+                if ($pin !== null) {
+                    $curl[CURLOPT_RESOLVE] = [$pin];
+                }
             }
+
+            $client = (new HttpFactory())->getHttp([
+                'timeout'         => $timeout,
+                'userAgent'       => self::USER_AGENT,
+                'follow_location' => false,
+                'transport.curl'  => $curl,
+            ], 'curl');
+
             $response = match ($method) {
                 'GET'    => $client->get($url, $headers, $timeout),
                 'HEAD'   => $client->head($url, $headers, $timeout),
@@ -101,11 +142,12 @@ final class Http
 
     /**
      * Rejects non-http(s) schemes, credentials in the URL and hosts that resolve to private, loopback,
-     * link-local or otherwise reserved addresses.
+     * link-local or otherwise reserved addresses (ALL resolved addresses must be public).
      *
+     * @return string|null "host:port:ip" line for CURLOPT_RESOLVE, null when the host is an IP literal (nothing to pin)
      * @throws ApiException
      */
-    public static function assertPublicUrl(string $url): void
+    public static function assertPublicUrl(string $url): ?string
     {
         $fail = static fn () => new ApiException(Text::_('UXS_CORE_ERR_SSRF'), 422, 'ssrf_blocked');
 
@@ -122,11 +164,15 @@ final class Http
             throw $fail();
         }
 
-        foreach (self::resolveHost($host) as $ip) {
+        $port = (int) ($parts['port'] ?? (strtolower($parts['scheme']) === 'https' ? 443 : 80));
+        $ips  = self::resolveHost($host);
+        foreach ($ips as $ip) {
             if (!self::isPublicIp($ip)) {
                 throw $fail();
             }
         }
+
+        return filter_var($host, FILTER_VALIDATE_IP) ? null : $host . ':' . $port . ':' . $ips[0];
     }
 
     /** @return string[] */
@@ -155,32 +201,42 @@ final class Http
         return $ips;
     }
 
+    /** True for a globally routable unicast address. Uses explicit CIDR lists, not FILTER_FLAG_NO_*_RANGE. */
     public static function isPublicIp(string $ip): bool
     {
-        if (!filter_var($ip, FILTER_VALIDATE_IP)) {
+        $packed = filter_var($ip, FILTER_VALIDATE_IP) ? @inet_pton($ip) : false;
+        if ($packed === false) {
             return false;
         }
-        // IPv4-mapped IPv6 (::ffff:127.0.0.1) => judge the embedded IPv4 address.
-        if (stripos($ip, '::ffff:') === 0 && filter_var(substr($ip, 7), FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-            $ip = substr($ip, 7);
-        }
-        $public = filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false;
-        if (!$public) {
-            return false;
-        }
-        // Ranges PHP does not flag: CGNAT 100.64/10, IPv6 unique-local fc00::/7 and link-local fe80::/10 are covered above on 8.1+,
-        // but be explicit for CGNAT and benchmarking ranges.
-        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
-            $long = ip2long($ip);
-            foreach (['100.64.0.0/10', '198.18.0.0/15', '192.0.0.0/24'] as $cidr) {
-                [$net, $bits] = explode('/', $cidr);
-                $mask = -1 << (32 - (int) $bits);
-                if (($long & $mask) === (ip2long($net) & $mask)) {
-                    return false;
-                }
+        $v6 = \strlen($packed) === 16;
+
+        foreach ($v6 ? self::BLOCKED_V6 : self::BLOCKED_V4 as $cidr) {
+            if (self::inCidr($packed, $cidr)) {
+                return false;
             }
         }
 
         return true;
+    }
+
+    private static function inCidr(string $packedIp, string $cidr): bool
+    {
+        [$net, $bits] = explode('/', $cidr);
+        $netPacked    = (string) inet_pton($net);
+        if (\strlen($netPacked) !== \strlen($packedIp)) {
+            return false;
+        }
+        $bits  = (int) $bits;
+        $bytes = intdiv($bits, 8);
+        if ($bytes > 0 && substr($packedIp, 0, $bytes) !== substr($netPacked, 0, $bytes)) {
+            return false;
+        }
+        $rest = $bits % 8;
+        if ($rest === 0) {
+            return true;
+        }
+        $mask = (0xFF << (8 - $rest)) & 0xFF;
+
+        return (\ord($packedIp[$bytes]) & $mask) === (\ord($netPacked[$bytes]) & $mask);
     }
 }
