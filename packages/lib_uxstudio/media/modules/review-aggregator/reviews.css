@@ -1,0 +1,167 @@
+/* UX Studio - Review Aggregator front end. Colours inherit from the template; override the custom properties to restyle. */
+.uxs-reviews {
+	--uxs-rev-border: rgba(128, 128, 128, .28);
+	--uxs-rev-radius: 12px;
+	--uxs-rev-star: #f4b400;
+	--uxs-rev-star-off: rgba(128, 128, 128, .35);
+	--uxs-rev-muted: rgba(128, 128, 128, .95);
+	--uxs-rev-bg: transparent;
+	margin: 1.5rem 0;
+}
+
+.uxs-reviews__heading {
+	margin: 0 0 1rem;
+}
+
+.uxs-reviews__empty {
+	text-align: center;
+	padding: 2rem 1rem;
+	color: var(--uxs-rev-muted);
+	font-style: italic;
+}
+
+.uxs-reviews__summary {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: .5rem;
+	margin-bottom: 1rem;
+}
+
+.uxs-reviews__avg {
+	font-size: 2rem;
+	font-weight: 700;
+	line-height: 1;
+}
+
+.uxs-reviews__count {
+	color: var(--uxs-rev-muted);
+}
+
+.uxs-reviews__stars {
+	display: inline-flex;
+	gap: 1px;
+	line-height: 1;
+	margin-bottom: .5rem;
+}
+
+.uxs-reviews__summary .uxs-reviews__stars {
+	margin-bottom: 0;
+}
+
+.uxs-reviews__star {
+	color: var(--uxs-rev-star-off);
+	font-size: 1.1rem;
+}
+
+.uxs-reviews__star.is-filled {
+	color: var(--uxs-rev-star);
+}
+
+/* Layouts */
+.uxs-reviews__list {
+	display: grid;
+	gap: 1.25rem;
+}
+
+.uxs-reviews--grid .uxs-reviews__list {
+	grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+
+.uxs-reviews--list .uxs-reviews__list {
+	grid-template-columns: 1fr;
+}
+
+.uxs-reviews--slider .uxs-reviews__list {
+	display: flex;
+	overflow-x: auto;
+	scroll-snap-type: x mandatory;
+	padding-bottom: .5rem;
+	-webkit-overflow-scrolling: touch;
+}
+
+.uxs-reviews--slider .uxs-reviews__card {
+	flex: 0 0 min(320px, 85%);
+	scroll-snap-align: start;
+}
+
+/* Card */
+.uxs-reviews__card {
+	background: var(--uxs-rev-bg);
+	border: 1px solid var(--uxs-rev-border);
+	border-radius: var(--uxs-rev-radius);
+	padding: 1.1rem 1.25rem;
+	box-sizing: border-box;
+}
+
+.uxs-reviews__card--google {
+	border-top: 3px solid #4285f4;
+}
+
+.uxs-reviews__card--mapycz {
+	border-top: 3px solid #2baf2b;
+}
+
+.uxs-reviews__card--facebook {
+	border-top: 3px solid #1877f2;
+}
+
+.uxs-reviews__header {
+	display: flex;
+	align-items: center;
+	gap: .75rem;
+	margin-bottom: .6rem;
+}
+
+.uxs-reviews__avatar {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: 0 0 2.5rem;
+	width: 2.5rem;
+	height: 2.5rem;
+	border-radius: 50%;
+	background: var(--uxs-rev-border);
+	font-weight: 600;
+}
+
+.uxs-reviews__who {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.uxs-reviews__name {
+	font-weight: 600;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.uxs-reviews__date {
+	font-size: .8rem;
+	color: var(--uxs-rev-muted);
+}
+
+.uxs-reviews__platform {
+	flex-shrink: 0;
+	font-size: .75rem;
+	color: var(--uxs-rev-muted);
+}
+
+.uxs-reviews__text {
+	margin: 0;
+	line-height: 1.55;
+	overflow-wrap: anywhere;
+}
+
+.uxs-reviews__more {
+	background: none;
+	border: 0;
+	padding: 0;
+	font: inherit;
+	font-size: .85em;
+	color: inherit;
+	text-decoration: underline;
+	cursor: pointer;
+}

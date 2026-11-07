@@ -1,0 +1,8 @@
+{
+	"id": "google-review-request",
+	"name": "Google Review Request",
+	"description": "Send customers an e-mail asking for a Google review (one by one, in bulk or from your shop / booking system) and keep a log of what was sent.",
+	"group": "marketing",
+	"icon": "mail-check",
+	"settings": true
+}
