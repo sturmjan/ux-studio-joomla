@@ -36,9 +36,13 @@ final class Http
     ];
 
     /**
-     * @param array{headers?:array<string,string>,body?:array|string,timeout?:int,allow_private?:bool,json?:bool,max_bytes?:int} $options
-     *        body array => form-encoded (or JSON when json=true). allow_private=true skips the guard (ONLY for fixed trusted URLs).
-     * @return array{status:int,headers:array<string,string>,body:string}
+     * @param array{headers?:array<string,string>,body?:array|string,timeout?:int,allow_private?:bool,json?:bool,max_bytes?:int,follow_redirects?:bool,max_redirects?:int} $options
+     *        body array => form-encoded (or JSON when json=true). allow_private=true skips the guard (ONLY for fixed trusted URLs);
+     *        a redirect to a different host is then refused (ApiException redirect_blocked), the trusted host cannot be used to bounce
+     *        the request elsewhere. follow_redirects (default true = up to max_redirects, default 3, hops) false returns the 3xx answer itself.
+     * @return array{status:int,headers:array<string,string>,body:string,url:string,redirected:bool,redirect_chain:string[],redirect_to:?string}
+     *         url = the address the answer came from; redirect_chain = the addresses that were left by a redirect;
+     *         redirect_to = absolute Location of a 3xx answer that was NOT followed (follow_redirects=false or hop limit), else null.
      * @throws ApiException when the URL is rejected by the SSRF guard
      * @throws \RuntimeException on transport errors
      */
@@ -50,6 +54,10 @@ final class Http
         $body     = $options['body'] ?? null;
         $allow    = !empty($options['allow_private']);
         $maxBytes = max(1024, (int) ($options['max_bytes'] ?? self::MAX_BYTES));
+        $follow   = !\array_key_exists('follow_redirects', $options) || !empty($options['follow_redirects']);
+        $maxHops  = max(0, min(10, (int) ($options['max_redirects'] ?? 3)));
+        $origin   = strtolower((string) parse_url($url, PHP_URL_HOST));
+        $chain    = [];
 
         if (!\function_exists('curl_init')) {
             // Without cURL the verified address cannot be pinned: refuse instead of running an unguarded request.
@@ -65,7 +73,7 @@ final class Http
             }
         }
 
-        for ($hop = 0; $hop <= 3; $hop++) {
+        for ($hop = 0; $hop <= $maxHops; $hop++) {
             $curl = [
                 CURLOPT_PROTOCOLS       => CURLPROTO_HTTP | CURLPROTO_HTTPS,
                 CURLOPT_REDIR_PROTOCOLS => CURLPROTO_HTTP | CURLPROTO_HTTPS,
@@ -103,14 +111,27 @@ final class Http
                 $flat[strtolower((string) $name)] = implode(', ', (array) $values);
             }
 
-            if ($status >= 300 && $status < 400 && !empty($flat['location']) && $hop < 3) {
-                $url    = self::resolve($url, $flat['location']);
-                $method = \in_array($status, [301, 302, 303], true) ? 'GET' : $method;
-                $body   = $method === 'GET' ? null : $body;
+            $location = $status >= 300 && $status < 400 && !empty($flat['location']) ? self::resolve($url, $flat['location']) : null;
+            if ($location !== null && $follow && $hop < $maxHops) {
+                if ($allow && strtolower((string) parse_url($location, PHP_URL_HOST)) !== $origin) {
+                    throw new ApiException(Text::_('UXS_CORE_ERR_REDIRECT'), 422, 'redirect_blocked');
+                }
+                $chain[] = $url;
+                $url     = $location;
+                $method  = \in_array($status, [301, 302, 303], true) ? 'GET' : $method;
+                $body    = $method === 'GET' ? null : $body;
                 continue;
             }
 
-            return ['status' => $status, 'headers' => $flat, 'body' => (string) $response->getBody()];
+            return [
+                'status'         => $status,
+                'headers'        => $flat,
+                'body'           => (string) $response->getBody(),
+                'url'            => $url,
+                'redirected'     => $chain !== [],
+                'redirect_chain' => $chain,
+                'redirect_to'    => $location,
+            ];
         }
 
         throw new \RuntimeException('Too many redirects.');

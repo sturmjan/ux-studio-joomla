@@ -119,7 +119,8 @@ final class CaClient
         if ($this->siteUid !== '') {
             $headers['X-UXStudio-Site-Id'] = $this->siteUid;
         }
-        $options = ['headers' => $headers, 'timeout' => 20, 'allow_private' => $this->hostIsPrivate()];
+        // The signature binds the exact URL, so a redirect is never followed (it would arrive unsigned / with a wrong signature).
+        $options = ['headers' => $headers, 'timeout' => 20, 'allow_private' => $this->hostIsPrivate(), 'follow_redirects' => false];
         if ($method === 'POST') {
             $options['headers']['Content-Type'] = 'application/json';
         }
@@ -127,6 +128,9 @@ final class CaClient
         $http = $this->ctx->http();
         $res  = $method === 'POST' ? $http->post($url, $body, $options) : $http->get($url, $options);
 
+        if ($res['redirect_to'] !== null) {
+            throw new \RuntimeException('Central App redirected to ' . $res['redirect_to'] . ' (check the Central App address, e.g. http vs https or www).');
+        }
         $json = json_decode($res['body'], true);
         if ($res['status'] >= 400) {
             $msg = \is_array($json) ? (string) ($json['error'] ?? $json['message'] ?? '') : '';
