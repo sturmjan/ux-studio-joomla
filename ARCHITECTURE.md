@@ -60,7 +60,7 @@ ux-studio-joomla/
   needituje při přidání modulu). Stav zapnutí v tabulce `#__uxstudio_modules (id, enabled, updated_at)`.
 - **Settings**: tabulka `#__uxstudio_settings (module VARCHAR(64) PK, data MEDIUMTEXT JSON, updated_at)`.
   Validace a sanitizace podle `settingsSchema()` (stejné typy polí jako WP verze:
-  toggle | text | textarea | css | number | select | multiselect | color | media | datetime | richtext | password).
+  toggle | text | textarea | css | number | select | multiselect | color | media | datetime | richtext | password | repeater).
   Typ `password` (API klíče, SMTP heslo) se ukládá šifrovaně (sodium secretbox, klíč odvozený z
   `$secret` v configuration.php) a do SPA se nikdy nevrací v čisté podobě (jen `"__set__"`).
 - **Migrator**: `#__uxstudio_migrations (module, version, applied_at)`. Každý modul vrací
@@ -85,6 +85,9 @@ ux-studio-joomla/
 - **Scheduler**: `plg_task_uxstudio` vystaví routinu `uxstudio.run` s parametrem `job`; moduly
   deklarují `tasks(): array` (job id => [label, callable, default interval]). Jádro při zapnutí
   modulu úlohu založí v `#__scheduler_tasks`, při vypnutí ji vypne.
+- **Sdílené služby jádra** (podrobně v `docs/MODULE-GUIDE.md` §6b): `Core\ClientIp` (režim a důvěryhodné proxy v nastavení jádra, `core/settings/core`), `Core\Mail`, `Core\Store` (`#__uxstudio_store`),
+  `Core\Hooks`, `Core\Notices`, `Core\SafeRegex`, `Http` (`follow_redirects`), jednorázové běhy úloh (`ModuleContext::runJobSoon`), multipart v `PublicApi`.
+  Selhání načtení nebo `boot()` jednoho modulu ostatní nezastaví (chyba v logu a v SPA).
 - **Language**: PHP řetězce v `src/Modules/<Name>/language/{en-GB,cs-CZ}/uxs_<id>.ini`, jádro je
   načte pro zapnutý modul. Jádro má vlastní `lib_uxstudio.ini`. Klíče `UXS_<ID>_...`.
 - **Logy/retence**: `Core\Retention` - moduly s log tabulkami deklarují `retention(): array` (tabulka, sloupec data, dny).

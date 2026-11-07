@@ -72,11 +72,12 @@ final class Module extends BaseModule
 ```
 
 `boot()` je jediná povinná metoda. Běží při každém požadavku (site, administrator, cli), dokud je modul zapnutý,
-proto jen registruj listenery a nic těžkého nedělej. Výjimka v `boot()` jen zapíše chybu do logu `uxstudio`
-(`administrator/logs/uxstudio.php`) a web běží dál.
+proto jen registruj listenery a nic těžkého nedělej. Výjimka (i chyba parsování třídy) v `boot()` jen zapíše chybu do logu `uxstudio`
+(`administrator/logs/uxstudio.php`), ostatní moduly se nabootují normálně a modul je v SPA označen „Chyba startu“ (`error` v `core/modules`).
 
 `ModuleContext` nabízí: `id()`, `app()`, `db()`, `client()`, `isAdmin()`, `isSite()`, `on($event, $callable, $priority)`,
-`setting($key, $default)`, `settings()`, `t($key, ...$args)`, `http()`, `useScript($file)`, `useStyle($file)`, `assetUrl($file)`.
+`setting($key, $default)`, `settings()`, `t($key, ...$args)`, `http()`, `useScript($file)`, `useStyle($file)`, `assetUrl($file)`,
+`store()`, `runJobSoon($job, $delay)`, `notice($key, $text, $level, $link)` / `clearNotice($key)` (viz §6 a §6b).
 
 **Kontext mimo `boot()`:** handlery rout, úlohy plánovače i CLI běží na požadavku, kde `boot()` neproběhl. Použij `$this->ctx()`
 (`final protected` v `BaseModule`, vytvoří se líně) a nekopíruj si vlastní privátní `context()`.
@@ -88,7 +89,7 @@ Soubory v `media/modules/<id>/` musí existovat (jinak se asset tiše přeskoč�
 
 ## 2. Nastavení (`settingsSchema()`)
 
-Pole polí; typy: `toggle | text | textarea | css | number | select | multiselect | color | media | datetime | richtext | password`.
+Pole polí; typy: `toggle | text | textarea | css | number | select | multiselect | color | media | datetime | richtext | password | repeater`.
 
 ```php
 public function settingsSchema(): array
@@ -101,6 +102,16 @@ public function settingsSchema(): array
 }
 ```
 
+Typy navíc:
+- `media`: pole s tlačítkem „Vybrat“ (Správce médií Joomly v modalu); hodnota je cesta `images/…` (nebo `http(s)://` URL), server odmítne `..` a cizí schémata.
+- `richtext`: jednoduché WYSIWYG (tučně, kurzíva, podtržení, nadpis, seznamy, odkaz, vyčistit formátování, přepínač na HTML); server hodnotu
+  projede `InputFilter` a odkazy/`src` omezí na `http(s)`, `mailto`, `tel`, relativní a `#`.
+- `repeater`: seznam řádků z podpolí. `['key' => 'links', 'type' => 'repeater', 'label' => ..., 'max' => 20, 'add_label' => '...', 'fields' => [[key,type,label,default], ...]]`.
+  Podpole smí být jakýkoli typ kromě `repeater` a `password`. Hodnota je pole objektů (`[{"title":"..","url":".."}, ...]`), každý řádek se validuje podle podpolí
+  (neznámé klíče zahodí, chybějící doplní z defaultu), překročení `max` (výchozí 50) vrátí 422.
+- Výchozí hodnota `text` / `textarea` / `richtext` může být jazykový klíč (`'default' => 'UXS_MYMOD_DEFAULT_SUBJECT'`): jádro ji přeloží do jazyka webu
+  (`$ctx->setting()` i formulář v SPA). Klíče bez překladu zůstanou, jak jsou.
+
 Volitelné vlastnosti pole: `help`, `default`, `options` (`hodnota => popisek`), `section` (dvě a více sekcí = podzáložky),
 `group` + `group_help` (karty), `show_if` (`{key, equals|in|truthy}`, seznam = AND), `wide`, `min`, `max`, `step`, `maxlength`, `placeholder`.
 Popisky mohou být jazykové klíče (`UXS_...`), jádro je přeloží.
@@ -112,6 +123,8 @@ Popisky mohou být jazykové klíče (`UXS_...`), jádro je přeloží.
   GET vrací `"__set__"` (nastaveno) nebo `""`. Odeslání `"__set__"` znamená "beze změny", `""` smaže, jiná hodnota přepíše.
   Hodnotu nikdy nelogovat a nevracet z vlastních rout.
 - API: `GET core/settings/<id>` a `POST core/settings/<id>` (tělo = objekt klíč => hodnota; chybějící klíče zůstanou).
+- **Nastavení jádra** (`core/settings/core`, jen `core.admin`, obrazovka „Nastavení“ v postranním panelu): `client_ip_mode` (`none | cloudflare | xff`,
+  výchozí `cloudflare`) a `trusted_proxies`. Čti je přes `Core\CoreSettings::get('client_ip_mode')`, IP přes `Core\ClientIp` (§6b).
 
 ## 3. API routy (`routes()`)
 
@@ -134,7 +147,8 @@ Endpoint: `administrator/index.php?option=com_uxstudio&task=api.dispatch&format=
 Jádro před handlerem ověří: přihlášení (401), `core.manage` na `com_uxstudio` (403), **CSRF token v hlavičce `X-CSRF-Token`**
 (403 `invalid_token`; platí pro GET i POST), existenci modulu (404), zapnutí modulu (409 `module_disabled`),
 ACL modulu (`acl()`, např. `core.admin` pro rizikové moduly) a metodu (405). Handler dostane `ApiRequest`
-(`param('id')`, `query()`, `input()` = JSON tělo nebo query, `int()`, `string()`, `bool()`, `body()`, `user()`).
+(`param('id')`, `query($key)`, `queryAll()` = celá query string, `input()` = JSON tělo nebo query, `all()` = tělo přes query, `int()`, `string()`, `bool()`, `body()`, `user()`,
+`files()` / `filesIn($group)` jen u veřejných multipart rout).
 
 Chyby: `throw new ApiException('Zpráva', 422, 'invalid_value');` => `{"ok":false,"error":{"code","message"}}` se správným HTTP kódem.
 Neošetřená výjimka vrátí 500 s obecnou zprávou (detail jde jen do logu `uxstudio`).
@@ -167,6 +181,11 @@ public function publicRoutes(): array
   Prázdné `secret` odmítne každý požadavek. Handler dostane `ApiRequest`; surové tělo je v `$r->raw()`.
 - `limit`: `[počet, okno v sekundách]` na IP a routu (výchozí `[30, 60]`), po překročení 429 + `Retry-After`. `max_body`: bajty (výchozí 65536), jinak 413.
   Vlastní limity jinde: `(new \Ux1\UxStudio\Core\RateLimiter($ctx->db()))->hit('klic', 5, 600)` vrací 0 (povoleno) nebo počet sekund do konce okna.
+- `max_files` + `max_file_size` zapnou **multipart/form-data**: nahrané soubory dostaneš v `$r->files()` (klíč = název inputu, vnořené názvy spojené tečkou, `files[photo][]` => `files.photo`;
+  `$r->filesIn('files')` vrátí `['photo' => [...]]`), každý záznam `{name, type, size, tmp_name, error}`. Jádro ověří `is_uploaded_file`, chyby uploadu, počet a velikost (413), textové části jsou v `$r->body()`
+  jako surové řetězce (`fields[email]=..` => `body()['fields']['email']`). `max_body` platí pro celý požadavek. Jméno a typ od klienta jsou nedůvěryhodné: obsah (finfo) si zkontroluj sám,
+  `tmp_name` přečti hned (PHP ho po požadavku smaže). Vzor: modul Forms (přijímá multipart i starý JSON + base64). Pro `hmac` routy multipart nepoužívej (není co podepsat).
+- Klientská IP: `Core\ClientIp::current()` (rate limit veřejného endpointu i `RateLimiter::hitClient()` ji používají sami). Nikdy nečti `REMOTE_ADDR` / `CF-Connecting-IP` napřímo.
 - Není tu session, ACL ani CSRF token: handler musí vše validovat sám a nikdy nevracet interní data. Vstup je nedůvěryhodný.
 
 ## 4. Migrace (`migrations()`)
@@ -216,6 +235,10 @@ public function tasks(): array
 }
 ```
 
+**Jednorázový běh navíc:** `$this->ctx()->runJobSoon('scan')` (např. z `onEnable()`, první kontrola hned po zapnutí) posune příští spuštění úlohy na „teď“
+(`$delaySeconds` pro odklad); proběhne při nejbližším ticku plánovače (lazy scheduler v administraci, cron, `scheduler:run`), ne v tomto požadavku, a úloha pak běží dál v intervalu. Vrací `false`,
+když modul takovou úlohu nedeklaruje nebo je vypnutý.
+
 `interval`: ISO 8601 (`PT15M`, `PT6H`, `P1D`) nebo počet hodin. Při zapnutí modulu jádro založí řádek v `#__scheduler_tasks`
 (typ `uxstudio.run`, parametr `job` = `<id modulu>.<id úlohy>`), při vypnutí ho vypne (stav 0). Interval si admin může
 změnit v Systém - Plánované úlohy; po aktualizaci se hodnota přepíše jen tehdy, když jsi v kódu změnil deklarovaný interval nebo název.
@@ -224,6 +247,30 @@ Ruční spuštění: `php <site>/cli/joomla.php scheduler:run --id=<id úlohy>`.
 
 `retention()` vrací pravidla `[['table' => '#__uxstudio_x_log', 'column' => 'created', 'days' => 90]]` (`days` může být
 i callable). Denní úloha jádra `core.retention` smaže starší řádky. Sloupec je DATETIME v UTC.
+
+## 6b. Sdílené služby jádra (`Ux1\UxStudio\Core`)
+
+Nepiš si vlastní verze, použij tyto:
+
+- **`ClientIp`** - `ClientIp::current()` je IP návštěvníka podle nastavení jádra (výchozí `cloudflare`: hlavičce `CF-Connecting-IP` se věří jen z oficiálních rozsahů Cloudflare; `xff`: `X-Forwarded-For`
+  zprava přes důvěryhodné proxy; `none`). Pomocné: `isLoopback()`, `isLocal()` (loopback + privátní + link-local), `isEdge()`, `isProtected()` (local nebo edge), `matches($ip, $seznam)`, `parseList()`, `normalize()`.
+  **Loopback a privátní adresy se nikdy automaticky nebanují ani neomezují** (lockout, bot-throttle, auto-ban): jen je hlásíš. `Modules\SecurityOptimization\ClientIp` je tenký alias.
+- **`Http`** - `$ctx->http()->request($method, $url, $options)`; volby navíc: `follow_redirects` (výchozí `true`, nejvýš `max_redirects` = 3 hopy), `false` vrátí 3xx odpověď samotnou.
+  Výsledek má `url` (adresa, ze které odpověď přišla), `redirected`, `redirect_chain[]` a `redirect_to` (absolutní `Location` nenásledovaného přesměrování, jinak `null`).
+  S `allow_private` (pevná důvěryhodná adresa, např. vývojová CA na privátní IP) se přesměrování na **jiný host** odmítne (`ApiException` `redirect_blocked`). Podepisované požadavky (HMAC přes URL) posílej s `follow_redirects => false`.
+- **`Mail`** - `Mail::send(['to' => .., 'subject' => .., 'body' => .., 'html' => true, 'reply_to' => .., 'attachments' => [cesta, ...], 'source' => 'UX Studio: Můj modul'])` vrací `bool` (`Mail::lastError()`),
+  `Mail::create()` vrátí Joomla mailer pro složitější zprávy. Zprávy jdou přes sdílený `MailHub`: použije se spojení z modulu smtp-email a zapíše je email-log, když jsou zapnuté;
+  když ne, odejdou nativním mailerem Joomly beze změny. Nikdy nevolej `MailerFactoryInterface::createMailer()` napřímo.
+- **`SafeRegex`** - regulární výrazy zadané administrátorem a spouštěné na návštěvnickém vstupu (`delimit`, `match`, `compiles`, `probe`; zkrácený subjekt, nízký backtrack limit, ReDoS zkouška při uložení).
+- **`RateLimiter`** - `hit($klíč, $limit, $okno)` a `hitClient($název, $limit, $okno)` (klíč doplní IP z `ClientIp`).
+- **`Store`** (`$ctx->store()`) - obecné key/value úložiště modulu v `#__uxstudio_store` (hodnota cokoli pro `json_encode`): `get($k, $default)`, `set($k, $v, $ttlSekund = 0)`, `has`, `delete`,
+  `increment($k, $o = 1, $ttl = 0)` (atomické), `keys($prefix)`, `deletePrefix($prefix)`. Prošlé hodnoty denně maže `core.retention`. Nic tajného (na to je pole `password`). Pro tabulky s vlastní strukturou pořád patří migrace modulu.
+- **`Hooks`** - jednoduché filtry mezi moduly: `Hooks::add('jmeno', callable, $priorita)` v `boot()`, `Hooks::filter('jmeno', $hodnota, ...$args)` u vlastníka. Dnes existuje `csp.sources`
+  (security-optimization): callback dostane a vrátí pole `direktiva => [zdroje]`, např. `$s['form-action'][] = 'https://app.ux1.cz'`; zdroje projdou validací CSP builderu. ca-connector tím přidává adresu CA do `form-action`
+  v administraci (párovací formulář), takže vynucené CSP párování nezablokuje.
+- **Upozornění v administraci** - `$ctx->notice('klic', 'Text (bez HTML)', 'warning|info|error', 'index.php?option=com_uxstudio#/module?id=muj-modul')` ukáže zprávu na přehledu Joomly (com_cpanel) a na obrazovce
+  UX Studia, jen uživatelům s `core.manage`, dokud ji modul nestáhne `$ctx->clearNotice('klic')` (nebo dokud je modul zapnutý). Odkaz musí být `index.php?...`.
+- **`ModuleRegistry`** - načtení nebo start jednoho modulu, který selže, zaloguje chybu a označí modul, ostatní nezasáhne (`$registry->error($id)`).
 
 ## 7. Překlady
 
@@ -272,6 +319,8 @@ node bin/jadmin.mjs j5 GET core/modules                         # seznam modulů
 node bin/jadmin.mjs j5 POST core/modules/hello-check '{"enabled":true}'
 node bin/jadmin.mjs j6 GET hello-check/ping
 node bin/jadmin.mjs j6 POST core/settings/hello-check '{"greeting":"Ahoj","secret_token":"tajne"}'
+node bin/jadmin.mjs j5 GET 'redirects/404?limit=5'               # GET s query stringem (nebo jako 4. argument: ... GET redirects/404 'limit=5&page=2')
+node bin/jadmin.mjs j5 POST redirects/rules @rules.json           # tělo POST ze souboru (@cesta, relativně k aktuální složce; vyhne se problémům s uvozovkami v shellu)
 node bin/jadmin.mjs j5 GET core/meta --no-csrf --expect 403      # bez tokenu musí být 403
 node bin/jadmin.mjs j5 page                                       # stránka komponenty: 200 + mount SPA
 ```
