@@ -1,0 +1,8 @@
+{
+	"id": "redirects",
+	"name": "Redirect rules",
+	"description": "SEO-safe 301/302/307/308/410 redirects with regular expressions, chain and loop protection, a 404 log with redirect suggestions and CSV import/export.",
+	"group": "content",
+	"icon": "signpost",
+	"settings": true
+}
