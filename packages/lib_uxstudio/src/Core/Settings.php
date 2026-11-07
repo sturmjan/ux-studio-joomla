@@ -75,12 +75,30 @@ final class Settings
         $fields = [];
         foreach ($definition as $field) {
             if (isset($field['key']) && preg_match('/^[A-Za-z0-9_]+$/', (string) $field['key'])) {
-                $field += ['type' => 'text'];
-                $fields[$field['key']] = $field;
+                $fields[$field['key']] = self::normalizeField($field);
             }
         }
 
         return $fields;
+    }
+
+    /** Defaults for the type; a repeater gets its sub fields normalised (sub fields cannot be repeaters or passwords). */
+    private static function normalizeField(array $field): array
+    {
+        $field += ['type' => 'text'];
+        if ($field['type'] === 'repeater') {
+            $sub = [];
+            foreach ((array) ($field['fields'] ?? []) as $child) {
+                if (\is_array($child) && isset($child['key']) && preg_match('/^[A-Za-z0-9_]+$/', (string) $child['key'])
+                    && !\in_array($child['type'] ?? 'text', ['repeater', 'password'], true)) {
+                    $child += ['type' => 'text'];
+                    $sub[$child['key']] = $child;
+                }
+            }
+            $field['fields'] = $sub;
+        }
+
+        return $field;
     }
 
     /** Schema with language keys resolved, ready for the SPA. @return array<int,array<string,mixed>> */
@@ -88,21 +106,34 @@ final class Settings
     {
         $out = [];
         foreach ($this->rawSchema($moduleId) as $field) {
-            foreach (['label', 'help', 'section', 'group', 'group_help', 'placeholder'] as $k) {
-                if (isset($field[$k]) && \is_string($field[$k])) {
-                    $field[$k] = self::translate($field[$k]);
-                }
-            }
-            if (isset($field['options']) && \is_array($field['options'])) {
-                foreach ($field['options'] as $value => $label) {
-                    $field['options'][$value] = self::translate((string) $label);
-                }
-            }
-            unset($field['sanitize']);
-            $out[] = $field;
+            $out[] = self::translateField($field);
         }
 
         return $out;
+    }
+
+    /** @param array<string,mixed> $field @return array<string,mixed> labels, option labels and text defaults resolved (sub fields too) */
+    private static function translateField(array $field): array
+    {
+        foreach (['label', 'help', 'section', 'group', 'group_help', 'placeholder', 'add_label', 'item_label'] as $k) {
+            if (isset($field[$k]) && \is_string($field[$k])) {
+                $field[$k] = self::translate($field[$k]);
+            }
+        }
+        if (isset($field['options']) && \is_array($field['options'])) {
+            foreach ($field['options'] as $value => $label) {
+                $field['options'][$value] = self::translate((string) $label);
+            }
+        }
+        if (\array_key_exists('default', $field)) {
+            $field['default'] = self::defaultFor($field);
+        }
+        if (($field['type'] ?? '') === 'repeater') {
+            $field['fields'] = array_values(array_map([self::class, 'translateField'], (array) ($field['fields'] ?? [])));
+        }
+        unset($field['sanitize']);
+
+        return $field;
     }
 
     private static function translate(string $text): string
@@ -110,16 +141,36 @@ final class Settings
         return preg_match('/^[A-Z][A-Z0-9_]{3,}$/', $text) ? Text::_($text) : $text;
     }
 
+    /**
+     * A text / textarea / richtext default that is a language key (UXS_...) is translated, so a module can ship a default
+     * subject or message in the language of the site. Everything else is returned as declared.
+     */
+    private static function translateDefault(string $text): string
+    {
+        if (!preg_match('/^UXS_[A-Z0-9_]+$/', $text)) {
+            return $text;
+        }
+        try {
+            $lang = Factory::getApplication()->getLanguage();
+
+            return $lang->hasKey($text) ? Text::_($text) : $text;
+        } catch (\Throwable $e) {
+            return $text;
+        }
+    }
+
     private static function defaultFor(array $field): mixed
     {
         if (\array_key_exists('default', $field)) {
-            return $field['default'];
+            $default = $field['default'];
+
+            return \is_string($default) && \in_array($field['type'] ?? 'text', ['text', 'textarea', 'richtext'], true) ? self::translateDefault($default) : $default;
         }
 
         return match ($field['type']) {
             'toggle' => false,
             'number' => 0,
-            'multiselect' => [],
+            'multiselect', 'repeater' => [],
             default => '',
         };
     }
@@ -274,7 +325,10 @@ final class Settings
             case 'richtext':
                 $value = (string) (\is_scalar($value) ? $value : '');
 
-                return $this->limit($field, InputFilter::getInstance([], [], 1, 1)->clean($value, 'html'));
+                return $this->limit($field, self::safeLinks(InputFilter::getInstance([], [], 1, 1)->clean($value, 'html')));
+
+            case 'repeater':
+                return $this->sanitizeRepeater($field, $value);
 
             case 'textarea':
                 $value = (string) (\is_scalar($value) ? $value : '');
@@ -293,12 +347,59 @@ final class Settings
                 return $value === '' ? '' : Crypto::encrypt($value);
 
             case 'media':
+                // A Joomla media path (images/a.png, optionally with the #joomlaImage:// suffix) or a http(s) URL; never a script / data URL.
+                $value = trim(strip_tags(str_replace("\0", '', (string) (\is_scalar($value) ? $value : ''))));
+                if ($value !== '' && (str_contains($value, '..') || preg_match('#^(?!https?://)[a-z][a-z0-9+.-]*:#i', $value))) {
+                    throw new ApiException($key . ': invalid media path', 422, 'invalid_value');
+                }
+
+                return $this->limit($field, $value);
+
             case 'text':
             default:
                 $value = (string) (\is_scalar($value) ? $value : '');
 
                 return $this->limit($field, trim(strip_tags(str_replace("\0", '', $value))));
         }
+    }
+
+    /** @return array<int,array<string,mixed>> */
+    private function sanitizeRepeater(array $field, mixed $value): array
+    {
+        $key  = (string) $field['key'];
+        $rows = \is_array($value) ? array_values($value) : [];
+        $max  = max(1, min(200, (int) ($field['max'] ?? 50)));
+        if (\count($rows) > $max) {
+            throw new ApiException($key . ': too many items (maximum ' . $max . ')', 422, 'invalid_value');
+        }
+        $out = [];
+        foreach ($rows as $row) {
+            if (!\is_array($row)) {
+                continue;
+            }
+            $clean = [];
+            foreach ((array) ($field['fields'] ?? []) as $subKey => $sub) {
+                $clean[$subKey] = \array_key_exists($subKey, $row) ? $this->sanitize($sub, $row[$subKey], null) : self::defaultFor($sub);
+            }
+            $out[] = $clean;
+        }
+
+        return $out;
+    }
+
+    /** Rich text links: only http(s), mailto, tel, relative and #anchor targets; everything else becomes "#". */
+    private static function safeLinks(string $html): string
+    {
+        return (string) preg_replace_callback(
+            '/\b(href|src)\s*=\s*(["\'])(.*?)\2/is',
+            static function (array $m): string {
+                $url = html_entity_decode(trim($m[3]), ENT_QUOTES | ENT_HTML5);
+                $url = preg_replace('/[\x00-\x20\x7f]+/', '', $url) ?? '';
+
+                return preg_match('#^(https?:|mailto:|tel:|/|\#|\?)#i', $url) || !preg_match('#^[a-z][a-z0-9+.-]*:#i', $url) ? $m[0] : $m[1] . '=' . $m[2] . '#' . $m[2];
+            },
+            $html
+        );
     }
 
     private function limit(array $field, string $value): string

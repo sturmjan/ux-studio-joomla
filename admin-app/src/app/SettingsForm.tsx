@@ -11,13 +11,19 @@ import { api, queryClient } from './api';
 import { t } from './i18n';
 import { pushToast } from './notify';
 import { type Scalar, type ShowIf, isEmptyValue, visibleKeys } from './showIf';
+import { MediaField, RepeaterField, RichTextField } from './FieldWidgets';
 import { ToggleSwitch } from './ui/ToggleSwitch';
 
-export type Value = string | number | boolean | string[] | null;
+/** One row of a repeater field: sub field key => value. */
+export interface Row {
+	[ key: string ]: Value;
+}
+
+export type Value = string | number | boolean | string[] | Row[] | null;
 
 export interface Field {
 	key: string;
-	type: 'toggle' | 'text' | 'textarea' | 'css' | 'number' | 'select' | 'multiselect' | 'color' | 'media' | 'datetime' | 'richtext' | 'password';
+	type: 'toggle' | 'text' | 'textarea' | 'css' | 'number' | 'select' | 'multiselect' | 'color' | 'media' | 'datetime' | 'richtext' | 'password' | 'repeater';
 	label: string;
 	help?: string;
 	default?: Value;
@@ -32,6 +38,9 @@ export interface Field {
 	step?: number;
 	maxlength?: number;
 	placeholder?: string;
+	/** repeater: sub fields of one row, maximum number of rows and the label of the "add" button */
+	fields?: Field[];
+	add_label?: string;
 }
 
 export interface SettingsPayload {
@@ -43,7 +52,15 @@ export interface SettingsPayload {
 /** Marker the server sends instead of a stored secret (and accepts back meaning "unchanged"). */
 export const SECRET_MARKER = '__set__';
 
-const WIDE_TYPES: ReadonlyArray< Field[ 'type' ] > = [ 'textarea', 'css', 'richtext', 'multiselect' ];
+const WIDE_TYPES: ReadonlyArray< Field[ 'type' ] > = [ 'textarea', 'css', 'richtext', 'multiselect', 'repeater' ];
+
+/** Empty value of a field (new repeater rows). */
+function blankValue( field: Field ): Value {
+	if ( field.default !== undefined ) {
+		return field.default;
+	}
+	return field.type === 'toggle' ? false : field.type === 'number' ? 0 : field.type === 'multiselect' || field.type === 'repeater' ? [] : '';
+}
 
 function PasswordField( { field, value, onChange }: { field: Field; value: Value; onChange: ( v: Value ) => void } ): JSX.Element {
 	const stored = value === SECRET_MARKER;
@@ -139,19 +156,47 @@ export function FieldInput( { field, value, onChange }: { field: Field; value: V
 			);
 		case 'css':
 			return <textarea id={ id } rows={ 10 } spellCheck={ false } className="uxs-code-editor" value={ String( value ?? '' ) } onChange={ ( e ) => onChange( e.target.value ) } />;
-		case 'textarea':
 		case 'richtext':
+			return <RichTextField id={ id } label={ field.label } value={ String( value ?? '' ) } maxLength={ field.maxlength } onChange={ onChange } />;
+		case 'media':
+			return <MediaField id={ id } label={ field.label } value={ String( value ?? '' ) } maxLength={ field.maxlength } onChange={ onChange } />;
+		case 'repeater': {
+			const subs = field.fields ?? [];
+			const rows = Array.isArray( value ) ? ( value as Row[] ) : [];
+			return (
+				<RepeaterField< Row >
+					label={ field.label }
+					addLabel={ field.add_label }
+					rows={ rows }
+					max={ field.max ?? 50 }
+					onChange={ onChange }
+					blank={ () => Object.fromEntries( subs.map( ( sub ) => [ sub.key, blankValue( sub ) ] ) ) }
+					renderRow={ ( row, index, update ) =>
+						subs.map( ( sub ) => {
+							const subId = `uxs-${ field.key }-${ index }-${ sub.key }`;
+							return (
+								<div key={ sub.key } className="uxs-repeater__cell">
+									<label htmlFor={ subId }>{ sub.label }</label>
+									<FieldInput field={ { ...sub, key: `${ field.key }-${ index }-${ sub.key }` } } value={ row[ sub.key ] ?? null } onChange={ ( v ) => update( { [ sub.key ]: v } ) } />
+									{ sub.help ? <p className="uxs-form__help">{ sub.help }</p> : null }
+								</div>
+							);
+						} )
+					}
+				/>
+			);
+		}
+		case 'textarea':
 			return <textarea id={ id } rows={ 5 } maxLength={ field.maxlength } value={ String( value ?? '' ) } onChange={ ( e ) => onChange( e.target.value ) } />;
 		case 'password':
 			return <PasswordField field={ field } value={ value } onChange={ onChange } />;
 		default:
-			// text, media (a Joomla media path such as images/logo.png)
 			return (
 				<input
 					type="text"
 					id={ id }
 					maxLength={ field.maxlength }
-					placeholder={ field.type === 'media' ? 'images/…' : field.placeholder }
+					placeholder={ field.placeholder }
 					value={ String( value ?? '' ) }
 					onChange={ ( e ) => onChange( e.target.value ) }
 				/>

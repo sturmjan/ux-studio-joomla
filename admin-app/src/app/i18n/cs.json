@@ -166,5 +166,22 @@
 	"Dismiss": "Zavřít",
 	"Boot error": "Chyba startu",
 	"The module failed to start and is skipped on this site. The other modules keep working.": "Modul se nepodařilo spustit a na webu se přeskakuje. Ostatní moduly fungují dál.",
-	"Shared options of UX Studio that every module uses.": "Společná nastavení UX Studia, která používají všechny moduly."
+	"Shared options of UX Studio that every module uses.": "Společná nastavení UX Studia, která používají všechny moduly.",
+	"Select": "Vybrat",
+	"Media Manager": "Správce médií",
+	"Click a file to select it.": "Kliknutím vyberte soubor.",
+	"Link address (https://, mailto:, tel: or /path)": "Adresa odkazu (https://, mailto:, tel: nebo /cesta)",
+	"Bold": "Tučně",
+	"Italic": "Kurzíva",
+	"Underline": "Podtržení",
+	"Heading": "Nadpis",
+	"Bulleted list": "Odrážky",
+	"Numbered list": "Číslovaný seznam",
+	"Link": "Odkaz",
+	"Clear formatting": "Odstranit formátování",
+	"Edit HTML": "Upravit HTML",
+	"Move up": "Posunout nahoru",
+	"Move down": "Posunout dolů",
+	"Remove item": "Odebrat položku",
+	"Add item": "Přidat položku"
 }
