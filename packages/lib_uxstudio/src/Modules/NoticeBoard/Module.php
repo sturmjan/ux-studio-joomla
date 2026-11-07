@@ -5,7 +5,6 @@ namespace Ux1\UxStudio\Modules\NoticeBoard;
 use Joomla\CMS\Factory;
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Language\Text;
-use Joomla\CMS\Mail\MailerFactoryInterface;
 use Joomla\CMS\Log\Log;
 use Joomla\CMS\Uri\Uri;
 use Joomla\Event\Event;
@@ -459,7 +458,7 @@ final class Module extends BaseModule
     private function sendMail(string $to, string $subject, string $html): bool
     {
         try {
-            $mailer = Factory::getContainer()->get(MailerFactoryInterface::class)->createMailer();
+            $mailer = \Ux1\UxStudio\Core\Mail::create();
             $from   = trim((string) $this->ctx()->setting('from_email', ''));
             if ($from !== '' && filter_var($from, FILTER_VALIDATE_EMAIL)) {
                 $mailer->setSender([$from, (string) $this->ctx()->app()->get('sitename', '')]);

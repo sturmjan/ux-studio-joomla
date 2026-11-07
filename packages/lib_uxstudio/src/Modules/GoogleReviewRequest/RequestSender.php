@@ -4,7 +4,6 @@ namespace Ux1\UxStudio\Modules\GoogleReviewRequest;
 
 use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
-use Joomla\CMS\Mail\MailerFactoryInterface;
 use Joomla\CMS\Mail\MailHelper;
 use Joomla\CMS\Uri\Uri;
 use Joomla\Database\ParameterType;
@@ -178,7 +177,7 @@ final class RequestSender
         }
 
         try {
-            $mailer = Factory::getContainer()->get(MailerFactoryInterface::class)->createMailer();
+            $mailer = \Ux1\UxStudio\Core\Mail::create();
             $mailer->isHtml(true);
             $mailer->CharSet = 'UTF-8';
             $mailer->addRecipient($key, $name);

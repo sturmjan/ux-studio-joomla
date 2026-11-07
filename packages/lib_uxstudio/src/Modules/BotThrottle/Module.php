@@ -5,7 +5,6 @@ namespace Ux1\UxStudio\Modules\BotThrottle;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Log\Log;
-use Joomla\CMS\Mail\MailerFactoryInterface;
 use Joomla\Event\Event;
 use Joomla\Event\Priority;
 use Ux1\UxStudio\Core\ApiException;
@@ -360,7 +359,7 @@ final class Module extends BaseModule
             if ($to === '') {
                 return;
             }
-            $mailer = Factory::getContainer()->get(MailerFactoryInterface::class)->createMailer();
+            $mailer = \Ux1\UxStudio\Core\Mail::create();
             $mailer->addRecipient($to);
             $mailer->setSubject(Text::sprintf('UXS_BOT_THROTTLE_MAIL_SUBJECT', (string) $app->get('sitename', 'Joomla')));
             $mailer->setBody(Text::sprintf('UXS_BOT_THROTTLE_MAIL_BODY', $context, (int) round($seconds / 60), $hash));

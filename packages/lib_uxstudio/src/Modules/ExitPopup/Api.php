@@ -5,7 +5,6 @@ namespace Ux1\UxStudio\Modules\ExitPopup;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Log\Log;
-use Joomla\CMS\Mail\MailerFactoryInterface;
 use Ux1\UxStudio\Core\ApiException;
 use Ux1\UxStudio\Core\ApiRequest;
 use Ux1\UxStudio\Core\ModuleContext;
@@ -114,7 +113,7 @@ final class Api
             return;
         }
         try {
-            $mailer = Factory::getContainer()->get(MailerFactoryInterface::class)->createMailer();
+            $mailer = \Ux1\UxStudio\Core\Mail::create();
             $mailer->addRecipient($email);
             $mailer->setSubject($subject);
             if (method_exists($mailer, 'isHtml')) {

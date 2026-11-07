@@ -6,7 +6,6 @@ use Joomla\CMS\Document\HtmlDocument;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Log\Log;
-use Joomla\CMS\Mail\MailerFactoryInterface;
 use Joomla\CMS\Uri\Uri;
 use Joomla\Database\ParameterType;
 use Joomla\Event\Event;
@@ -587,7 +586,7 @@ final class Module extends BaseModule
             if ($to === '') {
                 return;
             }
-            $mailer = Factory::getContainer()->get(MailerFactoryInterface::class)->createMailer();
+            $mailer = \Ux1\UxStudio\Core\Mail::create();
             $mailer->addRecipient($to);
             $mailer->setSubject($subject);
             $mailer->setBody($body);

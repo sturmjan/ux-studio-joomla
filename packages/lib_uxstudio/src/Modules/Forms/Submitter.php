@@ -5,7 +5,6 @@ namespace Ux1\UxStudio\Modules\Forms;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Log\Log;
-use Joomla\CMS\Mail\MailerFactoryInterface;
 use Ux1\UxStudio\Core\ApiException;
 use Ux1\UxStudio\Core\ApiRequest;
 use Ux1\UxStudio\Core\ModuleContext;
@@ -370,7 +369,7 @@ final class Submitter
             . $this->table($form, $values, $files);
 
         try {
-            $mailer = Factory::getContainer()->get(MailerFactoryInterface::class)->createMailer();
+            $mailer = \Ux1\UxStudio\Core\Mail::create();
             foreach ($to as $addr) {
                 $mailer->addRecipient($addr);
             }
@@ -412,7 +411,7 @@ final class Submitter
         $html    = nl2br($this->fill($message, $form, $values, [], $submissionId, true), false);
 
         try {
-            $mailer = Factory::getContainer()->get(MailerFactoryInterface::class)->createMailer();
+            $mailer = \Ux1\UxStudio\Core\Mail::create();
             $mailer->addRecipient($to);
             $mailer->setSubject($subject);
             $mailer->isHtml(true);
