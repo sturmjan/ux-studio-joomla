@@ -181,7 +181,7 @@ public function publicRoutes(): array
 }
 ```
 
-- `auth`: `none` (výchozí) | `token` (`Authorization: Bearer <secret>`) | `hmac` (`X-UXS-Timestamp` + `X-UXS-Signature` = hex `hmac_sha256("<timestamp>.<raw body>", secret)`, tolerance 5 minut).
+- `auth`: `none` (výchozí) | `token` (`Authorization: Bearer <secret>`) | `hmac` (`X-UXS-Timestamp` + `X-UXS-Signature` = hex `hmac_sha256("<timestamp>.<raw body>", secret)`, tolerance 5 minut; každý podpis jádro přijme jen jednou, opakování vrátí 409 `replayed`; `Origin: null` a jiný port u veřejných rout bez auth dostane 403).
   Prázdné `secret` odmítne každý požadavek. Handler dostane `ApiRequest`; surové tělo je v `$r->raw()`.
 - `limit`: `[počet, okno v sekundách]` na IP a routu (výchozí `[30, 60]`), po překročení 429 + `Retry-After`. `max_body`: bajty (výchozí 65536), jinak 413.
   Vlastní limity jinde: `(new \Ux1\UxStudio\Core\RateLimiter($ctx->db()))->hit('klic', 5, 600)` vrací 0 (povoleno) nebo počet sekund do konce okna.

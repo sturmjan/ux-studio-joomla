@@ -236,11 +236,7 @@ final class Module extends BaseModule
         if ($email === '') {
             throw new ApiException('email is required', 422, 'email_required');
         }
-        // The signature stays valid for the whole tolerance window: remember it so the same request cannot be replayed.
-        $sig = strtolower((string) $this->ctx()->app()->getInput()->server->get('HTTP_X_UXS_SIGNATURE', '', 'string'));
-        if ($sig !== '' && (new RateLimiter($this->ctx()->db()))->hit('grr-sig:' . $sig, 1, 900) > 0) {
-            throw new ApiException('This signed request was already processed.', 409, 'replayed');
-        }
+        // Replays of a signed request are rejected by the core (PublicApi::checkHmac).
         $res = $this->sender()->send($email, $r->string('name'), $r->string('ref'), 'api', null, false);
         if ($res['status'] === RequestSender::STATUS_FAILED) {
             // Do not leak the mail transport error to the caller.

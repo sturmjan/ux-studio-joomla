@@ -232,14 +232,24 @@ final class PublicApi
     private function checkOrigin($input): void
     {
         $origin = (string) $input->server->get('HTTP_ORIGIN', '', 'string');
-        if ($origin === '' || $origin === 'null') {
+        if ($origin === '') {
             return;
         }
-        $host = (string) parse_url($origin, PHP_URL_HOST);
-        $self = (string) parse_url(\Joomla\CMS\Uri\Uri::root(), PHP_URL_HOST);
-        if ($host === '' || strcasecmp($host, $self) !== 0) {
+        // "null" comes from sandboxed iframes, data: pages and some cross-origin redirects: never this site's own page.
+        $host = $origin === 'null' ? '' : (string) parse_url($origin, PHP_URL_HOST);
+        $root = \Joomla\CMS\Uri\Uri::root();
+        $self = (string) parse_url($root, PHP_URL_HOST);
+        if ($host === '' || strcasecmp($host, $self) !== 0 || $this->effectivePort($origin) !== $this->effectivePort($root)) {
             throw new ApiException(Text::_('UXS_CORE_ERR_FORBIDDEN'), 403, 'forbidden');
         }
+    }
+
+    /** Port with the defaults (80, 443) folded to 0: the scheme is not compared (it can be wrong behind a proxy), another application's port is. */
+    private function effectivePort(string $url): int
+    {
+        $port = (int) parse_url($url, PHP_URL_PORT);
+
+        return \in_array($port, [0, 80, 443], true) ? 0 : $port;
     }
 
     private function secret(array $def): string
@@ -287,6 +297,10 @@ final class PublicApi
         $expected = hash_hmac('sha256', $timestamp . '.' . $raw, $secret);
         if (!hash_equals($expected, $signature)) {
             throw new ApiException(Text::_('UXS_CORE_ERR_FORBIDDEN'), 403, 'forbidden');
+        }
+        // A valid signature stays valid for the whole tolerance window: accept each one once so a captured request cannot be replayed.
+        if ((new RateLimiter($this->kernel->db()))->hit('hmac-sig:' . $signature, 1, 2 * self::HMAC_TOLERANCE + 60) > 0) {
+            throw new ApiException('This signed request was already processed.', 409, 'replayed');
         }
     }
 }
