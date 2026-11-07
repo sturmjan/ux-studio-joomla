@@ -128,8 +128,12 @@ final class Kernel
                 (new Upgrader($this))->runIfNeeded();
             } catch (\Throwable $e) {
                 Log::add('UX Studio upgrade step failed: ' . $e->getMessage(), Log::ERROR, 'uxstudio');
+                // The detail (SQL, table names) goes to the log only; the message is shown to a signed-in manager and is generic.
                 if ($app->isClient('administrator')) {
-                    $app->enqueueMessage('UX Studio: ' . $e->getMessage(), 'error');
+                    $me = $app->getIdentity();
+                    if ($me && !$me->guest && $me->authorise('core.manage', 'com_uxstudio')) {
+                        $app->enqueueMessage('UX Studio: the update step failed, see the "uxstudio" log.', 'error');
+                    }
                 }
             }
         }

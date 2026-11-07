@@ -170,7 +170,11 @@ final class Submitter
         }
         if (!empty($s['confirm_enabled']) && $s['confirm_field'] !== '') {
             $to = (string) ($clean[$s['confirm_field']] ?? '');
-            if ($to !== '' && filter_var($to, FILTER_VALIDATE_EMAIL)) {
+            // The visitor chooses the recipient, so the form must not become a mail relay: a few per address and a cap per form and hour.
+            $limiter = new RateLimiter($ctx->db());
+            if ($to !== '' && filter_var($to, FILTER_VALIDATE_EMAIL)
+                && $limiter->hit('forms:confirm-to:' . sha1(strtolower($to)), 3, 3600) === 0
+                && $limiter->hit('forms:confirm-form:' . $formId, 60, 3600) === 0) {
                 $sent   = true;
                 $mailOk = $this->confirm($form, $clean, $to, $submissionId) && $mailOk;
             }
