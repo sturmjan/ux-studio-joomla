@@ -8,6 +8,7 @@ use Joomla\CMS\Uri\Uri;
 use Ux1\UxStudio\Core\ApiException;
 use Ux1\UxStudio\Core\ApiRequest;
 use Ux1\UxStudio\Core\BaseModule;
+use Ux1\UxStudio\Core\Hooks;
 use Ux1\UxStudio\Core\ModuleContext;
 
 \defined('_JEXEC') or die;
@@ -24,6 +25,19 @@ final class Module extends BaseModule
 {
     public function boot(ModuleContext $ctx): void
     {
+        // The pairing form of the administration POSTs to the Central App: an enforced CSP (security-optimization) must allow it.
+        if ($ctx->isAdmin()) {
+            Hooks::add('csp.sources', function (array $sources) use ($ctx): array {
+                $base  = Pairing::normalizeBaseUrl((string) $ctx->setting('ca_url', ''));
+                $parts = $base !== null ? parse_url($base) : false;
+                if (\is_array($parts) && !empty($parts['scheme']) && !empty($parts['host'])) {
+                    $host = (string) $parts['host'];
+                    $sources['form-action'][] = $parts['scheme'] . '://' . (str_contains($host, ':') && $host[0] !== '[' ? '[' . $host . ']' : $host) . (isset($parts['port']) ? ':' . $parts['port'] : '');
+                }
+
+                return $sources;
+            });
+        }
         // Both entry points run in onAfterInitialise, before Joomla routes the request, and always end the request.
         if ($ctx->isSite() && isset($_GET[Node::QUERY]) && \is_string($_GET[Node::QUERY])) {
             (new Node($ctx, $this->store()))->handle();

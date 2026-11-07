@@ -98,6 +98,22 @@ final class ModuleContext
     }
 
     /**
+     * Shows a notice on the Joomla control panel and the UX Studio screen of the administration until clearNotice() is called
+     * (see Core\Notices). $link is an administrator URL ("index.php?option=...") or ''.
+     *
+     * @param string $level info | warning | error
+     */
+    public function notice(string $key, string $message, string $level = 'warning', string $link = ''): void
+    {
+        Notices::raise($this->moduleId, $key, $message, $level, $link);
+    }
+
+    public function clearNotice(string $key): void
+    {
+        Notices::clear($this->moduleId, $key);
+    }
+
+    /**
      * Asks the Joomla scheduler to run a job of this module (declared in tasks()) soon, once, in addition to its regular
      * interval: for example the first scan right after the module was switched on. It runs at the next scheduler tick (lazy
      * scheduler in the browser, cron or scheduler:run), not inside this request.

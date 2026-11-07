@@ -101,6 +101,7 @@ final class Kernel
 
         try {
             Lang::loadCore($app);
+            Notices::register($app);
             foreach ($this->registry()->enabledIds() as $id) {
                 try {
                     $module = $this->registry()->module($id);

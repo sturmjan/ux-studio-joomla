@@ -2,6 +2,8 @@
 
 namespace Ux1\UxStudio\Modules\SecurityOptimization;
 
+use Ux1\UxStudio\Core\Hooks;
+
 \defined('_JEXEC') or die;
 
 /**
@@ -77,6 +79,17 @@ final class CspPolicy
         foreach ((array) ($settings['csp_presets'] ?? []) as $id) {
             foreach (self::PRESETS[(string) $id][1] ?? [] as $directive => $sources) {
                 $d[$directive] = array_merge($d[$directive] ?? ["'self'"], $sources);
+            }
+        }
+
+        // Sources contributed by other modules (hook "csp.sources", e.g. the Central App address for form-action).
+        foreach ((array) Hooks::filter('csp.sources', []) as $directive => $extra) {
+            if (!\in_array((string) $directive, self::DIRECTIVES, true)) {
+                continue;
+            }
+            $valid = self::sources(implode(' ', array_map('strval', (array) $extra)));
+            if ($valid !== []) {
+                $d[$directive] = array_merge($d[$directive] ?? ["'self'"], $valid);
             }
         }
 
