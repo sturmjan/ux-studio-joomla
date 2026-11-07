@@ -17,7 +17,7 @@ Postup práce: každou oblast staví Sonnet agent, kontroluje Opus (bezpečnost,
 - [x] bin/build.mjs, bin/dev-link.mjs, bin/jadmin.mjs
 - [x] Veřejný endpoint (PublicApi) s rate limitem, SSRF guard s připnutím IP, ochrana repa před instalací zipu na nalinkovaný web
 - [x] Průvodce nastavením (onboarding wizard jako WP verze) - commit 0f6e23c
-- [ ] Požadavky modulů na jádro (izolace bootu modulů, sdílený ClientIp, Core\Mail, SafeRegex, repeater/media/richtext pole, multipart v PublicApi, Http redirecty, Store, CSP zdroje, admin upozornění)
+- [x] Požadavky modulů na jádro (izolace bootu modulů, sdílený ClientIp, Core\Mail, SafeRegex, repeater/media/richtext pole, multipart v PublicApi, Http redirecty, Store, CSP zdroje, admin upozornění)
 
 ## F1b Centrální aplikace
 - [x] CMS adaptér v CA (WordPress vs Joomla) - větev `feature/joomla-sites` ve worktree `D:\xampp\htdocs\_ca-wt-joomla`, migrace 121, detail v CA PLAN.md §39 (souhlas uživatele 2026-11-06)
@@ -38,14 +38,14 @@ Postup práce: každou oblast staví Sonnet agent, kontroluje Opus (bezpečnost,
 - [x] Analytika + Pixel/Tag manager - 19a494f
 - [ ] Brevo API ověřit s platným klíčem (testovací klíč není)
 
-## F2b Moduly - 2. dávka
-- [ ] Přihlášení přes Google/Seznam/Microsoft/Facebook (third-party-login)
-- [ ] Optimalizace obrázků + auto-image-upload
-- [ ] AI markdown / llms.txt
-- [ ] Instagram feed + mod_uxstudio_instagram
-- [ ] Servisní požadavky + dashboard widgety
-- [ ] Výkon + měření načítání stránky
-- [ ] DNS manager
+## F2b Moduly - 2. dávka (postaveno, zrevidováno Opusem, opraveno; commity 2026-11-07 až 56d6735)
+- [x] Přihlášení přes Google/Seznam/Microsoft/Facebook (third-party-login)
+- [x] Optimalizace obrázků + auto-image-upload
+- [x] AI markdown / llms.txt
+- [x] Instagram feed + mod_uxstudio_instagram
+- [x] Servisní požadavky + dashboard widgety
+- [x] Výkon + měření načítání stránky
+- [x] DNS manager
 - [ ] Souhlas s cookies (consent) - čeká na rozhodnutí: WP verze je zatím jen plán (WP PLAN §26), pixel-tag-manager bez něj jen upozorňuje
 
 ## F3 Integrace
@@ -62,3 +62,7 @@ Postup práce: každou oblast staví Sonnet agent, kontroluje Opus (bezpečnost,
 - [ ] Podpis odpovědí konektoru ověřovat v CA a otestovat proti reálnému webu (viz F1b)
 - [ ] Prohlídka všech vnořených oken, záložek a chybových stavů ve stránkách modulů v cs (automatický průchod pokryl jen výchozí stav stránky)
 - [ ] GitHub repo (sturmjan/ux-studio-joomla), update server a vydání v0.1.0 - čeká na rozhodnutí
+
+## F4 Bezpečnostní audit (Opus, 2026-11-07)
+- [x] Průřezový audit všech veřejných vstupů, ACL, XSS, SSRF, uploadů, HMAC; 11 z 12 nálezů opraveno (commity 3c544e7..aaa5997)
+- [ ] Rozhodnout: má čtení odpovědí formulářů a odběratelů exit popupu vyžadovat core.admin (dnes core.manage = skupina Administrator)?
