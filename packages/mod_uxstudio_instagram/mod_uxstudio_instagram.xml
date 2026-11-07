@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension type="module" client="site" method="upgrade">
+	<name>mod_uxstudio_instagram</name>
+	<author>UX1</author>
+	<creationDate>2026-11</creationDate>
+	<copyright>(C) UX1</copyright>
+	<license>GNU General Public License version 2 or later</license>
+	<authorEmail>info@ux1.cz</authorEmail>
+	<authorUrl>https://ux1.cz</authorUrl>
+	<version>0.1.0</version>
+	<description>MOD_UXSTUDIO_INSTAGRAM_XML_DESCRIPTION</description>
+	<namespace path="src">Ux1\Module\UxStudioInstagram</namespace>
+	<files>
+		<folder module="mod_uxstudio_instagram">services</folder>
+		<folder>src</folder>
+		<folder>tmpl</folder>
+		<folder>language</folder>
+	</files>
+	<languages folder="language">
+		<language tag="en-GB">en-GB/mod_uxstudio_instagram.ini</language>
+		<language tag="en-GB">en-GB/mod_uxstudio_instagram.sys.ini</language>
+		<language tag="cs-CZ">cs-CZ/mod_uxstudio_instagram.ini</language>
+		<language tag="cs-CZ">cs-CZ/mod_uxstudio_instagram.sys.ini</language>
+	</languages>
+	<config>
+		<fields name="params">
+			<fieldset name="basic">
+				<field name="heading" type="text" label="MOD_UXSTUDIO_INSTAGRAM_HEADING" description="MOD_UXSTUDIO_INSTAGRAM_HEADING_DESC" maxlength="190" />
+				<field name="layout_mode" type="list" label="MOD_UXSTUDIO_INSTAGRAM_LAYOUT" description="MOD_UXSTUDIO_INSTAGRAM_LAYOUT_DESC" default="" validate="options">
+					<option value="">MOD_UXSTUDIO_INSTAGRAM_USE_DEFAULT</option>
+					<option value="grid">MOD_UXSTUDIO_INSTAGRAM_LAYOUT_GRID</option>
+					<option value="carousel">MOD_UXSTUDIO_INSTAGRAM_LAYOUT_CAROUSEL</option>
+				</field>
+				<field name="count" type="number" label="MOD_UXSTUDIO_INSTAGRAM_COUNT" description="MOD_UXSTUDIO_INSTAGRAM_COUNT_DESC" default="0" min="0" max="50" filter="integer" />
+				<field name="columns" type="list" label="MOD_UXSTUDIO_INSTAGRAM_COLUMNS" default="" validate="options">
+					<option value="">MOD_UXSTUDIO_INSTAGRAM_USE_DEFAULT</option>
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5">5</option>
+					<option value="6">6</option>
+					<option value="7">7</option>
+					<option value="8">8</option>
+				</field>
+				<field name="columns_tablet" type="list" label="MOD_UXSTUDIO_INSTAGRAM_COLUMNS_TABLET" default="" validate="options">
+					<option value="">MOD_UXSTUDIO_INSTAGRAM_USE_DEFAULT</option>
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5">5</option>
+					<option value="6">6</option>
+				</field>
+				<field name="columns_mobile" type="list" label="MOD_UXSTUDIO_INSTAGRAM_COLUMNS_MOBILE" default="" validate="options">
+					<option value="">MOD_UXSTUDIO_INSTAGRAM_USE_DEFAULT</option>
+					<option value="1">1</option>
+					<option value="2">2</option>
+					<option value="3">3</option>
+					<option value="4">4</option>
+					<option value="5">5</option>
+					<option value="6">6</option>
+				</field>
+				<field name="show_caption" type="list" label="MOD_UXSTUDIO_INSTAGRAM_SHOW_CAPTION" default="" validate="options">
+					<option value="">MOD_UXSTUDIO_INSTAGRAM_USE_DEFAULT</option>
+					<option value="1">JYES</option>
+					<option value="0">JNO</option>
+				</field>
+				<field name="show_likes" type="list" label="MOD_UXSTUDIO_INSTAGRAM_SHOW_LIKES" default="" validate="options">
+					<option value="">MOD_UXSTUDIO_INSTAGRAM_USE_DEFAULT</option>
+					<option value="1">JYES</option>
+					<option value="0">JNO</option>
+				</field>
+				<field name="show_follow" type="list" label="MOD_UXSTUDIO_INSTAGRAM_SHOW_FOLLOW" default="" validate="options">
+					<option value="">MOD_UXSTUDIO_INSTAGRAM_USE_DEFAULT</option>
+					<option value="1">JYES</option>
+					<option value="0">JNO</option>
+				</field>
+				<field name="hashtags" type="text" label="MOD_UXSTUDIO_INSTAGRAM_HASHTAGS" description="MOD_UXSTUDIO_INSTAGRAM_HASHTAGS_DESC" maxlength="300" />
+			</fieldset>
+			<fieldset name="advanced">
+				<field name="layout" type="modulelayout" label="JFIELD_ALT_LAYOUT_LABEL" class="form-select" validate="moduleLayout" />
+				<field name="moduleclass_sfx" type="textarea" label="COM_MODULES_FIELD_MODULECLASS_SFX_LABEL" rows="3" validate="CssIdentifier" />
+				<field name="cache" type="list" label="COM_MODULES_FIELD_CACHING_LABEL" default="0" filter="integer" validate="options">
+					<option value="1">JGLOBAL_USE_GLOBAL</option>
+					<option value="0">COM_MODULES_FIELD_VALUE_NOCACHING</option>
+				</field>
+				<field name="cache_time" type="number" label="COM_MODULES_FIELD_CACHE_TIME_LABEL" default="900" filter="integer" />
+				<field name="cachemode" type="hidden" default="static">
+					<option value="static"></option>
+				</field>
+			</fieldset>
+		</fields>
+	</config>
+</extension>

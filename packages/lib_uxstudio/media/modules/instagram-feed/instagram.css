@@ -1,0 +1,66 @@
+/* UX Studio - Instagram Feed. Layout is driven by modifier classes only (no inline styles: CSP friendly). */
+.uxs-ig { --uxs-ig-cols: 4; --uxs-ig-gap: 8px; margin: 0 0 1.5rem; }
+.uxs-ig--cols-1 { --uxs-ig-cols: 1; }
+.uxs-ig--cols-2 { --uxs-ig-cols: 2; }
+.uxs-ig--cols-3 { --uxs-ig-cols: 3; }
+.uxs-ig--cols-4 { --uxs-ig-cols: 4; }
+.uxs-ig--cols-5 { --uxs-ig-cols: 5; }
+.uxs-ig--cols-6 { --uxs-ig-cols: 6; }
+.uxs-ig--cols-7 { --uxs-ig-cols: 7; }
+.uxs-ig--cols-8 { --uxs-ig-cols: 8; }
+.uxs-ig--gap-0 { --uxs-ig-gap: 0px; }
+.uxs-ig--gap-4 { --uxs-ig-gap: 4px; }
+.uxs-ig--gap-8 { --uxs-ig-gap: 8px; }
+.uxs-ig--gap-12 { --uxs-ig-gap: 12px; }
+.uxs-ig--gap-16 { --uxs-ig-gap: 16px; }
+.uxs-ig--gap-24 { --uxs-ig-gap: 24px; }
+
+.uxs-ig__heading { margin: 0 0 .75rem; }
+.uxs-ig__viewport { position: relative; }
+.uxs-ig__list { list-style: none; margin: 0; padding: 0; }
+.uxs-ig__item { margin: 0; padding: 0; min-width: 0; }
+.uxs-ig__link { display: block; color: inherit; text-decoration: none; }
+.uxs-ig__media { position: relative; display: block; aspect-ratio: 1 / 1; overflow: hidden; background: rgba(127, 127, 127, .15); }
+.uxs-ig__img { display: block; width: 100%; height: 100%; object-fit: cover; transition: transform .25s ease; }
+.uxs-ig__link:hover .uxs-ig__img,
+.uxs-ig__link:focus-visible .uxs-ig__img { transform: scale(1.04); }
+.uxs-ig__link:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+.uxs-ig__badge { position: absolute; top: 8px; right: 8px; display: inline-flex; color: #fff; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .6)); }
+.uxs-ig__likes { position: absolute; left: 8px; bottom: 8px; padding: 2px 8px; border-radius: 999px; background: rgba(0, 0, 0, .6); color: #fff; font-size: .8125rem; line-height: 1.4; }
+.uxs-ig__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.uxs-ig__caption { display: block; margin-top: .4rem; font-size: .875rem; line-height: 1.4; overflow-wrap: anywhere; }
+.uxs-ig__follow { margin: .75rem 0 0; text-align: center; }
+
+/* Grid */
+.uxs-ig--grid .uxs-ig__list { display: grid; grid-template-columns: repeat(var(--uxs-ig-cols), minmax(0, 1fr)); gap: var(--uxs-ig-gap); }
+
+/* Carousel: native scroll-snap, the arrows (instagram.js) are an enhancement */
+.uxs-ig--carousel .uxs-ig__list { display: flex; gap: var(--uxs-ig-gap); overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.uxs-ig--carousel .uxs-ig__list::-webkit-scrollbar { display: none; }
+.uxs-ig--carousel .uxs-ig__item { flex: 0 0 calc((100% - (var(--uxs-ig-cols) - 1) * var(--uxs-ig-gap)) / var(--uxs-ig-cols)); scroll-snap-align: start; }
+.uxs-ig__nav { position: absolute; top: 50%; z-index: 2; display: none; align-items: center; justify-content: center; width: 40px; height: 40px; margin-top: -20px; padding: 0; border: 0; border-radius: 50%; background: rgba(0, 0, 0, .6); color: #fff; cursor: pointer; }
+.uxs-ig__nav:hover, .uxs-ig__nav:focus-visible { background: rgba(0, 0, 0, .85); }
+.uxs-ig__nav--prev { left: 8px; }
+.uxs-ig__nav--next { right: 8px; }
+.uxs-ig--js .uxs-ig__nav { display: inline-flex; }
+.uxs-ig--js .uxs-ig__nav[hidden] { display: none; }
+
+/* Tablets: at most 3 columns, phones: at most 2 */
+@media (max-width: 900px) {
+	.uxs-ig--cols-4, .uxs-ig--cols-5, .uxs-ig--cols-6, .uxs-ig--cols-7, .uxs-ig--cols-8 { --uxs-ig-cols: 3; }
+	.uxs-ig--tcols-1 { --uxs-ig-cols: 1; } .uxs-ig--tcols-2 { --uxs-ig-cols: 2; } .uxs-ig--tcols-3 { --uxs-ig-cols: 3; }
+	.uxs-ig--tcols-4 { --uxs-ig-cols: 4; } .uxs-ig--tcols-5 { --uxs-ig-cols: 5; } .uxs-ig--tcols-6 { --uxs-ig-cols: 6; }
+}
+@media (max-width: 560px) {
+	.uxs-ig--cols-3, .uxs-ig--cols-4, .uxs-ig--cols-5, .uxs-ig--cols-6, .uxs-ig--cols-7, .uxs-ig--cols-8 { --uxs-ig-cols: 2; }
+	.uxs-ig--tcols-3, .uxs-ig--tcols-4, .uxs-ig--tcols-5, .uxs-ig--tcols-6 { --uxs-ig-cols: 2; }
+	.uxs-ig--mcols-1 { --uxs-ig-cols: 1; } .uxs-ig--mcols-2 { --uxs-ig-cols: 2; } .uxs-ig--mcols-3 { --uxs-ig-cols: 3; }
+	.uxs-ig--mcols-4 { --uxs-ig-cols: 4; } .uxs-ig--mcols-5 { --uxs-ig-cols: 5; } .uxs-ig--mcols-6 { --uxs-ig-cols: 6; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.uxs-ig__img { transition: none; }
+	.uxs-ig--carousel .uxs-ig__list { scroll-behavior: auto; }
+}
+
+/* Message for administrators when there is nothing to show */
+.uxs-ig-notice { margin: 0 0 1.5rem; padding: .75rem 1rem; border: 1px dashed currentColor; border-radius: 4px; font-size: .875rem; }
