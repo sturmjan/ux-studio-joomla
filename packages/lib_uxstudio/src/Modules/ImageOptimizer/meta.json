@@ -1,0 +1,8 @@
+{
+	"id": "image-optimizer",
+	"name": "Image optimizer",
+	"description": "Compresses JPEG and PNG images on upload to the Media Manager, creates WebP and AVIF versions, optimizes existing images in batches and keeps the originals.",
+	"group": "performance",
+	"icon": "image",
+	"settings": true
+}
