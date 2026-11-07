@@ -88,7 +88,7 @@ final class CoreApi
         if (!$module) {
             throw new ApiException(Text::_('UXS_CORE_ERR_MODULE_UNKNOWN'), 404, 'unknown_module');
         }
-        if (!$r->user()->authorise($module->acl(), Api::COMPONENT)) {
+        if (!$r->user()->authorise($module->acl(), Api::COMPONENT) || !$this->sideEffectsAllowed($r, $id)) {
             throw new ApiException(Text::_('UXS_CORE_ERR_FORBIDDEN'), 403, 'forbidden');
         }
         if (!\array_key_exists('enabled', $r->body())) {
@@ -123,6 +123,17 @@ final class CoreApi
         return $this->describe($id) + ['migrations' => $applied];
     }
 
+    /**
+     * Modules whose enabling, disabling or settings write files or server configuration (.htaccess) declare "toggle_acl"
+     * in meta.json; that stricter ACL then also guards the toggle and the settings, so they cannot bypass admin-only routes.
+     */
+    private function sideEffectsAllowed(ApiRequest $r, string $id): bool
+    {
+        $acl = (string) ($this->kernel->registry()->meta($id)['toggle_acl'] ?? '');
+
+        return $acl === '' || $r->user()->authorise($acl, Api::COMPONENT);
+    }
+
     /** The core's own settings (id "core") are an administrator matter. */
     private function coreSettingsGuard(ApiRequest $r): void
     {
@@ -144,7 +155,7 @@ final class CoreApi
         if (!$module) {
             throw new ApiException(Text::_('UXS_CORE_ERR_MODULE_UNKNOWN'), 404, 'unknown_module');
         }
-        if (!$r->user()->authorise($module->acl(), Api::COMPONENT)) {
+        if (!$r->user()->authorise($module->acl(), Api::COMPONENT) || !$this->sideEffectsAllowed($r, $id)) {
             throw new ApiException(Text::_('UXS_CORE_ERR_FORBIDDEN'), 403, 'forbidden');
         }
         Lang::loadModule($this->kernel->app(), $id, $module->path());
