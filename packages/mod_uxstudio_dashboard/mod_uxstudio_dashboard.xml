@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension type="module" client="administrator" method="upgrade">
+	<name>mod_uxstudio_dashboard</name>
+	<author>UX1</author>
+	<creationDate>2026-11</creationDate>
+	<copyright>(C) UX1</copyright>
+	<license>GNU General Public License version 2 or later</license>
+	<authorEmail>info@ux1.cz</authorEmail>
+	<authorUrl>https://ux1.cz</authorUrl>
+	<version>0.1.0</version>
+	<description>MOD_UXSTUDIO_DASHBOARD_XML_DESCRIPTION</description>
+	<namespace path="src">Ux1\Module\UxStudioDashboard</namespace>
+	<files>
+		<folder module="mod_uxstudio_dashboard">services</folder>
+		<folder>src</folder>
+		<folder>tmpl</folder>
+		<folder>language</folder>
+	</files>
+	<languages folder="language">
+		<language tag="en-GB">en-GB/mod_uxstudio_dashboard.ini</language>
+		<language tag="en-GB">en-GB/mod_uxstudio_dashboard.sys.ini</language>
+		<language tag="cs-CZ">cs-CZ/mod_uxstudio_dashboard.ini</language>
+		<language tag="cs-CZ">cs-CZ/mod_uxstudio_dashboard.sys.ini</language>
+	</languages>
+	<config>
+		<fields name="params">
+			<fieldset name="advanced">
+				<field name="layout" type="modulelayout" label="JFIELD_ALT_LAYOUT_LABEL" class="form-select" validate="moduleLayout" />
+				<field name="moduleclass_sfx" type="textarea" label="COM_MODULES_FIELD_MODULECLASS_SFX_LABEL" rows="3" validate="CssIdentifier" />
+				<field name="cache" type="list" label="COM_MODULES_FIELD_CACHING_LABEL" default="0" filter="integer" validate="options">
+					<option value="0">COM_MODULES_FIELD_VALUE_NOCACHING</option>
+				</field>
+			</fieldset>
+		</fields>
+	</config>
+</extension>

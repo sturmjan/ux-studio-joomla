@@ -1,0 +1,8 @@
+{
+	"id": "dashboard-widgets",
+	"name": "Dashboard Widgets",
+	"description": "Cards on the Joomla administration home screen: summaries from UX Studio modules plus your own notes and links, with visibility per user group.",
+	"group": "admin",
+	"icon": "layout-dashboard",
+	"settings": true
+}
