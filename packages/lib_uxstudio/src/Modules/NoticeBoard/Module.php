@@ -59,8 +59,9 @@ final class Module extends BaseModule
     }
 
     /**
-     * Canonical site root with trailing slash. In a web request it is Uri::root() (and remembered); under CLI (scheduler:run, cron)
-     * Joomla invents a "joomla.invalid" host, so the remembered value (or live_site) is used there instead.
+     * Canonical site root with trailing slash. Order: live_site, the root remembered from an authenticated administrator
+     * request, and only as a last resort Uri::root() (which follows the Host header). Site requests never store anything,
+     * otherwise a forged Host would poison links in later e-mails.
      */
     public function siteRoot(): string
     {
@@ -68,32 +69,36 @@ final class Module extends BaseModule
         if ($cached !== null) {
             return $cached;
         }
-        $app = $this->ctx()->app();
-        if ($app->isClient('site') || $app->isClient('administrator')) {
-            $root = Uri::root();
-            if (!str_contains($root, 'joomla.invalid')) {
-                try {
-                    if ($this->store()->getMeta('site_root') !== $root) {
-                        $this->store()->setMeta('site_root', $root);
-                    }
-                } catch (\Throwable $e) {
-                    Log::add("Notice board: remembering the site root failed: " . $e->getMessage(), Log::WARNING, "uxstudio");
-                }
-            }
-
-            return $cached = $root;
-        }
-        $live = trim((string) $app->get('live_site', ''));
+        $live = trim((string) $this->ctx()->app()->get('live_site', ''));
         if ($live !== '') {
             return $cached = rtrim($live, '/') . '/';
         }
         try {
-            $stored = $this->store()->getMeta('site_root');
+            $stored = (string) $this->store()->getMeta('site_root');
         } catch (\Throwable $e) {
             $stored = '';
         }
 
         return $cached = ($stored !== '' ? $stored : Uri::root());
+    }
+
+    /** Remembers the root of an authenticated administrator API request (never call from public/site requests). */
+    public function rememberRoot(): void
+    {
+        if (trim((string) $this->ctx()->app()->get('live_site', '')) !== '') {
+            return;
+        }
+        $root = Uri::root();
+        if (str_contains($root, 'joomla.invalid')) {
+            return;
+        }
+        try {
+            if ($this->store()->getMeta('site_root') !== $root) {
+                $this->store()->setMeta('site_root', $root);
+            }
+        } catch (\Throwable $e) {
+            Log::add("Notice board: remembering the site root failed: " . $e->getMessage(), Log::WARNING, "uxstudio");
+        }
     }
 
     private function timezone(): \DateTimeZone
@@ -314,7 +319,7 @@ final class Module extends BaseModule
 
     public function apiNotices(ApiRequest $r): array
     {
-        $this->siteRoot();
+        $this->rememberRoot();
         $this->store()->archiveExpired();
         $store = $this->store();
 

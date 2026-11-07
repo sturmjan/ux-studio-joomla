@@ -168,7 +168,8 @@ final class CentralReviewsClient
         if ($this->ctx->app() instanceof ConsoleApplication) {
             return $kept !== '' ? $kept : $live;
         }
-        if ($kept !== $live) {
+        // Remember only from the administrator (authenticated API); a site request's Host header is attacker-controlled.
+        if ($kept !== $live && $this->ctx->app()->isClient('administrator')) {
             $this->store->setMeta('site_url', $live);
         }
 
