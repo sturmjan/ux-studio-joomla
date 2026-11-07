@@ -28,15 +28,36 @@ final class Module extends BaseModule
         if ($ctx->isSite() || $ctx->isAdmin()) {
             // Both endpoints run in onAfterInitialise, before Joomla routes the request, and always end the request.
             $query = $ctx->app()->getInput()->get->getCmd(Flow::QUERY, '');
-            if ($query === 'start') {
-                (new Flow($ctx, $this->store()))->start();
-            } elseif (Flow::isCallbackRequest()) {
-                (new Flow($ctx, $this->store()))->callback();
+            $start    = $query === 'start';
+            $callback = !$start && Flow::isCallbackRequest();
+            if ($start || $callback) {
+                $this->passGate();
+                $flow = new Flow($ctx, $this->store());
+                $start ? $flow->start() : $flow->callback();
             }
 
             $ctx->on('onAfterRender', [$this, 'injectButtons'], Priority::LOW);
         }
         $ctx->on('onUserAfterDelete', [$this, 'userDeleted']);
+    }
+
+    /**
+     * These endpoints run before onAfterRoute, where the security module's IP firewall and secret administrator URL
+     * are enforced, so they would bypass both. Run the same checks first (they end the request when it is refused).
+     */
+    private function passGate(): void
+    {
+        try {
+            $registry = $this->ctx()->kernel()->registry();
+            if ($registry->isEnabled('security-optimization')) {
+                $sec = $registry->module('security-optimization');
+                if ($sec instanceof \Ux1\UxStudio\Modules\SecurityOptimization\Module) {
+                    $sec->guardEarlyEndpoint();
+                }
+            }
+        } catch (\Throwable $e) {
+            // never lock the login out because the gate itself failed
+        }
     }
 
     private function store(): Store

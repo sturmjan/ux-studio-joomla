@@ -164,6 +164,18 @@ final class Module extends BaseModule
         }
     }
 
+    /**
+     * The firewall and the login gate (secret administrator URL) for endpoints that answer BEFORE onAfterRoute
+     * (the third-party login start and callback). Ends the request itself when it must be refused.
+     */
+    public function guardEarlyEndpoint(): void
+    {
+        $this->firewall();
+        if ($this->loginProtectionOn()) {
+            $this->loginGate();
+        }
+    }
+
     public function afterRoute(Event $event): void
     {
         $app = $this->ctx()->app();
