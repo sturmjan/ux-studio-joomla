@@ -1,0 +1,132 @@
+/* UX Studio exit-popup. Colours / width are set by exit-popup.js through CSS custom properties (CSP: no inline styles). */
+.uxs-exit {
+	position: fixed;
+	inset: 0;
+	z-index: 100000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 16px;
+	box-sizing: border-box;
+}
+.uxs-exit[hidden] { display: none; }
+.uxs-exit *, .uxs-exit *::before, .uxs-exit *::after { box-sizing: border-box; }
+
+.uxs-exit__backdrop {
+	position: absolute;
+	inset: 0;
+	background: rgba(0, 0, 0, var(--uxs-ep-overlay, 0.6));
+	opacity: 0;
+	transition: opacity 0.2s ease;
+}
+.uxs-exit.is-open .uxs-exit__backdrop { opacity: 1; }
+
+.uxs-exit__dialog {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	width: min(100%, var(--uxs-ep-width, 480px));
+	max-height: calc(100vh - 32px);
+	overflow: auto;
+	background: var(--uxs-ep-bg, #fff);
+	color: var(--uxs-ep-text, #4b5563);
+	border-radius: 10px;
+	box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+	font-size: 15px;
+	line-height: 1.5;
+	opacity: 0;
+	transform: translateY(16px);
+	transition: opacity 0.2s ease, transform 0.25s ease;
+}
+.uxs-exit.is-open .uxs-exit__dialog { opacity: 1; transform: none; }
+.uxs-exit__dialog:focus { outline: none; }
+.uxs-exit__dialog--horizontal { flex-direction: row; width: min(100%, max(var(--uxs-ep-width, 480px), 720px)); }
+.uxs-exit__dialog--horizontal .uxs-exit__media { flex: 0 0 40%; }
+.uxs-exit__dialog--horizontal .uxs-exit__media img { height: 100%; max-height: none; }
+.uxs-exit__dialog--horizontal .uxs-exit__inner { flex: 1 1 auto; }
+
+.uxs-exit__media img { display: block; width: 100%; max-height: 240px; object-fit: cover; }
+.uxs-exit__inner { padding: 28px; }
+.uxs-exit__headline { margin: 0 0 10px; padding-right: 28px; font-size: 1.5em; line-height: 1.25; color: var(--uxs-ep-title, #1f2937); }
+.uxs-exit__body { margin: 0 0 16px; }
+.uxs-exit__body > :first-child { margin-top: 0; }
+.uxs-exit__body > :last-child { margin-bottom: 0; }
+.uxs-exit__body img { max-width: 100%; height: auto; }
+.uxs-exit__body a { color: var(--uxs-ep-button, #2563eb); }
+
+.uxs-exit__close {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	z-index: 2;
+	width: 36px;
+	height: 36px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.85);
+	color: #333;
+	font-size: 24px;
+	line-height: 1;
+	cursor: pointer;
+}
+.uxs-exit__close:hover { background: #fff; }
+.uxs-exit__close:focus-visible, .uxs-exit__submit:focus-visible, .uxs-exit__cta:focus-visible { outline: 2px solid var(--uxs-ep-button, #2563eb); outline-offset: 2px; }
+
+.uxs-exit__form { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; }
+.uxs-exit__email {
+	flex: 1 1 200px;
+	min-width: 0;
+	padding: 10px 12px;
+	border: 1px solid #b6bcc6;
+	border-radius: 6px;
+	background: #fff;
+	color: #1f2937;
+	font: inherit;
+}
+.uxs-exit__email:focus-visible { outline: 2px solid var(--uxs-ep-button, #2563eb); outline-offset: 1px; }
+.uxs-exit__submit, .uxs-exit__cta {
+	display: inline-block;
+	padding: 10px 20px;
+	border: 0;
+	border-radius: 6px;
+	background: var(--uxs-ep-button, #2563eb);
+	color: var(--uxs-ep-button-text, #fff);
+	font: inherit;
+	font-weight: 600;
+	text-decoration: none;
+	cursor: pointer;
+}
+.uxs-exit__submit:disabled { opacity: 0.6; cursor: default; }
+.uxs-exit__cta { margin-top: 16px; }
+.uxs-exit__consent { display: flex; flex: 1 0 100%; gap: 8px; align-items: flex-start; font-size: 13px; }
+.uxs-exit__consent input { margin-top: 3px; }
+.uxs-exit__message { margin: 12px 0 0; font-size: 14px; }
+.uxs-exit__message:empty { display: none; }
+.uxs-exit__message.is-error { color: #b32d2e; }
+.uxs-exit__message.is-success { color: #1a7a31; }
+/* Visually hidden label and honeypot (not display:none, so assistive tech still reads the label). */
+.uxs-exit__sr, .uxs-exit__trap {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	margin: -1px;
+	padding: 0;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	border: 0;
+	white-space: nowrap;
+}
+.uxs-exit-lock { overflow: hidden; }
+
+@media (max-width: 640px) {
+	.uxs-exit__dialog--horizontal { flex-direction: column; }
+	.uxs-exit__dialog--horizontal .uxs-exit__media img { height: auto; max-height: 200px; }
+	.uxs-exit__inner { padding: 22px 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.uxs-exit__dialog, .uxs-exit__backdrop { transition: none; transform: none; }
+}

@@ -1,0 +1,115 @@
+/* UX Studio popup-manager. Colours / width are set by popup-manager.js through CSS custom properties (CSP: no inline styles). */
+.uxs-popup {
+	position: fixed;
+	inset: 0;
+	z-index: 99999;
+	display: flex;
+	pointer-events: none;
+	box-sizing: border-box;
+}
+.uxs-popup[hidden] { display: none; }
+.uxs-popup *, .uxs-popup *::before, .uxs-popup *::after { box-sizing: border-box; }
+
+.uxs-popup--center { align-items: center; justify-content: center; padding: 16px; }
+.uxs-popup--top { align-items: flex-start; justify-content: center; }
+.uxs-popup--bottom { align-items: flex-end; justify-content: center; }
+.uxs-popup--bottom-right { align-items: flex-end; justify-content: flex-end; padding: 16px; }
+.uxs-popup--bottom-left { align-items: flex-end; justify-content: flex-start; padding: 16px; }
+
+.uxs-popup__backdrop {
+	position: absolute;
+	inset: 0;
+	background: rgba(0, 0, 0, var(--uxs-pm-overlay, 0.6));
+	pointer-events: auto;
+	opacity: 0;
+	transition: opacity 0.2s ease;
+}
+.uxs-popup.is-open .uxs-popup__backdrop { opacity: 1; }
+
+.uxs-popup__dialog {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	width: min(100%, var(--uxs-pm-width, 520px));
+	max-height: calc(100vh - 32px);
+	overflow: auto;
+	pointer-events: auto;
+	background: var(--uxs-pm-bg, #fff);
+	color: var(--uxs-pm-text, #1f2937);
+	border-radius: 10px;
+	box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+	font-size: 15px;
+	line-height: 1.5;
+	opacity: 0;
+	transition: opacity 0.2s ease, transform 0.25s ease;
+}
+.uxs-popup__dialog:focus { outline: none; }
+.uxs-popup__dialog:focus-visible { outline: 2px solid var(--uxs-pm-accent, #2563eb); outline-offset: 2px; }
+.uxs-popup.is-open .uxs-popup__dialog { opacity: 1; transform: none; }
+
+/* Entrance animations (start state while the popup is not .is-open). */
+.uxs-popup--anim-slide:not(.is-open).uxs-popup--center .uxs-popup__dialog { transform: translateY(24px); }
+.uxs-popup--anim-slide:not(.is-open).uxs-popup--top .uxs-popup__dialog { transform: translateY(-100%); }
+.uxs-popup--anim-slide:not(.is-open).uxs-popup--bottom .uxs-popup__dialog,
+.uxs-popup--anim-slide:not(.is-open).uxs-popup--bottom-right .uxs-popup__dialog,
+.uxs-popup--anim-slide:not(.is-open).uxs-popup--bottom-left .uxs-popup__dialog { transform: translateY(100%); }
+.uxs-popup--anim-none .uxs-popup__dialog,
+.uxs-popup--anim-none .uxs-popup__backdrop { transition: none; }
+
+/* Bars use the whole width, the content keeps the configured width. */
+.uxs-popup--top .uxs-popup__dialog,
+.uxs-popup--bottom .uxs-popup__dialog { width: 100%; max-height: 60vh; border-radius: 0; }
+.uxs-popup--top .uxs-popup__content,
+.uxs-popup--bottom .uxs-popup__content { width: min(100%, var(--uxs-pm-width, 520px)); margin: 0 auto; }
+
+.uxs-popup__close {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+	z-index: 2;
+	width: 36px;
+	height: 36px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+	border: 0;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.08);
+	color: inherit;
+	font-size: 24px;
+	line-height: 1;
+	cursor: pointer;
+}
+.uxs-popup__close:hover { background: rgba(0, 0, 0, 0.16); }
+.uxs-popup__close:focus-visible { outline: 2px solid var(--uxs-pm-accent, #2563eb); outline-offset: 2px; }
+
+.uxs-popup__image { display: block; width: 100%; max-height: 240px; object-fit: cover; }
+.uxs-popup__content { padding: 28px 28px 24px; }
+.uxs-popup__headline { margin: 0 0 10px; padding-right: 28px; font-size: 1.4em; line-height: 1.25; color: inherit; }
+.uxs-popup__body { margin: 0 0 16px; }
+.uxs-popup__body > :first-child { margin-top: 0; }
+.uxs-popup__body > :last-child { margin-bottom: 0; }
+.uxs-popup__body img { max-width: 100%; height: auto; }
+.uxs-popup__body a { color: var(--uxs-pm-accent, #2563eb); }
+.uxs-popup__cta {
+	display: inline-block;
+	padding: 10px 20px;
+	border-radius: 6px;
+	background: var(--uxs-pm-accent, #2563eb);
+	color: var(--uxs-pm-cta, #fff);
+	font-weight: 600;
+	text-decoration: none;
+}
+.uxs-popup__cta:hover { filter: brightness(1.1); color: var(--uxs-pm-cta, #fff); }
+.uxs-popup__cta:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+
+.uxs-popup-lock { overflow: hidden; }
+
+@media (max-width: 480px) {
+	.uxs-popup--bottom-right, .uxs-popup--bottom-left { padding: 8px; }
+	.uxs-popup__content { padding: 22px 18px 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.uxs-popup__dialog, .uxs-popup__backdrop { transition: none; transform: none !important; }
+}

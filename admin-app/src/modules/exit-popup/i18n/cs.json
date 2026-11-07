@@ -1,0 +1,21 @@
+{
+	"Date": "Datum",
+	"E-mail": "E-mail",
+	"Page": "Stránka",
+	"Consent": "Souhlas",
+	"Yes": "Ano",
+	"Delete": "Smazat",
+	"Delete {email}?": "Smazat {email}?",
+	"Search e-mail…": "Hledat e-mail…",
+	"Search": "Hledat",
+	"Export CSV": "Exportovat CSV",
+	"Delete all captured e-mail addresses? This cannot be undone.": "Smazat všechny zachycené e-mailové adresy? Nelze vrátit zpět.",
+	"Delete all": "Smazat vše",
+	"No e-mail addresses captured yet.": "Zatím nebyla zachycena žádná e-mailová adresa.",
+	"Settings": "Nastavení",
+	"Subscribers": "Odběratelé",
+	"Preview on the site": "Náhled na webu",
+	"Save the settings first, the preview shows the saved popup.": "Nejdřív uložte nastavení, náhled ukazuje uložený popup.",
+	"{n} address|{n} addresses": "{n} adresa|{n} adresy|{n} adres",
+	"Something went wrong.": "Něco se nepovedlo."
+}
