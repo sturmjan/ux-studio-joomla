@@ -1,0 +1,8 @@
+{
+	"id": "performance-optimization",
+	"name": "Performance Optimization",
+	"description": "Speeds up the front end: lazy loading of images and iframes, deferred scripts, preconnect and preload hints, HTML minification, unneeded core assets and browser cache headers.",
+	"group": "performance",
+	"icon": "zap",
+	"settings": true
+}
