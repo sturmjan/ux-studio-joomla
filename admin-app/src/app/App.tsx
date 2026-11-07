@@ -16,6 +16,8 @@ import { currentRoute, hashParam, navigate } from './route';
 import { useModules } from './useModules';
 import { ConfirmHost } from './ui/Confirm';
 import { Toasts } from './ui/Toasts';
+import { Wizard } from './wizard/Wizard';
+import { WizardHint } from './wizard/WizardHint';
 
 /** Below this width of the shell the sidebar becomes an off-canvas drawer. */
 const NARROW_PX = 1100;
@@ -151,7 +153,16 @@ export function App(): JSX.Element {
 							</button>
 						</div>
 					) : null }
-					{ route === 'module' ? <ModulePage key={ activeId ?? '' } /> : <ModuleGrid /> }
+					{ route === 'module' ? (
+						<ModulePage key={ activeId ?? '' } />
+					) : route === 'wizard' ? (
+						<Wizard />
+					) : (
+						<>
+							<WizardHint />
+							<ModuleGrid />
+						</>
+					) }
 				</main>
 			</div>
 			<Toasts />

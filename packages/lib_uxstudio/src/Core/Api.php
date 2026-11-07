@@ -60,7 +60,7 @@ final class Api
             $registry        = $this->kernel->registry();
 
             if ($target === 'core') {
-                $handlers = (new CoreApi($this->kernel))->routes();
+                $handlers = (new CoreApi($this->kernel))->routes() + (new Onboarding\OnboardingApi($this->kernel))->routes();
                 $acl      = 'core.manage';
             } else {
                 $module = $registry->has($target) ? $registry->module($target) : null;
