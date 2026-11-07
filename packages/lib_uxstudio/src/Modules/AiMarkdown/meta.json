@@ -1,0 +1,8 @@
+{
+	"id": "ai-markdown",
+	"name": "AI Markdown",
+	"description": "Serves llms.txt, llms-full.txt and a clean markdown version of articles for AI assistants and crawlers, with cache and an AI bot access log.",
+	"group": "marketing",
+	"icon": "bot",
+	"settings": true
+}
