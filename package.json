@@ -4,7 +4,9 @@
   "private": true,
   "description": "UX Studio for Joomla 5 and 6 - build tooling",
   "type": "module",
-  "workspaces": ["admin-app"],
+  "workspaces": [
+    "admin-app"
+  ],
   "scripts": {
     "typecheck": "npm run typecheck -w admin-app",
     "build": "node bin/build.mjs",
@@ -12,6 +14,7 @@
     "dev-link": "node bin/dev-link.mjs"
   },
   "devDependencies": {
-    "fflate": "^0.8.3"
+    "fflate": "^0.8.3",
+    "playwright": "^1.65.0"
   }
 }
