@@ -1,0 +1,9 @@
+{
+	"id": "security-optimization",
+	"name": "Security optimization",
+	"description": "Security headers, Content-Security-Policy, hidden version info, IP firewall with bans, login brute-force protection (lock-outs, optional Turnstile, optional secret administrator URL) and a Joomla hardening report.",
+	"group": "security",
+	"icon": "shield-check",
+	"settings": true,
+	"requires": []
+}

@@ -1,0 +1,9 @@
+{
+	"id": "bot-throttle",
+	"name": "Bot Throttle",
+	"description": "Detects search engine, AI and SEO bots by User-Agent and throttles them with the server load, rate-limits abusive IPs and bans them, with notifications and an optional microcache.",
+	"group": "security",
+	"icon": "gauge",
+	"settings": true,
+	"requires": []
+}
