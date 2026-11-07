@@ -4,6 +4,9 @@
  *
  *   node bin/jadmin.mjs <j5|j6> GET core/modules
  *   node bin/jadmin.mjs j6 POST core/settings/hello-check '{"greeting":"Hi"}'
+ *   node bin/jadmin.mjs j5 GET redirects/log 'page=2&limit=10'    # GET query string as 4th argument ...
+ *   node bin/jadmin.mjs j5 GET 'redirects/log?page=2&limit=10'      # ... or appended to the route
+ *   node bin/jadmin.mjs j5 POST forms/import @payload.json          # POST body from a file (@file, relative to the current directory)
  *   node bin/jadmin.mjs j5 page [route]       # GET administrator/index.php?option=com_uxstudio (status + SPA mount check)
  *   node bin/jadmin.mjs j5 login              # (re)login and cache the session
  *   node bin/jadmin.mjs j5 GET core/meta --no-csrf     # send the request WITHOUT the X-CSRF-Token header
@@ -46,7 +49,7 @@ for (let i = 0; i < argv.length; i++) {
 }
 const [siteKey, cmd, arg1, arg2] = pos;
 if (!['j5', 'j6'].includes(siteKey) || !cmd) {
-	console.error('Usage: node bin/jadmin.mjs <j5|j6> <GET|POST|page|login> [route] [json] [--no-csrf] [--raw] [--expect <status>]');
+	console.error('Usage: node bin/jadmin.mjs <j5|j6> <GET|POST|page|login> [route[?query]] [json|@file|query] [--no-csrf] [--raw] [--expect <status>]');
 	process.exit(2);
 }
 
@@ -185,13 +188,15 @@ try {
 	}
 	await ensureSession();
 	const call = async () => {
-		const url = `${adminUrl}?option=com_uxstudio&task=api.dispatch&format=json&route=${arg1.split('/').map(encodeURIComponent).join('/')}`;
+		const [routePath, routeQuery = ''] = arg1.split(/\?(.*)/s);
+		const extraQuery = [routeQuery, method === 'GET' && arg2 ? arg2.replace(/^\?/, '') : ''].filter(Boolean).join('&');
+		const url = `${adminUrl}?option=com_uxstudio&task=api.dispatch&format=json&route=${routePath.split('/').map(encodeURIComponent).join('/')}${extraQuery ? '&' + extraQuery : ''}`;
 		const headers = { Accept: 'application/json' };
 		if (!flags.noCsrf) headers['X-CSRF-Token'] = state.csrf;
 		const init = { method, headers };
 		if (method === 'POST') {
 			headers['Content-Type'] = 'application/json';
-			init.body = arg2 ?? '{}';
+			init.body = arg2 === undefined ? '{}' : arg2.startsWith('@') ? readFileSync(resolve(arg2.slice(1)), 'utf8') : arg2;
 		}
 		return http(url, init);
 	};

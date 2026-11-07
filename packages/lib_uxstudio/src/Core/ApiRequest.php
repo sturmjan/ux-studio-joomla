@@ -63,6 +63,18 @@ final class ApiRequest
         return $this->query[$key] ?? $default;
     }
 
+    /** Whole query string as an array (public routes: without option / task / format / route). */
+    public function queryAll(): array
+    {
+        return $this->query;
+    }
+
+    /** Everything the client sent: query string values overridden by the JSON body. */
+    public function all(): array
+    {
+        return $this->body + $this->query;
+    }
+
     /** Whole decoded JSON body. */
     public function body(): array
     {
