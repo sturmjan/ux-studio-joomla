@@ -1,0 +1,8 @@
+{
+	"id": "third-party-login",
+	"name": "Third-Party Login",
+	"description": "Sign in to the administration and the website with Google, Microsoft, Facebook, Seznam or any OpenID Connect provider (OAuth 2.0 with PKCE).",
+	"group": "security",
+	"icon": "log-in",
+	"settings": true
+}
