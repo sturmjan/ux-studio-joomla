@@ -1,0 +1,8 @@
+{
+	"id": "pixel-tag-manager",
+	"name": "Pixel & Tag Manager",
+	"description": "Add tracking pixels and tags (Google Analytics 4, Google Ads, Tag Manager, Meta Pixel, Microsoft Clarity, Pinterest, Seznam retargeting) to the site. Scripts load only after the visitor's consent.",
+	"group": "marketing",
+	"icon": "activity",
+	"settings": true
+}

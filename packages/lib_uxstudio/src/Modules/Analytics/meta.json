@@ -1,0 +1,8 @@
+{
+	"id": "analytics",
+	"name": "Visitor Statistics",
+	"description": "Own cookie-free traffic measurement (GDPR-friendly): page views, unique visitors, top pages, sources, devices and a chart of the last days. Data is aggregated into daily summaries in batches.",
+	"group": "content",
+	"icon": "bar-chart",
+	"settings": true
+}
