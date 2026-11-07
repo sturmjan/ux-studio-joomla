@@ -158,6 +158,10 @@ Handler vždy sám validuje vstup (typy, délky, whitelist) a používá paramet
 **Přísnější ACL na jedné routě:** `acl()` modulu platí pro všechny routy; rizikovou akci zpřísníš tvarem
 `'POST purge' => ['handler' => [$this, 'purge'], 'acl' => 'core.admin']` (musí projít ACL modulu i routy).
 
+**Vedlejší efekty na soubory (`toggle_acl`):** zapnutí, vypnutí a nastavení modulu jdou jen přes `acl()` modulu, ne přes ACL jednotlivých rout. Modul, který zapisuje soubory nebo konfiguraci serveru (`.htaccess`), proto v `meta.json` uvede `"toggle_acl": "core.admin"`; jádro tuto přísnější ACL vyžaduje i pro přepnutí a uložení nastavení.
+
+**Osobní údaje:** ACL routy export nechrání data, která tentýž modul vrací stránkovaně přes jinou routu (`core.manage`). Přísnější ACL u exportu proto dává smysl jen tehdy, když i čtení má stejnou; jinak se spoléháme na `acl()` modulu.
+
 ### Veřejné (site) routy - `publicRoutes()`
 
 Pro formuláře, consent, webhooky a Centrální aplikaci (bez přihlášení): jeden endpoint
