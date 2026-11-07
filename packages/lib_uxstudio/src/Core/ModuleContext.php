@@ -91,6 +91,25 @@ final class ModuleContext
         return new Http();
     }
 
+    /** Key / value storage of this module (Core\Store). */
+    public function store(): Store
+    {
+        return new Store($this->kernel->db(), $this->moduleId);
+    }
+
+    /**
+     * Asks the Joomla scheduler to run a job of this module (declared in tasks()) soon, once, in addition to its regular
+     * interval: for example the first scan right after the module was switched on. It runs at the next scheduler tick (lazy
+     * scheduler in the browser, cron or scheduler:run), not inside this request.
+     *
+     * @param int $delaySeconds wait at least this long (default: as soon as possible)
+     * @return bool false when the module has no such job or the scheduler is not available
+     */
+    public function runJobSoon(string $jobId, int $delaySeconds = 0): bool
+    {
+        return $this->kernel->scheduler()->runSoon($this->moduleId, $jobId, $delaySeconds);
+    }
+
     /**
      * Front-end assets of the module live in packages/lib_uxstudio/media/modules/<module-id>/ and are published to
      * media/lib_uxstudio/modules/<module-id>/. This returns the site-relative URL of one file (path inside that folder).

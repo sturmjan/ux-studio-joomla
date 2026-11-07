@@ -39,6 +39,12 @@ final class Migrator
                 'CREATE TABLE IF NOT EXISTS `#__uxstudio_ratelimit` ('
                 . '`bucket` CHAR(40) NOT NULL, `hits` INT UNSIGNED NOT NULL DEFAULT 0, `window_start` INT UNSIGNED NOT NULL, PRIMARY KEY (`bucket`), KEY `idx_window` (`window_start`))' . self::TABLE_OPTIONS,
             ],
+            3 => [
+                // Generic module key / value storage (Core\Store).
+                'CREATE TABLE IF NOT EXISTS `#__uxstudio_store` ('
+                . '`module` VARCHAR(64) NOT NULL, `k` VARCHAR(190) NOT NULL, `v` MEDIUMTEXT NOT NULL, `expires_at` INT UNSIGNED NULL DEFAULT NULL, `updated_at` INT UNSIGNED NOT NULL DEFAULT 0, '
+                . 'PRIMARY KEY (`module`, `k`), KEY `idx_expires` (`expires_at`))' . self::TABLE_OPTIONS,
+            ],
         ];
     }
 

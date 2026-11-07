@@ -91,6 +91,59 @@ final class Scheduler
         $this->setStateForPrefix($moduleId . '.', 0);
     }
 
+    /**
+     * One-off run: moves the next execution of the task of a job to now (+ delay), creating the task when it is missing.
+     * The job still keeps its regular interval afterwards. Executed by the next scheduler tick.
+     */
+    public function runSoon(string $moduleId, string $jobId, int $delaySeconds = 0): bool
+    {
+        $module = $this->registry->module($moduleId);
+        if (!$module || !$this->registry->isEnabled($moduleId)) {
+            return false;
+        }
+        $jobs = $this->jobsOf($module);
+        if (!isset($jobs[$jobId])) {
+            return false;
+        }
+        $job = $moduleId . '.' . $jobId;
+        try {
+            $row = $this->findRow($job);
+            if ($row === null) {
+                $this->ensureTask($job, 'UX Studio: ' . $jobs[$jobId]['label'], $jobs[$jobId]['interval'], true);
+                $row = $this->findRow($job);
+            }
+            if ($row === null) {
+                return false;
+            }
+            $db   = $this->db;
+            $id   = (int) $row['id'];
+            $when = Factory::getDate('+' . max(0, $delaySeconds) . ' seconds')->toSql();
+            $db->setQuery(
+                $db->createQuery()->update($db->quoteName('#__scheduler_tasks'))
+                    ->set($db->quoteName('next_execution') . ' = :n')->set($db->quoteName('state') . ' = 1')
+                    ->where($db->quoteName('id') . ' = :id')->bind(':n', $when)->bind(':id', $id, ParameterType::INTEGER)
+            )->execute();
+
+            return true;
+        } catch (\Throwable $e) {
+            \Joomla\CMS\Log\Log::add('UX Studio scheduler runSoon failed: ' . $e->getMessage(), \Joomla\CMS\Log\Log::WARNING, 'uxstudio');
+
+            return false;
+        }
+    }
+
+    /** @return array<string,mixed>|null the uxstudio.run row of "<module>.<job>" */
+    private function findRow(string $job): ?array
+    {
+        foreach ($this->rows() as $row) {
+            if (($row['params']['job'] ?? null) === $job && (int) $row['state'] !== -2) {
+                return $row;
+            }
+        }
+
+        return null;
+    }
+
     /** Core housekeeping job (log retention), created on install / first migration. */
     public function syncCore(): void
     {
@@ -305,7 +358,10 @@ final class Scheduler
         [$moduleId, $jobId] = array_pad(explode('.', $job, 2), 2, '');
 
         if ($moduleId === 'core' && $jobId === 'retention') {
-            return json_encode((new Retention($this->db, $this->registry))->run(), JSON_UNESCAPED_SLASHES) ?: '';
+            $report = (new Retention($this->db, $this->registry))->run();
+            $report['core:store'] = Store::purgeExpired();
+
+            return json_encode($report, JSON_UNESCAPED_SLASHES) ?: '';
         }
         if (!$this->registry->isEnabled($moduleId)) {
             throw new \RuntimeException('Module "' . $moduleId . '" is not enabled.');
