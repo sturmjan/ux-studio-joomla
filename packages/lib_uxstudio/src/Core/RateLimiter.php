@@ -23,7 +23,18 @@ final class RateLimiter
      */
     public function hitClient(string $name, int $limit, int $windowSeconds): int
     {
-        return $this->hit($name . '|' . ClientIp::current(), $limit, $windowSeconds);
+        return $this->hit($name . '|' . self::clientBucket(ClientIp::current()), $limit, $windowSeconds);
+    }
+
+    /** IPv6 visitors get a whole /64 for themselves, so rotating addresses inside it does not multiply the limit. */
+    private static function clientBucket(string $ip): string
+    {
+        $bin = str_contains($ip, ':') ? @inet_pton($ip) : false;
+        if ($bin === false || \strlen($bin) !== 16 || str_starts_with($bin, hex2bin('00000000000000000000ffff'))) {
+            return $ip;
+        }
+
+        return bin2hex(substr($bin, 0, 8)) . '/64';
     }
 
     /**

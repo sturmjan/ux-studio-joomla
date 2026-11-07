@@ -7,6 +7,7 @@ use Joomla\CMS\Uri\Uri;
 use Joomla\Database\DatabaseInterface;
 use Joomla\Database\ParameterType;
 use Ux1\UxStudio\Core\Kernel;
+use Ux1\UxStudio\Core\RateLimiter;
 use Ux1\UxStudio\Modules\BotThrottle\Guard;
 
 \defined('_JEXEC') or die;
@@ -123,6 +124,10 @@ final class Tracker
 
         // Cheap shared guard first (a banned IP costs one read), then the generous per-IP cap of the public route itself.
         if (class_exists(Guard::class) && Guard::exceeded('analytics_hit', 20, 10, 900)) {
+            return false;
+        }
+        // A real visitor stays far below this; it bounds what one address (an IPv6 /64 counts as one) can insert per hour.
+        if ((new RateLimiter($this->db))->hitClient('analytics:hit-hour', 600, 3600) > 0) {
             return false;
         }
 
