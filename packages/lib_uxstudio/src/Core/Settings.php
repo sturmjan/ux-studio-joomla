@@ -321,8 +321,9 @@ final class Settings
             case 'css':
                 $value = (string) (\is_scalar($value) ? $value : '');
                 $value = str_replace("\0", '', $value);
-                // Prevent breaking out of a <style> element.
-                $value = preg_replace('#<\s*/?\s*(style|script)#i', '', $value) ?? '';
+                // Prevent breaking out of a <style> element: "<" has no legitimate use in CSS, so every one becomes the CSS
+                // escape \3C (a single pass cannot be bypassed by nesting, unlike removing "</style").
+                $value = str_replace('<', '\\3C ', $value);
 
                 return $this->limit($field, $value);
 
