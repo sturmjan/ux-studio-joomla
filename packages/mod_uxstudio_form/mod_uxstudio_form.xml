@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension type="module" client="site" method="upgrade">
+	<name>mod_uxstudio_form</name>
+	<author>UX1</author>
+	<creationDate>2026-11</creationDate>
+	<copyright>(C) UX1</copyright>
+	<license>GNU General Public License version 2 or later</license>
+	<authorEmail>info@ux1.cz</authorEmail>
+	<authorUrl>https://ux1.cz</authorUrl>
+	<version>0.1.0</version>
+	<description>MOD_UXSTUDIO_FORM_XML_DESCRIPTION</description>
+	<namespace path="src">Ux1\Module\UxStudioForm</namespace>
+	<files>
+		<folder module="mod_uxstudio_form">services</folder>
+		<folder>src</folder>
+		<folder>tmpl</folder>
+		<folder>language</folder>
+	</files>
+	<languages folder="language">
+		<language tag="en-GB">en-GB/mod_uxstudio_form.ini</language>
+		<language tag="en-GB">en-GB/mod_uxstudio_form.sys.ini</language>
+		<language tag="cs-CZ">cs-CZ/mod_uxstudio_form.ini</language>
+		<language tag="cs-CZ">cs-CZ/mod_uxstudio_form.sys.ini</language>
+	</languages>
+	<config>
+		<fields name="params">
+			<fieldset name="basic">
+				<field
+					name="form_id"
+					type="sql"
+					label="MOD_UXSTUDIO_FORM_FORM"
+					description="MOD_UXSTUDIO_FORM_FORM_DESC"
+					query="SELECT id, title FROM #__uxstudio_forms_forms WHERE status = 'published' ORDER BY title"
+					key_field="id"
+					value_field="title"
+					required="true"
+				>
+					<option value="">MOD_UXSTUDIO_FORM_SELECT</option>
+				</field>
+			</fieldset>
+			<fieldset name="advanced">
+				<field name="layout" type="modulelayout" label="JFIELD_ALT_LAYOUT_LABEL" class="form-select" validate="moduleLayout" />
+				<field name="moduleclass_sfx" type="textarea" label="COM_MODULES_FIELD_MODULECLASS_SFX_LABEL" rows="3" validate="CssIdentifier" />
+				<field name="cache" type="hidden" default="0" />
+			</fieldset>
+		</fields>
+	</config>
+</extension>

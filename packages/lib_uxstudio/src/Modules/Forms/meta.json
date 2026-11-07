@@ -1,0 +1,8 @@
+{
+	"id": "forms",
+	"name": "Form Builder",
+	"description": "Build forms with validation, spam protection, e-mail notifications and a searchable archive of submissions.",
+	"group": "content",
+	"icon": "clipboard-list",
+	"settings": true
+}

@@ -1,0 +1,109 @@
+/* UX Studio Forms - default front-end styles. Override --uxs-form-* variables or turn this file off in the module settings. */
+.uxs-form {
+	--uxs-form-accent: #2563eb;
+	--uxs-form-border: #cbd5e1;
+	--uxs-form-text: inherit;
+	--uxs-form-error: #b91c1c;
+	--uxs-form-ok: #15803d;
+	--uxs-form-radius: 6px;
+	color: var(--uxs-form-text);
+	max-width: 100%;
+}
+.uxs-form *,
+.uxs-form *::before,
+.uxs-form *::after {
+	box-sizing: border-box;
+}
+.uxs-form__grid {
+	display: grid;
+	grid-template-columns: repeat(12, minmax(0, 1fr));
+	gap: 1rem 1rem;
+}
+.uxs-form__field {
+	grid-column: span 12;
+	min-width: 0;
+}
+.uxs-form__field[hidden] {
+	display: none;
+}
+.uxs-form__field.uxs-w-25 { grid-column: span 3; }
+.uxs-form__field.uxs-w-33 { grid-column: span 4; }
+.uxs-form__field.uxs-w-50 { grid-column: span 6; }
+.uxs-form__field.uxs-w-66 { grid-column: span 8; }
+.uxs-form__field.uxs-w-75 { grid-column: span 9; }
+@media (max-width: 640px) {
+	.uxs-form__field[class*='uxs-w-'] { grid-column: span 12; }
+}
+.uxs-form label,
+.uxs-form legend {
+	display: block;
+	font-weight: 600;
+	margin: 0 0 0.3rem;
+	padding: 0;
+}
+.uxs-form__req { color: var(--uxs-form-error); }
+.uxs-form input[type='text'],
+.uxs-form input[type='email'],
+.uxs-form input[type='tel'],
+.uxs-form input[type='url'],
+.uxs-form input[type='number'],
+.uxs-form input[type='date'],
+.uxs-form input[type='file'],
+.uxs-form select,
+.uxs-form textarea {
+	width: 100%;
+	padding: 0.6rem 0.75rem;
+	border: 1px solid var(--uxs-form-border);
+	border-radius: var(--uxs-form-radius);
+	font: inherit;
+	background: #fff;
+	color: #0f172a;
+}
+.uxs-form input:focus-visible,
+.uxs-form select:focus-visible,
+.uxs-form textarea:focus-visible,
+.uxs-form__submit:focus-visible {
+	outline: 2px solid var(--uxs-form-accent);
+	outline-offset: 1px;
+}
+.uxs-form [aria-invalid='true'] { border-color: var(--uxs-form-error); }
+.uxs-form fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.uxs-form .uxs-form__choice {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.5rem;
+	font-weight: 400;
+	margin: 0 0 0.3rem;
+}
+.uxs-form .uxs-form__choice input { margin-top: 0.3rem; accent-color: var(--uxs-form-accent); }
+.uxs-form__help,
+.uxs-form__hint { margin: 0.25rem 0 0; font-size: 0.85em; opacity: 0.75; }
+.uxs-form__error { margin: 0.25rem 0 0; font-size: 0.875em; color: var(--uxs-form-error); }
+.uxs-form__error[hidden] { display: none; }
+/* Honeypot: out of sight for people and assistive technology, but present in the DOM for bots. */
+.uxs-form__hp {
+	position: absolute;
+	left: -10000px;
+	top: auto;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+}
+.uxs-form__actions { margin-top: 1.25rem; }
+.uxs-form__submit {
+	appearance: none;
+	border: 0;
+	border-radius: var(--uxs-form-radius);
+	background: var(--uxs-form-accent);
+	color: #fff;
+	font: inherit;
+	font-weight: 600;
+	padding: 0.7rem 1.5rem;
+	cursor: pointer;
+}
+.uxs-form__submit:hover { filter: brightness(0.92); }
+.uxs-form__submit:disabled { opacity: 0.6; cursor: wait; }
+.uxs-form__status { margin-top: 0.75rem; font-weight: 600; }
+.uxs-form__status.is-success { color: var(--uxs-form-ok); }
+.uxs-form__status.is-error { color: var(--uxs-form-error); }
+.uxs-form__captcha { margin-top: 1rem; }
