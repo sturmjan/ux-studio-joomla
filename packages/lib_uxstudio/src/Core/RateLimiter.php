@@ -18,6 +18,15 @@ final class RateLimiter
     }
 
     /**
+     * Like hit(), but the bucket is per client IP (Core\ClientIp, honours the proxy mode of the core settings):
+     * (new RateLimiter($db))->hitClient('my-module:contact', 5, 600).
+     */
+    public function hitClient(string $name, int $limit, int $windowSeconds): int
+    {
+        return $this->hit($name . '|' . ClientIp::current(), $limit, $windowSeconds);
+    }
+
+    /**
      * Counts one request in the bucket.
      *
      * @return int 0 when the request is allowed, otherwise the number of seconds until the window resets

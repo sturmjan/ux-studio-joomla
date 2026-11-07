@@ -21,6 +21,9 @@ final class ModuleRegistry
     /** @var array<string,bool>|null */
     private ?array $enabled = null;
 
+    /** @var array<string,string> module id => last load / boot error of this request */
+    private array $errors = [];
+
     public function __construct(private DatabaseInterface $db, private string $modulesDir)
     {
     }
@@ -74,16 +77,44 @@ final class ModuleRegistry
             return $this->instances[$id];
         }
         $meta = $this->meta($id);
-        if ($meta === null || !class_exists($meta['class'])) {
+        if ($meta === null) {
             return null;
         }
-        $module = new $meta['class']();
+        try {
+            if (!class_exists($meta['class'])) {
+                return null;
+            }
+            $module = new $meta['class']();
+        } catch (\Throwable $e) {
+            // A parse / type error in one module must not take the others (or the module list) down.
+            $this->recordError($id, $e);
+
+            return null;
+        }
         if (!$module instanceof BaseModule) {
             return null;
         }
         $module->setMeta($meta);
 
         return $this->instances[$id] = $module;
+    }
+
+    /** Remembers (and logs) a load / boot failure of a module for this request; the SPA shows it as "boot error". */
+    public function recordError(string $id, \Throwable $e): void
+    {
+        $this->errors[$id] = sprintf('%s (%s:%d)', $e->getMessage(), basename($e->getFile()), $e->getLine());
+        \Joomla\CMS\Log\Log::add(sprintf('Module %s failed: %s in %s:%d', $id, $e->getMessage(), $e->getFile(), $e->getLine()), \Joomla\CMS\Log\Log::ERROR, 'uxstudio');
+    }
+
+    public function error(string $id): ?string
+    {
+        return $this->errors[$id] ?? null;
+    }
+
+    /** @return array<string,string> */
+    public function errors(): array
+    {
+        return $this->errors;
     }
 
     /** @return array<string,bool> */

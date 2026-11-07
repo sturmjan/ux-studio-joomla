@@ -48,15 +48,32 @@ final class Settings
         return $this->cache[$moduleId] = $data;
     }
 
+    /** True when a value for the key was saved (as opposed to the schema default). */
+    public function hasStored(string $moduleId, string $key): bool
+    {
+        return \array_key_exists($key, $this->stored($moduleId));
+    }
+
+    /** Stored value as is (password fields stay encrypted); null when nothing was saved. */
+    public function storedValue(string $moduleId, string $key): mixed
+    {
+        return $this->stored($moduleId)[$key] ?? null;
+    }
+
     /** Raw (untranslated) schema keyed by field key; unknown module => empty. */
     public function rawSchema(string $moduleId): array
     {
-        $module = $this->registry->module($moduleId);
-        if (!$module) {
-            return [];
+        if ($moduleId === CoreSettings::ID) {
+            $definition = CoreSettings::schema();
+        } else {
+            $module = $this->registry->module($moduleId);
+            if (!$module) {
+                return [];
+            }
+            $definition = $module->settingsSchema();
         }
         $fields = [];
-        foreach ($module->settingsSchema() as $field) {
+        foreach ($definition as $field) {
             if (isset($field['key']) && preg_match('/^[A-Za-z0-9_]+$/', (string) $field['key'])) {
                 $field += ['type' => 'text'];
                 $fields[$field['key']] = $field;

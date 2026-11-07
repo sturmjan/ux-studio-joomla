@@ -102,17 +102,18 @@ final class Kernel
         try {
             Lang::loadCore($app);
             foreach ($this->registry()->enabledIds() as $id) {
-                $module = $this->registry()->module($id);
-                if (!$module) {
-                    continue;
-                }
                 try {
+                    $module = $this->registry()->module($id);
+                    if (!$module) {
+                        continue;
+                    }
                     Lang::loadModule($app, $id, $module->path());
                     $ctx = new ModuleContext($id, $app, $this);
                     $module->setContext($ctx);
                     $module->boot($ctx);
                 } catch (\Throwable $e) {
-                    Log::add(sprintf('Module %s failed to boot: %s', $id, $e->getMessage()), Log::ERROR, 'uxstudio');
+                    // One broken module never stops the boot of the others; the error is logged and shown in the SPA.
+                    $this->registry()->recordError($id, $e);
                 }
             }
         } catch (\Throwable $e) {

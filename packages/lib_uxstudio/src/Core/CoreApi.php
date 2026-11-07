@@ -66,6 +66,7 @@ final class CoreApi
             'settings'    => (bool) $meta['settings'],
             'enabled'     => $registry->isEnabled($id),
             'requires'    => array_values((array) $meta['requires']),
+            'error'       => $registry->error($id),
         ];
     }
 
@@ -121,9 +122,22 @@ final class CoreApi
         return $this->describe($id) + ['migrations' => $applied];
     }
 
-    private function moduleForSettings(ApiRequest $r): BaseModule
+    /** The core's own settings (id "core") are an administrator matter. */
+    private function coreSettingsGuard(ApiRequest $r): void
+    {
+        if (!$r->user()->authorise('core.admin', Api::COMPONENT)) {
+            throw new ApiException(Text::_('UXS_CORE_ERR_FORBIDDEN'), 403, 'forbidden');
+        }
+    }
+
+    private function moduleForSettings(ApiRequest $r): ?BaseModule
     {
         $id       = $r->param('id');
+        if ($id === CoreSettings::ID) {
+            $this->coreSettingsGuard($r);
+
+            return null;
+        }
         $registry = $this->kernel->registry();
         $module   = $registry->has($id) ? $registry->module($id) : null;
         if (!$module) {
@@ -139,19 +153,22 @@ final class CoreApi
 
     public function getSettings(ApiRequest $r): array
     {
-        $module = $this->moduleForSettings($r);
-        $s      = $this->kernel->settings();
+        $id = $this->moduleForSettings($r)?->id() ?? CoreSettings::ID;
+        $s  = $this->kernel->settings();
 
-        return ['id' => $module->id(), 'schema' => $s->schema($module->id()), 'values' => $s->forClient($module->id())];
+        return ['id' => $id, 'schema' => $s->schema($id), 'values' => $s->forClient($id)];
     }
 
     public function saveSettings(ApiRequest $r): array
     {
-        $module = $this->moduleForSettings($r);
+        $id     = $this->moduleForSettings($r)?->id() ?? CoreSettings::ID;
         $s      = $this->kernel->settings();
-        $values = $s->save($module->id(), $r->body());
+        $values = $s->save($id, $r->body());
+        if ($id === CoreSettings::ID) {
+            ClientIp::reset();
+        }
 
-        return ['id' => $module->id(), 'schema' => $s->schema($module->id()), 'values' => $values];
+        return ['id' => $id, 'schema' => $s->schema($id), 'values' => $values];
     }
 
     public function dashboard(ApiRequest $r): array

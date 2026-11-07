@@ -56,7 +56,7 @@ final class PublicApi
             }
 
             // Rate limit first: cheap and protects the checks below.
-            $ip = (string) $input->server->get('REMOTE_ADDR', '', 'string');
+            $ip = ClientIp::current();
             [$max, $window] = array_pad(array_map('intval', (array) ($def['limit'] ?? self::DEFAULT_LIMIT)), 2, 60);
             $retry = (new RateLimiter($this->kernel->db()))->hit($target . '|' . $pattern . '|' . $ip, max(1, $max), max(1, $window));
             if ($retry > 0) {

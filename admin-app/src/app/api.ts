@@ -106,6 +106,8 @@ export interface ModuleInfo {
 	settings: boolean;
 	enabled: boolean;
 	requires: string[];
+	/** Load / boot error of the module on the last request (null when fine). */
+	error?: string | null;
 }
 
 export interface CoreMeta {

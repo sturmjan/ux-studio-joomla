@@ -61,7 +61,7 @@ final class Submitter
             throw new ApiException(Text::_('UXS_FORMS_ERR_TOO_FAST'), 429, 'too_fast');
         }
 
-        $ip = (string) Factory::getApplication()->getInput()->server->get('REMOTE_ADDR', '', 'string');
+        $ip = \Ux1\UxStudio\Core\ClientIp::current();
 
         // 4) Turnstile (when the form asks for it and the keys are configured).
         if (!empty($s['turnstile']) && (string) $ctx->setting('turnstile_secret', '') !== '') {

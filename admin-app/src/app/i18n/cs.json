@@ -163,5 +163,8 @@
 	"Run the setup wizard": "Spustit průvodce nastavením",
 	"Is this a new website? Choose its type and turn on the recommended modules in one short wizard.": "Je to nový web? Vyberte jeho typ a zapněte doporučené moduly v jednom krátkém průvodci.",
 	"Start the wizard": "Spustit průvodce",
-	"Dismiss": "Zavřít"
+	"Dismiss": "Zavřít",
+	"Boot error": "Chyba startu",
+	"The module failed to start and is skipped on this site. The other modules keep working.": "Modul se nepodařilo spustit a na webu se přeskakuje. Ostatní moduly fungují dál.",
+	"Shared options of UX Studio that every module uses.": "Společná nastavení UX Studia, která používají všechny moduly."
 }

@@ -43,6 +43,13 @@ export function ModulePage(): JSX.Element {
 				<ToggleSwitch checked={ module.enabled } label={ module.enabled ? t( 'Disable module' ) : t( 'Turn on module' ) } onChange={ ( enabled ) => toggle.mutate( { m: module, enabled } ) } />
 			</PageHead>
 			{ module.description ? <p className="uxs-muted">{ module.description }</p> : null }
+			{ module.error ? (
+				<div className="uxs-notice is-error" role="alert">
+					<strong>{ t( 'Boot error' ) }</strong> { t( 'The module failed to start and is skipped on this site. The other modules keep working.' ) }
+					<br />
+					<code>{ module.error }</code>
+				</div>
+			) : null }
 			{ ! module.enabled ? (
 				<div className="uxs-notice">
 					<p>

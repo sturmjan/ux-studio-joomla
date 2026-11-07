@@ -2,7 +2,7 @@
 
 namespace Ux1\UxStudio\Modules\BotThrottle;
 
-use Ux1\UxStudio\Modules\SecurityOptimization\ClientIp;
+use Ux1\UxStudio\Core\ClientIp;
 
 \defined('_JEXEC') or die;
 

@@ -2,8 +2,7 @@
 
 namespace Ux1\UxStudio\Modules\Analytics;
 
-use Ux1\UxStudio\Core\Kernel;
-use Ux1\UxStudio\Modules\SecurityOptimization\ClientIp as SharedClientIp;
+use Ux1\UxStudio\Core\ClientIp as SharedClientIp;
 
 \defined('_JEXEC') or die;
 
@@ -22,19 +21,6 @@ final class ClientIp
             return filter_var($remote, FILTER_VALIDATE_IP) ? $remote : '';
         }
 
-        $mode    = 'cloudflare';
-        $trusted = '';
-        try {
-            $settings = Kernel::instance()->settings();
-            $mode     = (string) $settings->get('security-optimization', 'ip_firewall_proxy', 'cloudflare');
-            $trusted  = (string) $settings->get('security-optimization', 'ip_trusted_proxies', '');
-        } catch (\Throwable $e) {
-            // Settings unavailable: fall back to the Cloudflare-only default below.
-        }
-
-        return SharedClientIp::resolve(
-            \in_array($mode, SharedClientIp::MODES, true) ? $mode : 'cloudflare',
-            SharedClientIp::parseList($trusted)
-        );
+        return SharedClientIp::current();
     }
 }

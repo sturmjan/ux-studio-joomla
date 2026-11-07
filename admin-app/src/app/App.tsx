@@ -3,9 +3,11 @@
  * Routes: #/modules (default) and #/module?id=<module id>.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { LayoutGrid, Menu, Moon, PanelLeftClose, PanelLeftOpen, Sun, X } from 'lucide-react';
+import { LayoutGrid, Menu, Moon, PanelLeftClose, PanelLeftOpen, Settings, Sun, X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { UNSAFE_PortalProvider as PortalProvider } from 'react-aria';
-import { options } from './api';
+import { api, options, type CoreMeta } from './api';
+import { CoreSettingsPage } from './CoreSettingsPage';
 import { t } from './i18n';
 import { ModuleGrid } from './ModuleGrid';
 import { ModuleIcon } from './moduleIcons';
@@ -36,6 +38,7 @@ export function App(): JSX.Element {
 	useRoute();
 	const route = currentRoute();
 	const { data: modules } = useModules();
+	const { data: meta } = useQuery( { queryKey: [ 'meta' ], queryFn: () => api.get< CoreMeta >( 'core/meta' ) } );
 	const shellRef = useRef< HTMLDivElement >( null );
 	const [ narrow, setNarrow ] = useState( false );
 	const [ folded, setFolded ] = useState( getSidebarHidden() );
@@ -115,7 +118,7 @@ export function App(): JSX.Element {
 						</button>
 					</div>
 					<nav className="uxs-tree" aria-label={ t( 'Modules' ) }>
-						<button type="button" className={ `uxs-sidebar__item${ route !== 'module' ? ' is-active' : '' }` } onClick={ () => go( 'modules' ) }>
+						<button type="button" className={ `uxs-sidebar__item${ route !== 'module' && route !== 'settings' ? ' is-active' : '' }` } onClick={ () => go( 'modules' ) }>
 							<LayoutGrid size={ 20 } aria-hidden="true" /> { t( 'Modules' ) }
 						</button>
 						{ ( modules ?? [] )
@@ -125,6 +128,11 @@ export function App(): JSX.Element {
 									<ModuleIcon name={ m.icon } moduleId={ m.id } size={ 20 } /> { m.name }
 								</button>
 							) ) }
+						{ meta?.canAdmin ? (
+							<button type="button" className={ `uxs-sidebar__item${ route === 'settings' ? ' is-active' : '' }` } onClick={ () => go( 'settings' ) }>
+								<Settings size={ 20 } aria-hidden="true" /> { t( 'Settings' ) }
+							</button>
+						) : null }
 					</nav>
 					<div className="uxs-sidebar__foot">
 						<button type="button" className="uxs-sidebar__item" onClick={ toggleTheme }>
@@ -155,6 +163,8 @@ export function App(): JSX.Element {
 					) : null }
 					{ route === 'module' ? (
 						<ModulePage key={ activeId ?? '' } />
+					) : route === 'settings' ? (
+						<CoreSettingsPage />
 					) : route === 'wizard' ? (
 						<Wizard />
 					) : (

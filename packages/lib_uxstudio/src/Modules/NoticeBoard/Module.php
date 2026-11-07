@@ -265,8 +265,7 @@ final class Module extends BaseModule
             $app->enqueueMessage(Text::_('JINVALID_TOKEN_NOTICE'), 'warning');
             $app->redirect($back);
         }
-        $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
-        if ((new RateLimiter($this->ctx()->db()))->hit('notice-board:subscribe-form:' . $ip, 5, 300) > 0) {
+        if ((new RateLimiter($this->ctx()->db()))->hitClient('notice-board:subscribe-form', 5, 300) > 0) {
             $app->enqueueMessage(Text::_('UXS_NOTICE_BOARD_SUBSCRIBE_ERROR'), 'warning');
             $app->redirect($back);
         }

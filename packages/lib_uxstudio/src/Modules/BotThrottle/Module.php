@@ -12,7 +12,7 @@ use Ux1\UxStudio\Core\ApiException;
 use Ux1\UxStudio\Core\ApiRequest;
 use Ux1\UxStudio\Core\BaseModule;
 use Ux1\UxStudio\Core\ModuleContext;
-use Ux1\UxStudio\Modules\SecurityOptimization\ClientIp;
+use Ux1\UxStudio\Core\ClientIp;
 
 \defined('_JEXEC') or die;
 
@@ -93,14 +93,13 @@ final class Module extends BaseModule
             $s    = $this->s();
             $mode = (string) ($s['ip_source'] ?? 'inherit');
             if ($mode === 'inherit') {
-                $kernel  = $this->ctx()->kernel();
-                $mode    = (string) $kernel->settings()->get('security-optimization', 'ip_firewall_proxy', 'cloudflare');
-                $trusted = (string) $kernel->settings()->get('security-optimization', 'ip_trusted_proxies', '');
+                // Core setting (Settings screen of UX Studio).
+                $this->ip      = ClientIp::current();
+                $this->trusted = ClientIp::trusted();
             } else {
-                $trusted = (string) ($s['trusted_proxies'] ?? '');
+                $this->trusted = ClientIp::parseList((string) ($s['trusted_proxies'] ?? ''));
+                $this->ip      = ClientIp::resolve(\in_array($mode, ClientIp::MODES, true) ? $mode : 'cloudflare', $this->trusted);
             }
-            $this->ip      = ClientIp::resolve(\in_array($mode, ClientIp::MODES, true) ? $mode : 'cloudflare', ClientIp::parseList($trusted));
-            $this->trusted = ClientIp::parseList($trusted);
         }
 
         return $this->ip !== '' ? $this->ip : '0.0.0.0';
@@ -109,7 +108,8 @@ final class Module extends BaseModule
     /** A Cloudflare edge / trusted proxy address is a shared hop, never a single visitor: no rate limit, no ban for it. */
     private function isSharedHop(string $ip): bool
     {
-        return ClientIp::isEdge($ip, $this->trusted);
+        // Also loopback / private addresses: they are reported, never throttled or banned automatically.
+        return ClientIp::isProtected($ip, $this->trusted);
     }
 
     private function debugHeaders(): bool
@@ -575,7 +575,8 @@ final class Module extends BaseModule
             'cache'      => (new Microcache())->size(),
             'active_bans' => $this->store()->activeBanCount(),
             'client_ip'  => $this->clientIp(),
-            'edge_warning' => $this->isSharedHop($this->clientIp()),
+            'edge_warning' => ClientIp::isEdge($this->clientIp(), $this->trusted),
+            'local_ip'     => ClientIp::isLocal($this->clientIp()),
             'categories' => $cats,
             'report_hash_enabled' => $this->reportHash('0.0.0.0') !== '',
         ];

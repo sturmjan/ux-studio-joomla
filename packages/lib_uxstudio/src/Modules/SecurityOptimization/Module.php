@@ -83,9 +83,8 @@ final class Module extends BaseModule
     private function clientIp(): string
     {
         if ($this->ip === null) {
-            $s        = $this->s();
-            $mode     = \in_array($s['ip_firewall_proxy'] ?? 'cloudflare', ClientIp::MODES, true) ? (string) $s['ip_firewall_proxy'] : 'cloudflare';
-            $this->ip = ClientIp::resolve($mode, ClientIp::parseList((string) ($s['ip_trusted_proxies'] ?? '')));
+            // Mode and trusted proxies are core settings (Core\ClientIp).
+            $this->ip = ClientIp::current();
         }
 
         return $this->ip;
@@ -135,15 +134,15 @@ final class Module extends BaseModule
         }
     }
 
-    /** Loopback and allowlisted addresses are never locked out. */
+    /** Loopback, private and allowlisted addresses are never locked out (a shared local hop would lock out everybody). */
     private function loginExempt(string $ip): bool
     {
-        return ClientIp::isLoopback($ip) || ClientIp::matches($ip, ClientIp::parseList((string) ($this->s()['ip_firewall_allowlist'] ?? '')));
+        return ClientIp::isLocal($ip) || ClientIp::matches($ip, ClientIp::parseList((string) ($this->s()['ip_firewall_allowlist'] ?? '')));
     }
 
     private function trustedList(): array
     {
-        return ClientIp::parseList((string) ($this->s()['ip_trusted_proxies'] ?? ''));
+        return ClientIp::trusted();
     }
 
     /** Basic hardening headers that must also be on redirects and error pages (the full set follows in onAfterRender). */
@@ -263,7 +262,8 @@ final class Module extends BaseModule
         }
 
         $autoAfter = (int) ($s['lockout_auto_ban_after'] ?? 0);
-        if ($autoAfter > 0 && $lock['strikes'] >= $autoAfter && !ClientIp::isEdge($ip, $this->trustedList())) {
+        if ($autoAfter > 0 && $lock['strikes'] >= $autoAfter && !ClientIp::isProtected($ip, $this->trustedList())) {
+            // Loopback, private and proxy addresses are never banned automatically (only locked out and reported).
             try {
                 $this->bans()->save([
                     'value'      => $ip,
@@ -607,10 +607,6 @@ final class Module extends BaseModule
         return [
             // Firewall.
             ['key' => 'ip_firewall_enabled', 'section' => $p . 'SEC_FIREWALL', 'type' => 'toggle', 'label' => $p . 'F_FIREWALL', 'help' => $p . 'F_FIREWALL_HELP', 'default' => true],
-            ['key' => 'ip_firewall_proxy', 'section' => $p . 'SEC_FIREWALL', 'type' => 'select', 'label' => $p . 'F_PROXY', 'help' => $p . 'F_PROXY_HELP', 'default' => 'cloudflare',
-             'options' => ['none' => $p . 'PROXY_NONE', 'cloudflare' => $p . 'PROXY_CLOUDFLARE', 'xff' => $p . 'PROXY_XFF']],
-            ['key' => 'ip_trusted_proxies', 'section' => $p . 'SEC_FIREWALL', 'type' => 'textarea', 'label' => $p . 'F_TRUSTED', 'help' => $p . 'F_TRUSTED_HELP', 'default' => '', 'maxlength' => 2000,
-             'show_if' => ['key' => 'ip_firewall_proxy', 'in' => ['cloudflare', 'xff']]],
             ['key' => 'ip_firewall_allowlist', 'section' => $p . 'SEC_FIREWALL', 'type' => 'textarea', 'label' => $p . 'F_ALLOWLIST', 'help' => $p . 'F_ALLOWLIST_HELP', 'default' => '', 'maxlength' => 4000],
             ['key' => 'ip_firewall_message', 'section' => $p . 'SEC_FIREWALL', 'type' => 'text', 'label' => $p . 'F_MESSAGE', 'help' => $p . 'F_MESSAGE_HELP', 'default' => '', 'maxlength' => 300],
 
@@ -778,7 +774,7 @@ final class Module extends BaseModule
         return [
             'client_ip'        => $ip,
             'remote_addr'      => ClientIp::normalize((string) ($_SERVER['REMOTE_ADDR'] ?? '')),
-            'ip_mode'          => $s['ip_firewall_proxy'],
+            'ip_mode'          => ClientIp::mode(),
             // The visitor address resolved to a Cloudflare edge / trusted proxy: the proxy mode does not match the real setup.
             'edge_warning'     => $ip !== '' && ClientIp::isEdge($ip, $this->trustedList()),
             'firewall'         => !empty($s['ip_firewall_enabled']),

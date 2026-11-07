@@ -140,6 +140,11 @@ export function ModuleGrid(): JSX.Element {
 								<span className="uxs-tile__desc" title={ m.description }>
 									{ m.description }
 								</span>
+								{ m.error ? (
+									<span className="uxs-badge is-danger" title={ m.error }>
+										{ t( 'Boot error' ) }
+									</span>
+								) : null }
 								<ToggleSwitch checked={ m.enabled } label={ m.enabled ? t( 'Disable module' ) : t( 'Turn on module' ) } onChange={ ( enabled ) => toggle.mutate( { m, enabled } ) } />
 								{ clickable ? <ChevronRight size={ 16 } className="uxs-tile__chevron" aria-hidden="true" /> : <span className="uxs-tile__chevron" aria-hidden="true" style={ { width: 16 } } /> }
 							</div>

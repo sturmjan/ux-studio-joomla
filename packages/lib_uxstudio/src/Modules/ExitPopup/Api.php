@@ -87,7 +87,7 @@ final class Api
         $page = trim($r->string('page_url'));
         $page = preg_match('#^https?://#i', $page) ? mb_substr(preg_replace('/[\x00-\x1f\x7f]/', '', $page) ?? '', 0, 500) : '';
 
-        $ip     = (string) $this->ctx->app()->getInput()->server->get('REMOTE_ADDR', '', 'string');
+        $ip     = \Ux1\UxStudio\Core\ClientIp::current();
         $ipHash = hash_hmac('sha256', $ip, (string) $this->ctx->app()->get('secret', ''));
 
         // Idempotent: an existing address answers like a new one, so the form cannot be used to probe subscriptions.
