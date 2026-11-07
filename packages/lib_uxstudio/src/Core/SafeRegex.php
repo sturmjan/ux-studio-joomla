@@ -1,10 +1,12 @@
 <?php
 
-namespace Ux1\UxStudio\Modules\Redirects;
+namespace Ux1\UxStudio\Core;
 
 \defined('_JEXEC') or die;
 
 /**
+ * Shared helper of the core (modules: Core\SafeRegex).
+ *
  * Regular expressions written by an administrator and evaluated on visitor input.
  *
  * A pattern like `(a+)+$` takes exponential time on a crafted address (ReDoS): a single request could pin a PHP

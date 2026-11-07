@@ -6,6 +6,7 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
 use Joomla\Database\DatabaseInterface;
 use Joomla\Database\ParameterType;
+use Ux1\UxStudio\Core\SafeRegex;
 
 \defined('_JEXEC') or die;
 

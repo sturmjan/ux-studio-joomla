@@ -5,6 +5,7 @@ namespace Ux1\UxStudio\Modules\Redirects;
 use Joomla\CMS\Language\Text;
 use Joomla\Http\HttpFactory;
 use Ux1\UxStudio\Core\Http;
+use Ux1\UxStudio\Core\SafeRegex;
 
 \defined('_JEXEC') or die;
 
