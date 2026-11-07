@@ -2,6 +2,8 @@
 
 namespace Ux1\UxStudio\Modules\PerformanceOptimization;
 
+use Ux1\UxStudio\Core\HtaccessBlock;
+
 \defined('_JEXEC') or die;
 
 /**
@@ -101,7 +103,7 @@ final class CacheHeaders
         $base    = trim(self::strip($current)); // throws before anything is written when the markers are damaged
         $backup  = $current !== '' ? self::backup($current) : '';
         $next = ($base === '' ? '' : $base . "\n\n") . self::block($ttl);
-        if (@file_put_contents($file, $next, LOCK_EX) === false) {
+        if (!HtaccessBlock::write($file, $next)) {
             throw new \RuntimeException('The .htaccess file is not writable.');
         }
 
@@ -129,7 +131,7 @@ final class CacheHeaders
             return @unlink($file);
         }
 
-        return @file_put_contents($file, $base . "\n", LOCK_EX) !== false;
+        return HtaccessBlock::write($file, $base . "\n");
     }
 
     /**

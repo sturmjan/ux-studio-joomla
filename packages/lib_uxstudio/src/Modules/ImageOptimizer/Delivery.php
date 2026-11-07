@@ -2,6 +2,8 @@
 
 namespace Ux1\UxStudio\Modules\ImageOptimizer;
 
+use Ux1\UxStudio\Core\HtaccessBlock;
+
 \defined('_JEXEC') or die;
 
 /**
@@ -60,13 +62,25 @@ final class Delivery
         $file    = self::file();
         $current = is_file($file) ? (string) file_get_contents($file) : '';
         $block   = self::block($webp, $avif);
-        $next    = self::strip($current);
-        $next    = ($next === '' ? '' : rtrim($next) . "\n\n") . $block;
-        if ($next === $current) {
-            return true;
+        try {
+            $next = self::strip($current); // throws when the markers are damaged: nothing is written then
+            $next = ($next === '' ? '' : rtrim($next) . "\n\n") . $block;
+            if ($next === $current) {
+                return true;
+            }
+            if ($current !== '') {
+                HtaccessBlock::backup($current, self::backupDir(), 'images-htaccess');
+            }
+        } catch (\RuntimeException $e) {
+            return false;
         }
 
-        return @file_put_contents($file, $next) !== false;
+        return HtaccessBlock::write($file, $next);
+    }
+
+    private static function backupDir(): string
+    {
+        return JPATH_ADMINISTRATOR . '/logs/uxs-image-optimizer';
     }
 
     public static function remove(): bool
@@ -79,17 +93,23 @@ final class Delivery
         if (!str_contains($current, self::BEGIN)) {
             return true;
         }
-        $next = trim(self::strip($current));
+        try {
+            $next = trim(self::strip($current));
+            HtaccessBlock::backup($current, self::backupDir(), 'images-htaccess');
+        } catch (\RuntimeException $e) {
+            return false;
+        }
         if ($next === '') {
             return @unlink($file);
         }
 
-        return @file_put_contents($file, $next . "\n") !== false;
+        return HtaccessBlock::write($file, $next . "\n");
     }
 
+    /** @throws \RuntimeException when the end marker is missing */
     private static function strip(string $content): string
     {
-        return (string) preg_replace('/\R?' . preg_quote(self::BEGIN, '/') . '.*?' . preg_quote(self::END, '/') . '\R?/s', "\n", $content);
+        return HtaccessBlock::strip($content, self::BEGIN, self::END);
     }
 
     /** Brings the file in line with the settings (called when the admin opens the site / the module is switched on). */
