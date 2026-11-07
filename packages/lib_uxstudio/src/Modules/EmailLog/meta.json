@@ -1,0 +1,8 @@
+{
+	"id": "email-log",
+	"name": "E-mail log",
+	"description": "Records every e-mail the site sends (including Joomla core mail such as password reset): recipient, subject, text, status and origin. Resend a message, export to CSV.",
+	"group": "communication",
+	"icon": "mail-search",
+	"settings": true
+}

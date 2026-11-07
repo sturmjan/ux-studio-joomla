@@ -1,0 +1,8 @@
+{
+	"id": "smtp-email",
+	"name": "SMTP e-mail",
+	"description": "Sends all e-mail of the site (including Joomla core mail such as password reset) through your own SMTP server or the Brevo API, with an optional fallback connection and a From address override.",
+	"group": "communication",
+	"icon": "mail",
+	"settings": true
+}

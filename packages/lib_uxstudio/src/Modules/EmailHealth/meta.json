@@ -1,0 +1,8 @@
+{
+	"id": "email-health",
+	"name": "E-mail health",
+	"description": "Sends a test e-mail to check the site can deliver mail, and checks the DNS of the sender domain (MX, SPF, DKIM, DMARC). Optional scheduled tests; the result is available to the Central App.",
+	"group": "communication",
+	"icon": "mail-check",
+	"settings": true
+}
