@@ -1,0 +1,26 @@
+/* UX Studio Opening Hours - front end */
+.uxs-oh { max-width: 380px; border: 1px solid #d8dde3; border-radius: 10px; padding: 16px; font-size: 14px; line-height: 1.5; box-sizing: border-box; }
+.uxs-oh.is-hidden { display: none; }
+.uxs-oh__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.uxs-oh__title { font-weight: 600; }
+.uxs-oh__badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.uxs-oh__badge.is-open { background: #dcfce7; color: #14532d; }
+.uxs-oh__badge.is-closed { background: #fee2e2; color: #7f1d1d; }
+.uxs-oh__next { font-size: 13px; color: #4b5563; margin-bottom: 6px; }
+.uxs-oh__banner { color: #fff; border-radius: 6px; padding: 6px 10px; font-size: 13px; margin: 6px 0; }
+.uxs-oh__banner--info { background: #2271b1; }
+.uxs-oh__banner--warning { background: #8a5a00; }
+.uxs-oh__banner--critical { background: #d63638; }
+.uxs-oh__address, .uxs-oh__phone { color: #4b5563; margin-bottom: 4px; }
+.uxs-oh__note { color: #92400e; font-size: 13px; margin: 4px 0 8px; }
+.uxs-oh__table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+.uxs-oh__caption { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.uxs-oh__table th { text-align: left; font-weight: 400; color: #4b5563; padding: 3px 0; }
+.uxs-oh__table td { text-align: right; padding: 3px 0; }
+.uxs-oh__table tr.is-today th, .uxs-oh__table tr.is-today td { font-weight: 700; color: #111827; }
+.uxs-oh__exceptions { margin-top: 10px; padding-top: 8px; border-top: 1px solid #e5e7eb; font-size: 13px; }
+.uxs-oh__exceptions-title { font-weight: 600; margin-bottom: 4px; }
+.uxs-oh__exceptions ul { list-style: none; margin: 0; padding: 0; }
+.uxs-oh__exceptions li { display: flex; justify-content: space-between; gap: 8px; padding: 2px 0; }
+.uxs-oh__switch { display: block; margin-bottom: 8px; font-size: 14px; }
+.uxs-oh__switch select { margin-left: 6px; }

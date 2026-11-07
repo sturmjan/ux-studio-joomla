@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<extension type="module" client="site" method="upgrade">
+	<name>mod_uxstudio_opening_hours</name>
+	<author>UX1</author>
+	<creationDate>2026-11</creationDate>
+	<copyright>(C) UX1</copyright>
+	<license>GNU General Public License version 2 or later</license>
+	<authorEmail>info@ux1.cz</authorEmail>
+	<authorUrl>https://ux1.cz</authorUrl>
+	<version>0.1.0</version>
+	<description>MOD_UXSTUDIO_OPENING_HOURS_XML_DESCRIPTION</description>
+	<namespace path="src">Ux1\Module\UxStudioOpeningHours</namespace>
+	<files>
+		<folder module="mod_uxstudio_opening_hours">services</folder>
+		<folder>src</folder>
+		<folder>tmpl</folder>
+		<folder>language</folder>
+	</files>
+	<languages folder="language">
+		<language tag="en-GB">en-GB/mod_uxstudio_opening_hours.ini</language>
+		<language tag="en-GB">en-GB/mod_uxstudio_opening_hours.sys.ini</language>
+		<language tag="cs-CZ">cs-CZ/mod_uxstudio_opening_hours.ini</language>
+		<language tag="cs-CZ">cs-CZ/mod_uxstudio_opening_hours.sys.ini</language>
+	</languages>
+	<config>
+		<fields name="params">
+			<fieldset name="basic">
+				<field name="location" type="sql" label="MOD_UXSTUDIO_OPENING_HOURS_LOCATION" description="MOD_UXSTUDIO_OPENING_HOURS_LOCATION_DESC" default="0" query="SELECT id AS value, title AS text FROM #__uxstudio_oh_locations ORDER BY ordering, title" key_field="value" value_field="text" validate="options">
+					<option value="0">MOD_UXSTUDIO_OPENING_HOURS_LOCATION_FIRST</option>
+					<option value="all">MOD_UXSTUDIO_OPENING_HOURS_LOCATION_ALL</option>
+				</field>
+				<field name="display" type="list" label="MOD_UXSTUDIO_OPENING_HOURS_DISPLAY" description="MOD_UXSTUDIO_OPENING_HOURS_DISPLAY_DESC" default="card" validate="options">
+					<option value="card">MOD_UXSTUDIO_OPENING_HOURS_DISPLAY_CARD</option>
+					<option value="status">MOD_UXSTUDIO_OPENING_HOURS_DISPLAY_STATUS</option>
+				</field>
+			</fieldset>
+			<fieldset name="advanced">
+				<field name="layout" type="modulelayout" label="JFIELD_ALT_LAYOUT_LABEL" class="form-select" validate="moduleLayout" />
+				<field name="moduleclass_sfx" type="textarea" label="COM_MODULES_FIELD_MODULECLASS_SFX_LABEL" rows="3" validate="CssIdentifier" />
+				<field name="cache" type="list" label="COM_MODULES_FIELD_CACHING_LABEL" default="0" filter="integer" validate="options">
+					<option value="1">JGLOBAL_USE_GLOBAL</option>
+					<option value="0">COM_MODULES_FIELD_VALUE_NOCACHING</option>
+				</field>
+				<field name="cache_time" type="number" label="COM_MODULES_FIELD_CACHE_TIME_LABEL" default="900" filter="integer" />
+				<field name="cachemode" type="hidden" default="static">
+					<option value="static"></option>
+				</field>
+			</fieldset>
+		</fields>
+	</config>
+</extension>

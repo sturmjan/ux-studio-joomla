@@ -1,0 +1,145 @@
+/* UX Studio Top Bar. Colours come from --uxs-tb-bg / --uxs-tb-fg (set through WebAssetManager inline style). */
+#uxstudio-top-bar {
+	position: relative;
+	width: 100%;
+	overflow: hidden;
+	white-space: nowrap;
+	z-index: 99999;
+	font-size: 14px;
+	line-height: 1.4;
+	padding: 8px 0;
+	text-align: center;
+	box-sizing: border-box;
+	background: var(--uxs-tb-bg, #1d3998);
+	color: var(--uxs-tb-fg, #fff);
+}
+
+#uxstudio-top-bar.is-sticky {
+	position: sticky;
+	top: 0;
+}
+
+#uxstudio-top-bar a {
+	color: var(--uxs-tb-fg, #fff);
+	text-decoration: underline;
+}
+
+#uxstudio-top-bar a:hover {
+	opacity: 0.8;
+}
+
+.uxstudio-top-bar__track {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+}
+
+.uxstudio-top-bar__content {
+	display: inline-block;
+	white-space: nowrap;
+	padding: 0 20px;
+}
+
+/* Reserve room for the close button */
+#uxstudio-top-bar[data-hash] .uxstudio-top-bar__track {
+	padding-right: 36px;
+	box-sizing: border-box;
+}
+
+/* Strip block-level margins from editor output */
+.uxstudio-top-bar__content p,
+.uxstudio-top-bar__content ul,
+.uxstudio-top-bar__content ol {
+	display: inline;
+	margin: 0;
+	padding: 0;
+}
+
+.uxstudio-top-bar--marquee .uxstudio-top-bar__track {
+	justify-content: flex-start;
+	animation: uxstudio-top-bar-scroll var(--uxstudio-tb-duration, 20s) linear infinite;
+	width: max-content;
+}
+
+.uxstudio-top-bar--marquee .uxstudio-top-bar__content {
+	flex-shrink: 0;
+}
+
+@keyframes uxstudio-top-bar-scroll {
+	0% {
+		transform: translateX(0);
+	}
+	100% {
+		transform: translateX(-50%);
+	}
+}
+
+.uxstudio-top-bar--marquee:hover .uxstudio-top-bar__track {
+	animation-play-state: paused;
+}
+
+/* Slideshow: one message at a time, it may wrap instead of scrolling */
+#uxstudio-top-bar[data-slides] {
+	white-space: normal;
+}
+
+#uxstudio-top-bar[data-slides] .uxstudio-top-bar__content {
+	display: none;
+	white-space: normal;
+	width: 100%;
+	box-sizing: border-box;
+	text-align: center;
+}
+
+#uxstudio-top-bar[data-slides] .uxstudio-top-bar__content.is-active {
+	display: block;
+	animation: uxstudio-top-bar-fade 0.5s ease;
+}
+
+.uxstudio-top-bar__title {
+	margin-right: 0.5em;
+}
+
+.uxstudio-top-bar__close {
+	position: absolute;
+	top: 50%;
+	right: 8px;
+	transform: translateY(-50%);
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	border: 0;
+	border-radius: 4px;
+	background: transparent;
+	color: var(--uxs-tb-fg, #fff);
+	font-size: 22px;
+	line-height: 1;
+	cursor: pointer;
+	z-index: 2;
+}
+
+.uxstudio-top-bar__close:hover,
+.uxstudio-top-bar__close:focus-visible {
+	background: rgba(255, 255, 255, 0.2);
+	outline: 2px solid currentColor;
+	outline-offset: 1px;
+}
+
+@keyframes uxstudio-top-bar-fade {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	#uxstudio-top-bar[data-slides] .uxstudio-top-bar__content.is-active {
+		animation: none;
+	}
+	.uxstudio-top-bar--marquee .uxstudio-top-bar__track {
+		animation: none;
+	}
+}
