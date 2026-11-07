@@ -18,6 +18,7 @@ final class ApiRequest
      * @param array<string,mixed>  $query   Query string values.
      * @param array<string,mixed>  $body    Decoded JSON body.
      * @param string               $raw     Raw request body (public routes only; needed to verify signatures of your own).
+     * @param array<string,array<int,array{name:string,type:string,size:int,tmp_name:string,error:int}>> $files Uploaded files (multipart public routes).
      */
     public function __construct(
         private string $method,
@@ -26,8 +27,42 @@ final class ApiRequest
         private array $query,
         private array $body,
         private User $user,
-        private string $raw = ''
+        private string $raw = '',
+        private array $files = []
     ) {
+    }
+
+    /**
+     * Files uploaded with a multipart/form-data request to a public route that declares 'max_files'. Key = input name,
+     * nested names joined with dots (files[photo] / files[photo][] => "files.photo"); every value is a list of
+     * {name, type, size, tmp_name, error}. Already checked: really uploaded by PHP, no error, within the route limits.
+     * The client supplied name and type are untrusted: validate the content yourself.
+     *
+     * @return array<string,array<int,array{name:string,type:string,size:int,tmp_name:string,error:int}>>
+     */
+    public function files(): array
+    {
+        return $this->files;
+    }
+
+    /**
+     * Uploaded files of one input group: filesIn('files') returns ['photo' => [..files..]] for files[photo] / files[photo][].
+     * An input called exactly like the group (files / files[]) is returned under the key ''.
+     *
+     * @return array<string,array<int,array{name:string,type:string,size:int,tmp_name:string,error:int}>>
+     */
+    public function filesIn(string $group): array
+    {
+        $out = [];
+        foreach ($this->files as $key => $list) {
+            if ($key === $group) {
+                $out[''] = $list;
+            } elseif (str_starts_with($key, $group . '.')) {
+                $out[substr($key, \strlen($group) + 1)] = $list;
+            }
+        }
+
+        return $out;
     }
 
     /** Raw request body as received (public routes only, empty for administrator routes). */

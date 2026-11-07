@@ -84,7 +84,7 @@ final class Module extends BaseModule
     public function publicRoutes(): array
     {
         return [
-            'POST submit' => ['handler' => [$this, 'submit'], 'auth' => 'none', 'limit' => [30, 60], 'max_body' => 8388608],
+            'POST submit' => ['handler' => [$this, 'submit'], 'auth' => 'none', 'limit' => [30, 60], 'max_body' => 8388608, 'max_files' => 15, 'max_file_size' => 5242880],
         ];
     }
 

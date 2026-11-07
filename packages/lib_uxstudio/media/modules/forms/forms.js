@@ -99,20 +99,6 @@
 		return input;
 	}
 
-	function readFile(file) {
-		return new Promise(function (resolve, reject) {
-			var reader = new FileReader();
-			reader.onload = function () {
-				var result = String(reader.result || '');
-				resolve({ name: file.name, data: result.slice(result.indexOf(',') + 1) });
-			};
-			reader.onerror = function () {
-				reject(reader.error);
-			};
-			reader.readAsDataURL(file);
-		});
-	}
-
 	function collect(form) {
 		var fields = {};
 		var seen = {};
@@ -185,8 +171,7 @@
 			var button = form.querySelector('.uxs-form__submit');
 			var original = button ? button.textContent : '';
 			var tooLarge = false;
-			var jobs = [];
-			var fileKeys = [];
+			var uploads = [];
 			qsa(form, 'input[type="file"]').forEach(function (input) {
 				if (input.disabled || !input.files || !input.files.length) {
 					return;
@@ -198,8 +183,7 @@
 						showError(form, input.name, form.getAttribute('data-msg-size'));
 					}
 				});
-				fileKeys.push(input.name);
-				jobs.push(Promise.all(Array.prototype.map.call(input.files, readFile)));
+				uploads.push({ key: input.name, files: input.files });
 			});
 			if (tooLarge) {
 				status(form, form.getAttribute('data-msg-size'), 'error');
@@ -216,27 +200,48 @@
 			var hp = form.querySelector('[name="uxs_website"]');
 			var ts = form.querySelector('[name="cf-turnstile-response"]');
 
-			Promise.all(jobs)
-				.then(function (read) {
-					var files = {};
-					fileKeys.forEach(function (key, i) {
-						files[key] = read[i];
+			var meta = {
+				form_id: parseInt(form.getAttribute('data-form-id'), 10),
+				ts: form.getAttribute('data-ts'),
+				hp: hp ? hp.value : '',
+				turnstile: ts ? ts.value : '',
+				page_url: window.location.href,
+			};
+			var fields = collect(form);
+			var request;
+			if (uploads.length) {
+				// Files travel as real multipart uploads (no base64 inflation).
+				var data = new FormData();
+				Object.keys(meta).forEach(function (k) {
+					data.append(k, String(meta[k]));
+				});
+				Object.keys(fields).forEach(function (k) {
+					if (Array.isArray(fields[k])) {
+						fields[k].forEach(function (v) {
+							data.append('fields[' + k + '][]', v);
+						});
+					} else {
+						data.append('fields[' + k + ']', fields[k]);
+					}
+				});
+				uploads.forEach(function (u) {
+					Array.prototype.forEach.call(u.files, function (file) {
+						data.append('files[' + u.key.replace(/\[\]$/, '') + '][]', file, file.name);
 					});
-					return fetch(form.getAttribute('data-endpoint'), {
-						method: 'POST',
-						credentials: 'same-origin',
-						headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-						body: JSON.stringify({
-							form_id: parseInt(form.getAttribute('data-form-id'), 10),
-							ts: form.getAttribute('data-ts'),
-							hp: hp ? hp.value : '',
-							turnstile: ts ? ts.value : '',
-							page_url: window.location.href,
-							fields: collect(form),
-							files: files,
-						}),
-					});
-				})
+				});
+				request = fetch(form.getAttribute('data-endpoint'), { method: 'POST', credentials: 'same-origin', headers: { Accept: 'application/json' }, body: data });
+			} else {
+				meta.fields = fields;
+				meta.files = {};
+				request = fetch(form.getAttribute('data-endpoint'), {
+					method: 'POST',
+					credentials: 'same-origin',
+					headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+					body: JSON.stringify(meta),
+				});
+			}
+
+			request
 				.then(function (res) {
 					return res.json().catch(function () {
 						return null;

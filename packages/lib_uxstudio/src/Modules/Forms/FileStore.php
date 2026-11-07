@@ -93,8 +93,42 @@ final class FileStore
             throw new \InvalidArgumentException(Text::sprintf('UXS_FORMS_ERR_FILE_SIZE', (int) ($limit / 1048576)));
         }
 
+        return self::validate($field, (string) $item['name'], $bytes);
+    }
+
+    /**
+     * Same checks for a multipart upload (ApiRequest::files() entry); the content is read from the temporary file.
+     *
+     * @param  array<string,mixed> $field
+     * @param  mixed               $file  {name, size, tmp_name, error}
+     * @return array{name:string,ext:string,mime:string,bytes:string}
+     * @throws \InvalidArgumentException with a translated message
+     */
+    public static function inspectUpload(array $field, mixed $file, int $maxMb): array
+    {
+        if (!\is_array($file) || !\is_string($file['name'] ?? null) || !\is_string($file['tmp_name'] ?? null) || !is_file($file['tmp_name'])) {
+            throw new \InvalidArgumentException(Text::_('UXS_FORMS_ERR_FILE_INVALID'));
+        }
+        $limit = max(1, min($maxMb, (int) ($field['max_size_mb'] ?? 2))) * 1048576;
+        if ((int) filesize($file['tmp_name']) > $limit) {
+            throw new \InvalidArgumentException(Text::sprintf('UXS_FORMS_ERR_FILE_SIZE', (int) ($limit / 1048576)));
+        }
+        $bytes = (string) file_get_contents($file['tmp_name']);
+        if ($bytes === '') {
+            throw new \InvalidArgumentException(Text::_('UXS_FORMS_ERR_FILE_INVALID'));
+        }
+
+        return self::validate($field, $file['name'], $bytes);
+    }
+
+    /**
+     * @param  array<string,mixed> $field
+     * @return array{name:string,ext:string,mime:string,bytes:string}
+     */
+    private static function validate(array $field, string $rawName, string $bytes): array
+    {
         // Original name: base name only, no control characters, bounded length.
-        $name = (string) preg_replace('/[\x00-\x1F\x7F\\\\\/<>:"|?*]+/u', '_', basename(str_replace('\\', '/', (string) $item['name'])));
+        $name = (string) preg_replace('/[\x00-\x1F\x7F\\\\\/<>:"|?*]+/u', '_', basename(str_replace('\\', '/', $rawName)));
         $name = trim(mb_substr($name, 0, 120), ". \t");
         $ext  = strtolower(pathinfo($name, PATHINFO_EXTENSION));
         $allowed = array_intersect((array) ($field['accept'] ?? Fields::FILE_DEFAULT), Fields::FILE_ALLOWED);

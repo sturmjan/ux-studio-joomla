@@ -75,6 +75,8 @@ final class Submitter
         $input = \is_array($input) ? $input : [];
         $files = $r->input('files', []);
         $files = \is_array($files) ? $files : [];
+        // Multipart submission: files arrive as real uploads (files[<field key>]); the JSON / base64 form keeps working.
+        $uploads = $r->filesIn('files');
 
         // Visibility depends on the raw values of other fields.
         $values = [];
@@ -95,8 +97,9 @@ final class Submitter
                 continue;
             }
             if ($f['type'] === 'file') {
-                $list = $files[$key] ?? [];
-                $list = \is_array($list) && isset($list['data']) ? [$list] : (\is_array($list) ? array_values($list) : []);
+                $isUpload = isset($uploads[$key]);
+                $list     = $isUpload ? $uploads[$key] : ($files[$key] ?? []);
+                $list     = \is_array($list) && isset($list['data']) ? [$list] : (\is_array($list) ? array_values($list) : []);
                 $limit = !empty($f['multiple']) ? 5 : 1;
                 if (\count($list) > $limit) {
                     $errors[$key] = Text::sprintf('UXS_FORMS_ERR_FILES_COUNT', $limit);
@@ -110,7 +113,7 @@ final class Submitter
                 }
                 foreach ($list as $item) {
                     try {
-                        $prepared[$key][] = FileStore::inspect($f, $item, $maxMb);
+                        $prepared[$key][] = $isUpload ? FileStore::inspectUpload($f, $item, $maxMb) : FileStore::inspect($f, $item, $maxMb);
                     } catch (\InvalidArgumentException $e) {
                         $errors[$key] = $e->getMessage();
                         break;

@@ -13,6 +13,8 @@ use Joomla\CMS\Log\Log;
  *   index.php?option=com_uxstudio&task=public.dispatch&format=json&route=<module>/<path>
  * Serves BaseModule::publicRoutes(). Pipeline: module known + enabled, route + method, client IP rate limit,
  * body size cap, Origin check (auth "none"), authentication (none | token | hmac), then the handler.
+ * Bodies: JSON (application/json) or multipart/form-data (text parts in ApiRequest::body(), uploads in ApiRequest::files(),
+ * only when the route declares 'max_files' > 0; see publicRoutes() in BaseModule).
  * There is no session / ACL / CSRF here by design: the handler validates its input itself.
  */
 final class PublicApi
@@ -20,6 +22,7 @@ final class PublicApi
     private const DEFAULT_LIMIT    = [30, 60];
     private const DEFAULT_MAX_BODY = 65536;
     private const HMAC_TOLERANCE   = 300;
+    private const DEFAULT_MAX_FILE = 5242880;
 
     public function __construct(private Kernel $kernel)
     {
@@ -74,8 +77,13 @@ final class PublicApi
                 default => throw new ApiException(Text::_('UXS_CORE_ERR_FORBIDDEN'), 403, 'forbidden'),
             };
 
-            $body = [];
-            if ($raw !== '') {
+            $body  = [];
+            $files = [];
+            if ($this->isMultipart($input)) {
+                // PHP has already parsed the parts. Text parts are raw strings like in JSON (the handler validates them).
+                $body  = $_POST;
+                $files = $this->uploads($def);
+            } elseif ($raw !== '') {
                 $json = json_decode($raw, true);
                 if (!\is_array($json)) {
                     throw new ApiException(Text::_('UXS_CORE_ERR_BODY'), 400, 'invalid_json');
@@ -90,7 +98,7 @@ final class PublicApi
             if (!\is_callable($handler)) {
                 throw new ApiException(Text::_('UXS_CORE_ERR_NOT_FOUND'), 404, 'not_found');
             }
-            $data = $handler(new ApiRequest($method, $path, $params, $query, $body, $app->getIdentity(), $raw));
+            $data = $handler(new ApiRequest($method, $path, $params, $query, $body, $app->getIdentity(), $raw, $files));
 
             return [200, ['ok' => true, 'data' => $data], []];
         } catch (ApiException $e) {
@@ -129,6 +137,71 @@ final class PublicApi
         return ['', null, [], $pathExists];
     }
 
+    private function isMultipart($input): bool
+    {
+        return stripos((string) $input->server->get('CONTENT_TYPE', '', 'string'), 'multipart/form-data') === 0
+            && strtoupper((string) $input->server->get('REQUEST_METHOD', 'GET', 'string')) === 'POST';
+    }
+
+    /**
+     * Uploaded files of a multipart request, checked against the route limits: 'max_files' (default 0 = uploads are
+     * ignored), 'max_file_size' (bytes per file, default 5 MB). Only files PHP really received (is_uploaded_file) are kept.
+     * A name like files[photo][] arrives as the key "files.photo".
+     *
+     * @return array<string,array<int,array{name:string,type:string,size:int,tmp_name:string,error:int}>>
+     */
+    private function uploads(array $def): array
+    {
+        $maxFiles = (int) ($def['max_files'] ?? 0);
+        $maxSize  = (int) ($def['max_file_size'] ?? self::DEFAULT_MAX_FILE);
+        $flat     = [];
+        foreach ($_FILES as $name => $spec) {
+            $this->flattenFiles((string) $name, $spec['name'] ?? '', $spec['type'] ?? '', $spec['size'] ?? 0, $spec['tmp_name'] ?? '', $spec['error'] ?? UPLOAD_ERR_NO_FILE, $flat);
+        }
+        if ($maxFiles <= 0) {
+            return [];
+        }
+
+        $out   = [];
+        $count = 0;
+        foreach ($flat as $key => $list) {
+            foreach ($list as $file) {
+                if ($file['error'] === UPLOAD_ERR_NO_FILE) {
+                    continue;
+                }
+                if ($file['error'] === UPLOAD_ERR_INI_SIZE || $file['error'] === UPLOAD_ERR_FORM_SIZE || $file['size'] > $maxSize) {
+                    throw new ApiException(Text::_('UXS_CORE_ERR_TOO_LARGE'), 413, 'payload_too_large');
+                }
+                if ($file['error'] !== UPLOAD_ERR_OK || !is_uploaded_file($file['tmp_name'])) {
+                    throw new ApiException(Text::_('UXS_CORE_ERR_UPLOAD'), 400, 'upload_failed');
+                }
+                if (++$count > $maxFiles) {
+                    throw new ApiException(Text::_('UXS_CORE_ERR_TOO_LARGE'), 413, 'too_many_files');
+                }
+                $out[$key][] = $file;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param string|array<mixed> $name
+     * @param array<string,array<mixed>> $out
+     */
+    private function flattenFiles(string $key, mixed $name, mixed $type, mixed $size, mixed $tmp, mixed $error, array &$out): void
+    {
+        if (\is_array($name)) {
+            foreach ($name as $sub => $_) {
+                $path = \is_int($sub) ? $key : $key . '.' . $sub;
+                $this->flattenFiles($path, $name[$sub], $type[$sub] ?? '', $size[$sub] ?? 0, $tmp[$sub] ?? '', $error[$sub] ?? UPLOAD_ERR_NO_FILE, $out);
+            }
+
+            return;
+        }
+        $out[$key][] = ['name' => (string) $name, 'type' => (string) $type, 'size' => (int) $size, 'tmp_name' => (string) $tmp, 'error' => (int) $error];
+    }
+
     private function readBody($input, string $method, int $max): string
     {
         if ($method === 'GET' || $method === 'HEAD') {
@@ -137,6 +210,10 @@ final class PublicApi
         $length = (int) $input->server->get('CONTENT_LENGTH', 0, 'int');
         if ($length > $max) {
             throw new ApiException(Text::_('UXS_CORE_ERR_TOO_LARGE'), 413, 'payload_too_large');
+        }
+        if ($this->isMultipart($input)) {
+            // php://input is empty for multipart; the parts are read from $_POST / $_FILES.
+            return '';
         }
         $raw = (string) file_get_contents('php://input', false, null, 0, $max + 1);
         if (\strlen($raw) > $max) {

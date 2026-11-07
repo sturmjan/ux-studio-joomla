@@ -95,7 +95,10 @@ abstract class BaseModule
      *     | 'hmac' (X-UXS-Timestamp + X-UXS-Signature = hex hmac_sha256("<timestamp>.<raw body>", secret), 5 minute window).
      *   - secret: string or callable returning the secret (token / hmac; an empty secret denies every request).
      *   - limit: [max requests, window in seconds] per client IP and route (default [30, 60]); exceeding it returns 429.
-     *   - max_body: maximum request body in bytes (default 65536), larger returns 413.
+     *   - max_body: maximum request body in bytes (default 65536), larger returns 413 (for multipart this is the whole request, uploads included).
+     *   - max_files / max_file_size: accept multipart/form-data uploads (ApiRequest::files()): at most max_files files (default 0 = uploads
+     *     are ignored), each at most max_file_size bytes (default 5 MB); more or larger returns 413. The text parts of a multipart request
+     *     are in ApiRequest::body() as raw strings, nested names like fields[email] arrive as arrays. Not for hmac routes (nothing to sign).
      * No Joomla session, ACL or CSRF token is involved, so a handler must validate everything itself.
      *
      * @return array<string,array<string,mixed>>
