@@ -2,7 +2,7 @@
 /**
  * Joomla administrator CLI for testing the UX Studio API like the SPA does (session cookie + CSRF token).
  *
- *   (j5clean = third clean Joomla 5 for install/update tests, J5CLEAN_URL in .env.local)
+ *   (j5clean, j6clean = clean Joomla 5 / 6 for install/update tests, J5CLEAN_URL, J6CLEAN_URL in .env.local)
  *   node bin/jadmin.mjs <j5|j6> GET core/modules
  *   node bin/jadmin.mjs j6 POST core/settings/hello-check '{"greeting":"Hi"}'
  *   node bin/jadmin.mjs j5 GET redirects/log 'page=2&limit=10'    # GET query string as 4th argument ...
@@ -49,8 +49,8 @@ for (let i = 0; i < argv.length; i++) {
 	else pos.push(argv[i]);
 }
 const [siteKey, cmd, arg1, arg2] = pos;
-if (!['j5', 'j6', 'j5clean'].includes(siteKey) || !cmd) {
-	console.error('Usage: node bin/jadmin.mjs <j5|j6|j5clean> <GET|POST|page|login> [route[?query]] [json|@file|query] [--no-csrf] [--raw] [--expect <status>]');
+if (!['j5', 'j6', 'j5clean', 'j6clean'].includes(siteKey) || !cmd) {
+	console.error('Usage: node bin/jadmin.mjs <j5|j6|j5clean|j6clean> <GET|POST|page|login> [route[?query]] [json|@file|query] [--no-csrf] [--raw] [--expect <status>]');
 	process.exit(2);
 }
 
