@@ -6,6 +6,7 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Log\Log;
 use Joomla\CMS\Version;
 use Ux1\UxStudio\Core\ApiException;
+use Ux1\UxStudio\Core\ClientIp;
 use Ux1\UxStudio\Core\Kernel;
 use Ux1\UxStudio\Core\Lang;
 use Ux1\UxStudio\Core\ModuleContext;
@@ -112,7 +113,8 @@ final class Node
     {
         $raw     = (string) $this->ctx->setting('node_allowed_ips', '');
         $allowed = array_filter(array_map('trim', preg_split('/[\r\n,\s]+/', $raw) ?: []));
-        if ($allowed && !\in_array((string) ($_SERVER['REMOTE_ADDR'] ?? ''), $allowed, true)) {
+        // The real client address (Core\ClientIp honours the proxy mode), with CIDR support; behind Cloudflare REMOTE_ADDR is the proxy.
+        if ($allowed && !ClientIp::matches(ClientIp::current(), $allowed)) {
             $this->send(403, ['message' => 'This IP address is not on the allowlist']);
         }
     }
@@ -155,7 +157,7 @@ final class Node
      */
     private function failed(string $message): never
     {
-        $ip      = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+        $ip      = ClientIp::current();
         $retry   = (new RateLimiter($this->ctx->db()))->hit('ca-connector:node-fail:' . $ip, 60, 60);
         // Anonymous callers must not fill the table: log at most 3 failures per IP and 5 minutes, nothing once throttled.
         if ($retry === 0 && (new RateLimiter($this->ctx->db()))->hit('ca-connector:node-fail-log:' . $ip, 3, 300) === 0) {

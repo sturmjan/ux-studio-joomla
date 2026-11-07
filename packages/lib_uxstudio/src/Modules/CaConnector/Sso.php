@@ -16,6 +16,7 @@ use Joomla\CMS\User\UserFactoryInterface;
 use Joomla\CMS\User\UserHelper;
 use Joomla\Database\DatabaseInterface;
 use Joomla\Database\ParameterType;
+use Ux1\UxStudio\Core\ClientIp;
 use Ux1\UxStudio\Core\ModuleContext;
 use Ux1\UxStudio\Core\RateLimiter;
 
@@ -281,7 +282,7 @@ final class Sso
     public function redeem(CMSApplicationInterface $app): void
     {
         $token = (string) ($_GET[self::QUERY] ?? '');
-        $ip    = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
+        $ip    = ClientIp::current();
 
         if (!preg_match('/^[a-f0-9]{64}$/', $token)) {
             $this->fail($app, 'invalid_token_format');

@@ -5,6 +5,7 @@ namespace Ux1\UxStudio\Modules\CaConnector;
 use Joomla\CMS\Factory;
 use Joomla\Database\DatabaseInterface;
 use Joomla\Database\ParameterType;
+use Ux1\UxStudio\Core\ClientIp;
 
 \defined('_JEXEC') or die;
 
@@ -155,7 +156,7 @@ final class Store
         try {
             $db     = $this->db;
             $now    = Factory::getDate()->toSql();
-            $ip     = mb_substr((string) ($_SERVER['REMOTE_ADDR'] ?? ''), 0, 45);
+            $ip     = mb_substr(ClientIp::current(), 0, 45);
             $detail = mb_substr($detail, 0, 500);
             $flag   = $ok ? 1 : 0;
             $db->setQuery(
