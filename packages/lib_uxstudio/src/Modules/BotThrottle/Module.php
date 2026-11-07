@@ -107,8 +107,7 @@ final class Module extends BaseModule
     /** A Cloudflare edge / trusted proxy address is a shared hop, never a single visitor: no rate limit, no ban for it. */
     private function isSharedHop(string $ip): bool
     {
-        // Also loopback / private addresses: they are reported, never throttled or banned automatically.
-        return ClientIp::isProtected($ip, $this->trusted);
+        return ClientIp::isEdge($ip, $this->trusted);
     }
 
     private function debugHeaders(): bool
@@ -319,7 +318,10 @@ final class Module extends BaseModule
     /** Creates a ban, logs it and (throttled) e-mails the administrator. */
     private function ban(string $hash, string $context, string $reason, int $seconds, string $ip): void
     {
-        if ($this->isSharedHop($ip)) {
+        if (ClientIp::isProtected($ip, $this->trusted)) {
+            // Loopback / private / proxy address: throttled for the moment (the limits still apply) but never banned persistently, only reported.
+            $this->store()->log(['ip_hash' => $hash, 'user_agent' => (string) ($_SERVER['HTTP_USER_AGENT'] ?? ''), 'action' => 'would_ban', 'bot_category' => 'rate-limit', 'bot_name' => $context, 'url' => $this->url(), 'response_status' => 429]);
+
             return;
         }
         $this->store()->ban($hash, $context, $reason, $seconds, $this->reportHash($ip));

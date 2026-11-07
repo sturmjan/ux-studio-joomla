@@ -184,7 +184,7 @@ public function publicRoutes(): array
 - `max_files` + `max_file_size` zapnou **multipart/form-data**: nahrané soubory dostaneš v `$r->files()` (klíč = název inputu, vnořené názvy spojené tečkou, `files[photo][]` => `files.photo`;
   `$r->filesIn('files')` vrátí `['photo' => [...]]`), každý záznam `{name, type, size, tmp_name, error}`. Jádro ověří `is_uploaded_file`, chyby uploadu, počet a velikost (413), textové části jsou v `$r->body()`
   jako surové řetězce (`fields[email]=..` => `body()['fields']['email']`). `max_body` platí pro celý požadavek. Jméno a typ od klienta jsou nedůvěryhodné: obsah (finfo) si zkontroluj sám,
-  `tmp_name` přečti hned (PHP ho po požadavku smaže). Vzor: modul Forms (přijímá multipart i starý JSON + base64). Pro `hmac` routy multipart nepoužívej (není co podepsat).
+  `tmp_name` přečti hned (PHP ho po požadavku smaže). Vzor: modul Forms (přijímá multipart i starý JSON + base64). Multipart se přijímá jen na routě s `max_files` > 0 nebo `'multipart' => true` (jen textové části) a nikdy na `hmac` routě (tělo z `$_POST` se nepodepisuje): jinak 415 `unsupported_media_type`.
 - Klientská IP: `Core\ClientIp::current()` (rate limit veřejného endpointu i `RateLimiter::hitClient()` ji používají sami). Nikdy nečti `REMOTE_ADDR` / `CF-Connecting-IP` napřímo.
 - Není tu session, ACL ani CSRF token: handler musí vše validovat sám a nikdy nevracet interní data. Vstup je nedůvěryhodný.
 
@@ -254,13 +254,13 @@ Nepiš si vlastní verze, použij tyto:
 
 - **`ClientIp`** - `ClientIp::current()` je IP návštěvníka podle nastavení jádra (výchozí `cloudflare`: hlavičce `CF-Connecting-IP` se věří jen z oficiálních rozsahů Cloudflare; `xff`: `X-Forwarded-For`
   zprava přes důvěryhodné proxy; `none`). Pomocné: `isLoopback()`, `isLocal()` (loopback + privátní + link-local), `isEdge()`, `isProtected()` (local nebo edge), `matches($ip, $seznam)`, `parseList()`, `normalize()`.
-  **Loopback a privátní adresy se nikdy automaticky nebanují ani neomezují** (lockout, bot-throttle, auto-ban): jen je hlásíš. `Modules\SecurityOptimization\ClientIp` je tenký alias.
+  **Loopback a privátní adresy se nikdy automaticky nebanují** (trvalé zápisy: ban, auto-ban) a jen se hlásí (log `would_ban`, `local_ip` v přehledu a varování v SPA); dočasná omezení (rate limit, burst, lockout loginu) se na ně vztahují dál, aby chybně nastavený režim IP potichu nevypnul ochranu. Výjimka z omezení je jen pro Cloudflare / důvěryhodné proxy (`isEdge()`). `Modules\SecurityOptimization\ClientIp` je tenký alias.
 - **`Http`** - `$ctx->http()->request($method, $url, $options)`; volby navíc: `follow_redirects` (výchozí `true`, nejvýš `max_redirects` = 3 hopy), `false` vrátí 3xx odpověď samotnou.
   Výsledek má `url` (adresa, ze které odpověď přišla), `redirected`, `redirect_chain[]` a `redirect_to` (absolutní `Location` nenásledovaného přesměrování, jinak `null`).
-  S `allow_private` (pevná důvěryhodná adresa, např. vývojová CA na privátní IP) se přesměrování na **jiný host** odmítne (`ApiException` `redirect_blocked`). Podepisované požadavky (HMAC přes URL) posílej s `follow_redirects => false`.
+  S `allow_private` (pevná důvěryhodná adresa, např. vývojová CA na privátní IP) se přesměrování na jiný **origin** (scheme + host + port) odmítne (`ApiException` `redirect_blocked`). U ostatních požadavků se při přesměrování na jiný origin vynechají hlavičky `Authorization`, `Cookie`, `Proxy-Authorization` a `X-UXS-*`. Podepisované požadavky (HMAC přes URL) posílej s `follow_redirects => false`.
 - **`Mail`** - `Mail::send(['to' => .., 'subject' => .., 'body' => .., 'html' => true, 'reply_to' => .., 'attachments' => [cesta, ...], 'source' => 'UX Studio: Můj modul'])` vrací `bool` (`Mail::lastError()`),
   `Mail::create()` vrátí Joomla mailer pro složitější zprávy. Zprávy jdou přes sdílený `MailHub`: použije se spojení z modulu smtp-email a zapíše je email-log, když jsou zapnuté;
-  když ne, odejdou nativním mailerem Joomly beze změny. Nikdy nevolej `MailerFactoryInterface::createMailer()` napřímo.
+  když ne, odejdou nativním mailerem Joomly beze změny. Nikdy nevolej `MailerFactoryInterface::createMailer()` napřímo. **Povinné: žádné `mail()`, `PHPMailer` ani `Factory::getMailer()` v modulu** - jinak zpráva mine SMTP spojení i email-log (typicky `mail() vrátil false` v logu). Vždy `Mail::send([... 'source' => 'UX Studio: Název modulu'])` nebo `Mail::create()`.
 - **`SafeRegex`** - regulární výrazy zadané administrátorem a spouštěné na návštěvnickém vstupu (`delimit`, `match`, `compiles`, `probe`; zkrácený subjekt, nízký backtrack limit, ReDoS zkouška při uložení).
 - **`RateLimiter`** - `hit($klíč, $limit, $okno)` a `hitClient($název, $limit, $okno)` (klíč doplní IP z `ClientIp`).
 - **`Store`** (`$ctx->store()`) - obecné key/value úložiště modulu v `#__uxstudio_store` (hodnota cokoli pro `json_encode`): `get($k, $default)`, `set($k, $v, $ttlSekund = 0)`, `has`, `delete`,
@@ -270,7 +270,7 @@ Nepiš si vlastní verze, použij tyto:
   v administraci (párovací formulář), takže vynucené CSP párování nezablokuje.
 - **Upozornění v administraci** - `$ctx->notice('klic', 'Text (bez HTML)', 'warning|info|error', 'index.php?option=com_uxstudio#/module?id=muj-modul')` ukáže zprávu na přehledu Joomly (com_cpanel) a na obrazovce
   UX Studia, jen uživatelům s `core.manage`, dokud ji modul nestáhne `$ctx->clearNotice('klic')` (nebo dokud je modul zapnutý). Odkaz musí být `index.php?...`.
-- **`ModuleRegistry`** - načtení nebo start jednoho modulu, který selže, zaloguje chybu a označí modul, ostatní nezasáhne (`$registry->error($id)`).
+- **`ModuleRegistry`** - načtení nebo start jednoho modulu, který selže, zaloguje chybu a označí modul, ostatní nezasáhne (`$registry->error($id)`); chyba se uloží i do úložiště jádra, takže ji SPA ukáže i když selhala jen strana webu (site), a smaže se po úspěšném startu stejného klienta.
 
 ## 7. Překlady
 

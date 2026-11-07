@@ -41,7 +41,7 @@ Kategorie robotů (pravidlo pro každou), Zátěž a prodlevy (prahy, rozsahy pr
 
 ## Napojení na CA
 
-`caFeed('bot-throttle/bans', ['since'=>N], [])` (přijme i `bans`) → `{items:[{id, ip_hash, reason, banned_at}], last_id}`; `ip_hash` je klíčovaný flotilový hash (`report_hash`),
+`caFeed('bot-throttle/bans', ['since'=>N], [])` (přijme i `bans`) → `{items:[{id, report_hash, context, created_at}], last_id}`; `report_hash` je klíčovaný flotilový hash (`created_at` je UTC),
 bany bez nastaveného klíče se nehlásí; kurzor `since` = poslední načtené `id`, max 200 položek.
 
 ## Rozdíly proti WP verzi / co chybí

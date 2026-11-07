@@ -63,5 +63,9 @@
 	"Overview": "Přehled",
 	"Log": "Záznam",
 	"Bans": "Bany",
-	"Settings": "Nastavení"
+	"Settings": "Nastavení",
+	"The visitor address is a private or loopback address.": "Adresa návštěvníka je soukromá nebo loopback.",
+	"The site is probably behind a reverse proxy: check Settings, IP mode. Such an address is never banned automatically.": "Web je pravděpodobně za reverzní proxy: zkontrolujte Nastavení, režim IP. Taková adresa se nikdy nebanuje automaticky.",
+	"The visitor address is a proxy / Cloudflare edge address.": "Adresa návštěvníka je adresa proxy / Cloudflare.",
+	"Check Settings, IP mode and trusted proxies, otherwise all visitors look like one.": "Zkontrolujte Nastavení, režim IP a důvěryhodné proxy, jinak vypadají všichni návštěvníci jako jeden."
 }

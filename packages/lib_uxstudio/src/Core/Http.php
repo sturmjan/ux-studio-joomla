@@ -56,7 +56,7 @@ final class Http
         $maxBytes = max(1024, (int) ($options['max_bytes'] ?? self::MAX_BYTES));
         $follow   = !\array_key_exists('follow_redirects', $options) || !empty($options['follow_redirects']);
         $maxHops  = max(0, min(10, (int) ($options['max_redirects'] ?? 3)));
-        $origin   = strtolower((string) parse_url($url, PHP_URL_HOST));
+        $origin   = self::originOf($url);
         $chain    = [];
 
         if (!\function_exists('curl_init')) {
@@ -113,8 +113,14 @@ final class Http
 
             $location = $status >= 300 && $status < 400 && !empty($flat['location']) ? self::resolve($url, $flat['location']) : null;
             if ($location !== null && $follow && $hop < $maxHops) {
-                if ($allow && strtolower((string) parse_url($location, PHP_URL_HOST)) !== $origin) {
+                $nextOrigin = self::originOf($location);
+                if ($allow && $nextOrigin !== $origin) {
+                    // Same scheme, host AND port as the trusted URL (no https -> http downgrade, no other port).
                     throw new ApiException(Text::_('UXS_CORE_ERR_REDIRECT'), 422, 'redirect_blocked');
+                }
+                if ($nextOrigin !== self::originOf($url)) {
+                    // Credentials never follow a redirect to another origin.
+                    $headers = self::stripCredentials($headers);
                 }
                 $chain[] = $url;
                 $url     = $location;
@@ -135,6 +141,28 @@ final class Http
         }
 
         throw new \RuntimeException('Too many redirects.');
+    }
+
+    /** scheme://host:port (lower case, default ports filled in). */
+    private static function originOf(string $url): string
+    {
+        $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+        $port   = parse_url($url, PHP_URL_PORT) ?: ($scheme === 'https' ? 443 : 80);
+
+        return $scheme . '://' . strtolower((string) parse_url($url, PHP_URL_HOST)) . ':' . $port;
+    }
+
+    /** @param array<string,string> $headers @return array<string,string> without Authorization, Cookie, Proxy-Authorization and X-UXS-* */
+    private static function stripCredentials(array $headers): array
+    {
+        foreach (array_keys($headers) as $name) {
+            $n = strtolower((string) $name);
+            if ($n === 'authorization' || $n === 'cookie' || $n === 'proxy-authorization' || str_starts_with($n, 'x-uxs-')) {
+                unset($headers[$name]);
+            }
+        }
+
+        return $headers;
     }
 
     public function get(string $url, array $options = []): array

@@ -133,10 +133,14 @@ final class Module extends BaseModule
         }
     }
 
-    /** Loopback, private and allowlisted addresses are never locked out (a shared local hop would lock out everybody). */
+    /**
+     * Allowlisted addresses are never locked out. Loopback / private addresses ARE counted and locked out temporarily (a wrongly
+     * configured IP mode must not silently switch brute-force protection off); they are just never banned (see loginFailed) and
+     * the overview warns about them (local_ip).
+     */
     private function loginExempt(string $ip): bool
     {
-        return ClientIp::isLocal($ip) || ClientIp::matches($ip, ClientIp::parseList((string) ($this->s()['ip_firewall_allowlist'] ?? '')));
+        return ClientIp::matches($ip, ClientIp::parseList((string) ($this->s()['ip_firewall_allowlist'] ?? '')));
     }
 
     private function trustedList(): array
@@ -261,6 +265,9 @@ final class Module extends BaseModule
         }
 
         $autoAfter = (int) ($s['lockout_auto_ban_after'] ?? 0);
+        if ($autoAfter > 0 && $lock['strikes'] >= $autoAfter && ClientIp::isProtected($ip, $this->trustedList())) {
+            $this->guard()->log('would_ban', $ip, $username);
+        }
         if ($autoAfter > 0 && $lock['strikes'] >= $autoAfter && !ClientIp::isProtected($ip, $this->trustedList())) {
             // Loopback, private and proxy addresses are never banned automatically (only locked out and reported).
             try {
@@ -776,6 +783,8 @@ final class Module extends BaseModule
             'ip_mode'          => ClientIp::mode(),
             // The visitor address resolved to a Cloudflare edge / trusted proxy: the proxy mode does not match the real setup.
             'edge_warning'     => $ip !== '' && ClientIp::isEdge($ip, $this->trustedList()),
+            // The visitor address is loopback / private: the IP mode is probably wrong (a reverse proxy in front of the site).
+            'local_ip'         => $ip !== '' && ClientIp::isLocal($ip),
             'firewall'         => !empty($s['ip_firewall_enabled']),
             'active_bans'      => $this->bans()->activeCount(),
             'login_stats'      => $stats,

@@ -53,7 +53,7 @@ Stejné jako WP: tlačítko „Připojit k Centrální aplikaci“ v UX Studiu o
 Konektor musí vracet stejné klíče: `ping` (CA ho přijme jen s `connector:"uxjoomla"` a `cms:"joomla"`,
 jinak párování neprojde), `updates`, `php-errors {total_count,type_counts,errors[]}`,
 `vulnerabilities {available,vuln_count,severity_level,inventory[{type,slug,name,version,active}],vulnerabilities[]}`,
-`email-log {items,total}`, `ip-bans`, `ip-bans/sync` (POST `{bans:[]}`), `bot-throttle/bans {items[{id,ip_hash,reason,banned_at}],last_id}`,
+`email-log {items,total}`, `ip-bans`, `ip-bans/sync` (POST `{bans:[]}`), `bot-throttle/bans {items[{id,report_hash,context,created_at}],last_id}`,
 `sso/issue` (POST tělo `{operator_email, target_role, target_wp_role, cms}`, čti `target_role`; odpověď
 `{success,token,expires_in,login_url}`, `login_url` MUSÍ být na stejném schématu/hostu/portu jako web a cesta
 pod `/administrator/`, jinak ho CA odmítne), `sso/revoke-all {success,revoked}`.

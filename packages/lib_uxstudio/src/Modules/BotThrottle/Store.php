@@ -211,20 +211,20 @@ final class Store
      * Reportable bans for the Central App (cursor based, ascending). Only rows with a fleet hash qualify: bans recorded
      * before a fleet secret was configured stay local forever.
      *
-     * @return array<int,array{id:int,ip_hash:string,reason:string,banned_at:string}>
+     * @return array<int,array{id:int,report_hash:string,context:string,created_at:string}> same shape as the WordPress node (created_at = UTC, `Y-m-d H:i:s`)
      */
     public function bansSince(int $afterId, int $limit = 200): array
     {
         $db   = $this->db;
         $rows = $db->setQuery(
-            $db->createQuery()->select($db->quoteName(['id', 'report_hash', 'reason', 'banned_at']))->from($db->quoteName(self::BANS))
+            $db->createQuery()->select($db->quoteName(['id', 'report_hash', 'context', 'banned_at']))->from($db->quoteName(self::BANS))
                 ->where($db->quoteName('report_hash') . ' IS NOT NULL')->where($db->quoteName('id') . ' > :a')->order($db->quoteName('id') . ' ASC')->bind(':a', $afterId, ParameterType::INTEGER),
             0,
             max(1, min(500, $limit))
         )->loadAssocList() ?: [];
 
         return array_map(static fn (array $r): array => [
-            'id' => (int) $r['id'], 'ip_hash' => (string) $r['report_hash'], 'reason' => (string) $r['reason'], 'banned_at' => gmdate('c', (int) strtotime($r['banned_at'] . ' UTC')),
+            'id' => (int) $r['id'], 'report_hash' => (string) $r['report_hash'], 'context' => (string) $r['context'], 'created_at' => gmdate('Y-m-d H:i:s', (int) strtotime($r['banned_at'] . ' UTC')),
         ], $rows);
     }
 

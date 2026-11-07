@@ -28,6 +28,8 @@ type Overview = {
 	cache: { count: number; bytes: number };
 	active_bans: number;
 	client_ip: string;
+	edge_warning?: boolean;
+	local_ip?: boolean;
 	categories: Array< { id: string; label: string; action: string; bots: string[] } >;
 	report_hash_enabled: boolean;
 };
@@ -110,6 +112,16 @@ function OverviewTab(): JSX.Element {
 
 	return (
 		<>
+			{ o.local_ip ? (
+				<div className="uxs-notice" role="alert">
+					<strong>{ t( 'The visitor address is a private or loopback address.' ) }</strong> { t( 'The site is probably behind a reverse proxy: check Settings, IP mode. Such an address is never banned automatically.' ) }
+				</div>
+			) : null }
+			{ o.edge_warning ? (
+				<div className="uxs-notice" role="alert">
+					<strong>{ t( 'The visitor address is a proxy / Cloudflare edge address.' ) }</strong> { t( 'Check Settings, IP mode and trusted proxies, otherwise all visitors look like one.' ) }
+				</div>
+			) : null }
 			<div className="uxs-cards">
 				<div className="uxs-card">
 					<span className="uxs-card__label">{ t( 'Server load' ) }</span>

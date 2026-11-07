@@ -16,6 +16,8 @@ type Overview = {
 	client_ip: string;
 	remote_addr: string;
 	ip_mode: string;
+	edge_warning?: boolean;
+	local_ip?: boolean;
 	firewall: boolean;
 	active_bans: number;
 	login_stats: Record< 'fail' | 'lockout' | 'blocked' | 'captcha' | 'success' | 'secret', number >;
@@ -89,6 +91,16 @@ function OverviewTab( { onGo }: { onGo: ( tab: string ) => void } ): JSX.Element
 
 	return (
 		<>
+			{ o.local_ip ? (
+				<div className="uxs-notice" role="alert">
+					<strong>{ t( 'The visitor address is a private or loopback address.' ) }</strong> { t( 'The site is probably behind a reverse proxy: check Settings, IP mode. Such an address is never banned automatically.' ) }
+				</div>
+			) : null }
+			{ o.edge_warning ? (
+				<div className="uxs-notice" role="alert">
+					<strong>{ t( 'The visitor address is a proxy / Cloudflare edge address.' ) }</strong> { t( 'Check Settings, IP mode and trusted proxies, otherwise all visitors look like one.' ) }
+				</div>
+			) : null }
 			{ o.rescue_active ? (
 				<div className="uxs-notice" role="alert">
 					<strong>{ t( 'Login protection is switched off by UXSTUDIO_DISABLE_LOGIN_PROTECTION.' ) }</strong> { t( 'Lock-outs, Turnstile and the secret URL do nothing until the constant is removed.' ) }

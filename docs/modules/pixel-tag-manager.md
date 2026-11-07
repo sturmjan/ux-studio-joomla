@@ -20,3 +20,5 @@ GA4, Google Ads (AW-), Google Tag Manager, Meta Pixel, Microsoft Clarity, Pinter
 WP verze uměla jen GA, Facebook Pixel a Pinterest a vkládala je inline bez souhlasu. Zde přibyly Ads, GTM, Clarity, Seznam, brána souhlasu,
 externí loader (CSP) a varování. Chybí: noscript fallbacky (nejdou podmínit souhlasem), vlastní konverzní události,
 propojení s připravovaným modulem consent (kontrakt `uxs_consent` / `UXSConsent.has` / `uxs:consent` je připraven).
+
+CSP hosty se přidávají po direktivách jen tam, kde je poskytovatel potřebuje (`Providers::all()[...]['csp']`). Omezení: ve strict režimu security-optimization (nonce bez `strict-dynamic`) neprojdou inline skripty z vlastních HTML tagů uvnitř kontejneru GTM; ověřit s reálnými ID.

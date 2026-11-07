@@ -58,6 +58,10 @@ function walk(dir, base = dir, out = []) {
 			continue;
 		}
 		const full = join(dir, name);
+		// Test scripts must not ship: some define _JEXEC themselves and run when requested directly.
+		if (['tests', 'test'].includes(name) || /\.test\.php$/.test(name)) {
+			continue;
+		}
 		if (statSync(full).isDirectory()) {
 			walk(full, base, out);
 		} else {

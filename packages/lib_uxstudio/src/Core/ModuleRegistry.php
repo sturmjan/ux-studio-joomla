@@ -21,6 +21,11 @@ final class ModuleRegistry
     /** @var array<string,bool>|null */
     private ?array $enabled = null;
 
+    private const ERRORS_KEY = 'boot_errors';
+
+    /** @var array<string,array{message:string,client:string,time:int}>|null persisted errors (any client) */
+    private ?array $stored = null;
+
     /** @var array<string,string> module id => last load / boot error of this request */
     private array $errors = [];
 
@@ -103,18 +108,91 @@ final class ModuleRegistry
     public function recordError(string $id, \Throwable $e): void
     {
         $this->errors[$id] = sprintf('%s (%s:%d)', $e->getMessage(), basename($e->getFile()), $e->getLine());
+        $this->persistError($id);
         \Joomla\CMS\Log\Log::add(sprintf('Module %s failed: %s in %s:%d', $id, $e->getMessage(), $e->getFile(), $e->getLine()), \Joomla\CMS\Log\Log::ERROR, 'uxstudio');
     }
 
     public function error(string $id): ?string
     {
-        return $this->errors[$id] ?? null;
+        return $this->errors[$id] ?? $this->storedErrors()[$id]['message'] ?? null;
     }
 
     /** @return array<string,string> */
     public function errors(): array
     {
-        return $this->errors;
+        $out = $this->errors;
+        foreach ($this->storedErrors() as $id => $row) {
+            $out += [$id => (string) ($row['message'] ?? '')];
+        }
+
+        return $out;
+    }
+
+    /** Boot failures of earlier requests (e.g. the site half of a module that only the administrator SPA looks at). @return array<string,array{message:string,client:string,time:int}> */
+    private function storedErrors(): array
+    {
+        if ($this->stored === null) {
+            $this->stored = [];
+            try {
+                $value        = Store::forModule(Migrator::CORE)->get(self::ERRORS_KEY, []);
+                $this->stored = \is_array($value) ? $value : [];
+            } catch (\Throwable $e) {
+                // Store table missing before the first migration.
+            }
+        }
+
+        return $this->stored;
+    }
+
+    private function clientName(): string
+    {
+        try {
+            return Kernel::instance()->app()->isClient('administrator') ? 'administrator' : 'site';
+        } catch (\Throwable $e) {
+            return 'cli';
+        }
+    }
+
+    private function persistError(string $id): void
+    {
+        try {
+            $all      = $this->storedErrors();
+            $all[$id] = ['message' => $this->errors[$id], 'client' => $this->clientName(), 'time' => time()];
+            Store::forModule(Migrator::CORE)->set(self::ERRORS_KEY, $all);
+            $this->stored = $all;
+        } catch (\Throwable $e) {
+            // Best effort.
+        }
+    }
+
+    private function forgetError(string $id): void
+    {
+        $all = $this->storedErrors();
+        if (isset($all[$id])) {
+            unset($all[$id]);
+            try {
+                Store::forModule(Migrator::CORE)->set(self::ERRORS_KEY, $all);
+                $this->stored = $all;
+            } catch (\Throwable $e) {
+            }
+        }
+        unset($this->errors[$id]);
+    }
+
+    /** A module of this client booted fine: forget the error stored for it by the same client. */
+    public function bootSucceeded(string $id): void
+    {
+        $all = $this->storedErrors();
+        if (!isset($all[$id]) || ($all[$id]['client'] ?? '') !== $this->clientName() || isset($this->errors[$id])) {
+            return;
+        }
+        unset($all[$id]);
+        try {
+            Store::forModule(Migrator::CORE)->set(self::ERRORS_KEY, $all);
+            $this->stored = $all;
+        } catch (\Throwable $e) {
+            // Best effort.
+        }
     }
 
     /** @return array<string,bool> */
@@ -171,6 +249,9 @@ final class ModuleRegistry
         }
         $db->setQuery($q)->execute();
         $this->enabled = null;
+        if (!$enabled) {
+            $this->forgetError($id);
+        }
     }
 
     /** @return string[] enabled modules that list $id in their "requires" */

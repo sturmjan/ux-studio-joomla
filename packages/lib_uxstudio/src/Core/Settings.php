@@ -20,6 +20,10 @@ final class Settings
     /** Marker returned to / accepted from the SPA instead of a stored secret. */
     public const SECRET_MARKER = '__set__';
 
+    /** Rich text is rendered to every visitor: whitelist only (no form, input, button, svg, style attribute, iframe ...). */
+    private const RICHTEXT_TAGS  = ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'h2', 'h3', 'h4', 'ul', 'ol', 'li', 'a', 'img', 'blockquote', 'hr', 'span'];
+    private const RICHTEXT_ATTRS = ['href', 'src', 'alt', 'title', 'target', 'rel'];
+
     /** @var array<string,array<string,mixed>> */
     private array $cache = [];
 
@@ -325,7 +329,7 @@ final class Settings
             case 'richtext':
                 $value = (string) (\is_scalar($value) ? $value : '');
 
-                return $this->limit($field, self::safeLinks(InputFilter::getInstance([], [], 1, 1)->clean($value, 'html')));
+                return $this->limit($field, self::safeLinks(InputFilter::getInstance(self::RICHTEXT_TAGS, self::RICHTEXT_ATTRS, 0, 0, 1)->clean($value, 'html')));
 
             case 'repeater':
                 return $this->sanitizeRepeater($field, $value);
@@ -349,7 +353,7 @@ final class Settings
             case 'media':
                 // A Joomla media path (images/a.png, optionally with the #joomlaImage:// suffix) or a http(s) URL; never a script / data URL.
                 $value = trim(strip_tags(str_replace("\0", '', (string) (\is_scalar($value) ? $value : ''))));
-                if ($value !== '' && (str_contains($value, '..') || preg_match('#^(?!https?://)[a-z][a-z0-9+.-]*:#i', $value))) {
+                if ($value !== '' && !self::validMedia($value)) {
                     throw new ApiException($key . ': invalid media path', 422, 'invalid_value');
                 }
 
@@ -385,6 +389,22 @@ final class Settings
         }
 
         return $out;
+    }
+
+    /**
+     * A relative Joomla media path (letters, digits, _ - . / space %, optional "#joomlaImage://..." suffix; no ".." segment, so
+     * "foto..jpg" is fine) or a plain http(s) URL. No quotes, angle brackets or whitespace tricks that could leave an attribute.
+     */
+    private static function validMedia(string $value): bool
+    {
+        if (preg_match('#^https?://#i', $value)) {
+            return filter_var($value, FILTER_VALIDATE_URL) !== false && !preg_match('/["\'<>\s]/', $value);
+        }
+        if (preg_match('#(^|/)\.\.(/|$)#', preg_replace('/#joomlaImage:.*$/', '', $value) ?? $value)) {
+            return false;
+        }
+
+        return (bool) preg_match('#^[\p{L}\p{N}_\-./ %]+(\#joomlaImage://[^"\'<>\s]*)?$#u', $value);
     }
 
     /** Rich text links: only http(s), mailto, tel, relative and #anchor targets; everything else becomes "#". */

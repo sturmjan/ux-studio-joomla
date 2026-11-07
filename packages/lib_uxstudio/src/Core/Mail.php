@@ -2,8 +2,10 @@
 
 namespace Ux1\UxStudio\Core;
 
+use Joomla\CMS\Factory;
 use Joomla\CMS\Log\Log;
 use Joomla\CMS\Mail\Mail as JoomlaMail;
+use Joomla\CMS\Mail\MailerFactoryInterface;
 use Ux1\UxStudio\Modules\SmtpEmail\Mail\MailHub;
 
 \defined('_JEXEC') or die;
@@ -20,12 +22,22 @@ final class Mail
 {
     private static string $lastError = '';
 
-    /** A Joomla mailer routed through the hub (installs it on first use; idempotent). */
+    /**
+     * A Joomla mailer routed through the hub. The hub (swap of the container's mailer factory) is installed only by the
+     * smtp-email and email-log modules while they are on; with both off this is the native mailer wrapped without touching the
+     * container. Falls back to the plain native mailer when the smtp-email code is missing or broken.
+     */
     public static function create(): JoomlaMail
     {
-        MailHub::install();
+        try {
+            if (class_exists(MailHub::class)) {
+                return MailHub::createMailer();
+            }
+        } catch (\Throwable $e) {
+            Log::add('Mail hub unavailable, using the native mailer: ' . $e->getMessage(), Log::WARNING, 'uxstudio');
+        }
 
-        return MailHub::createMailer();
+        return Factory::getContainer()->get(MailerFactoryInterface::class)->createMailer();
     }
 
     /**
@@ -38,7 +50,8 @@ final class Mail
     public static function send(array $message): bool
     {
         self::$lastError = '';
-        $previous        = MailHub::sourceOverride();
+        $hub             = class_exists(MailHub::class);
+        $previous        = $hub ? MailHub::sourceOverride() : '';
         try {
             $mailer = self::create();
             if (($message['from'] ?? '') !== '' && filter_var($message['from'], FILTER_VALIDATE_EMAIL)) {
@@ -69,7 +82,7 @@ final class Mail
                     $mailer->addAttachment($path, $name);
                 }
             }
-            if (($message['source'] ?? '') !== '') {
+            if ($hub && ($message['source'] ?? '') !== '') {
                 MailHub::overrideSource((string) $message['source']);
             }
 
@@ -80,7 +93,9 @@ final class Mail
         } catch (\Throwable $e) {
             self::$lastError = $e->getMessage();
         } finally {
-            MailHub::overrideSource($previous);
+            if ($hub) {
+                MailHub::overrideSource($previous);
+            }
         }
         Log::add('Mail failed: ' . self::$lastError, Log::WARNING, 'uxstudio');
 

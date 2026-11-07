@@ -106,8 +106,9 @@ final class CoreApi
             $applied = $this->kernel->migrator()->run($id);
             $registry->setEnabled($id, true);
             Lang::loadModule($this->kernel->app(), $id, $module->path());
-            $module->onEnable();
+            // Scheduler tasks first: onEnable() may ask for a first run (runJobSoon), which only touches a task that is on.
             $this->kernel->scheduler()->enableModule($id);
+            $module->onEnable();
         } elseif (!$enable && $registry->isEnabled($id)) {
             $by = $registry->dependents($id);
             if ($by) {

@@ -112,7 +112,8 @@ final class Scheduler
                 $this->ensureTask($job, 'UX Studio: ' . $jobs[$jobId]['label'], $jobs[$jobId]['interval'], true);
                 $row = $this->findRow($job);
             }
-            if ($row === null) {
+            if ($row === null || (int) $row['state'] !== 1) {
+                // A task the administrator switched off in the Joomla scheduler stays off (their decision).
                 return false;
             }
             $db   = $this->db;
@@ -120,7 +121,7 @@ final class Scheduler
             $when = Factory::getDate('+' . max(0, $delaySeconds) . ' seconds')->toSql();
             $db->setQuery(
                 $db->createQuery()->update($db->quoteName('#__scheduler_tasks'))
-                    ->set($db->quoteName('next_execution') . ' = :n')->set($db->quoteName('state') . ' = 1')
+                    ->set($db->quoteName('next_execution') . ' = :n')
                     ->where($db->quoteName('id') . ' = :id')->bind(':n', $when)->bind(':id', $id, ParameterType::INTEGER)
             )->execute();
 

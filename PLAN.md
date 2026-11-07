@@ -22,7 +22,8 @@ Postup práce: každou oblast staví Sonnet agent, kontroluje Opus (bezpečnost,
 ## F1b Centrální aplikace
 - [x] CMS adaptér v CA (WordPress vs Joomla) - větev `feature/joomla-sites` ve worktree `D:\xampp\htdocs\_ca-wt-joomla`, migrace 121, detail v CA PLAN.md §39 (souhlas uživatele 2026-11-06)
 - [x] Modul ca-connector (párování, HMAC endpoint ?uxstudio_node, SSO, dispatch na caFeed modulů, CaClient) - commit cbac5f9
-- [x] End-to-end párování skutečného Joomla webu s CA a ověření health/SSO/banů v CA (2026-11-07, J5 i J6)
+- [x] End-to-end párování skutečného Joomla webu s CA a ověření health/SSO v CA (2026-11-07, J5 i J6)
+- [ ] End-to-end bany: ban na J5 -> tick CA (CronController::doBotThrottleBans, nastavený central_report_secret) -> řádek v site_bot_bans a posunutý cursor (zatím site_bot_bans i site_bot_ban_cursors prázdné, ověřena jen ruční cesta)
 - [ ] Podpis odpovědí konektoru ověřovat v CA ApiClient (CA PLAN §39.3b)
 
 ## F2 Moduly - 1. dávka (postaveno, zrevidováno Opusem, nálezy opraveny)
@@ -48,11 +49,13 @@ Postup práce: každou oblast staví Sonnet agent, kontroluje Opus (bezpečnost,
 - [ ] Souhlas s cookies (consent) - čeká na rozhodnutí: WP verze je zatím jen plán (WP PLAN §26), pixel-tag-manager bez něj jen upozorňuje
 
 ## F3 Integrace
-- [x] Čistá instalace produkčního zipu (nová Joomla 5.4.10, web `joomla5clean`): instalace bez chyb, zapnutí všech 29 modulů, migrace, 17 úloh Scheduleru, frontend 200, admin SPA bez chyb v konzoli, update stejným zipem (data zůstala), odinstalace (tabulky `#__uxstudio_*` zůstávají záměrně) a znovu instalace; hello-check v zipu není
-- [x] Všechny moduly zapnuté současně na J5 i J6: 104 GET rout bez chyby a bez PHP varování, CSP enforce basic (J5) i strict (J6) se všemi frontendovými moduly bez porušení (pixel-tag-manager a forms s Turnstile si hosty do CSP přidávají samy přes hook), defer/minify HTML z výkonu, tajná URL administrace + SSO, Apache log bez nových chyb
+- [x] Čistá instalace produkčního zipu - ověřeno na working tree k 7.11. (2. dávka necommitnutá, zip tedy neodpovídá commitu; opakovat po commitu 2. dávky) (nová Joomla 5.4.10, web `joomla5clean`): instalace bez chyb, zapnutí všech 29 modulů, migrace, 17 úloh Scheduleru, frontend 200, admin SPA bez chyb v konzoli, update stejným zipem (data zůstala), odinstalace (tabulky `#__uxstudio_*` zůstávají záměrně) a znovu instalace; hello-check v zipu není
+- [x] Všechny moduly zapnuté současně na J5 i J6 (working tree k 7.11., opakovat po commitu 2. dávky; CSP test s falešnými ID): 104 GET rout bez chyby a bez PHP varování, CSP enforce basic (J5) i strict (J6) se všemi frontendovými moduly bez porušení (pixel-tag-manager a forms s Turnstile si hosty do CSP přidávají samy přes hook), defer/minify HTML z výkonu, tajná URL administrace + SSO, Apache log bez nových chyb
 - [x] UI v prohlížeči (headless Chromium): mřížka, nastavení, průvodce a stránka každého modulu na J5, J6 i clean, světlý/tmavý režim, cs-CZ (nainstalovaný jazykový balíček) i en-GB, konzole bez chyb, v cs nenalezen nepřeložený text
-- [x] End-to-end párování J5 i J6 s CA (větev feature/joomla-sites): párování, ping/capabilities, health refresh (updates, php-errors, email, security-monitor, vulnerabilities), SSO do administrace (jednorázový token), push IP banů, pull botích banů (opraveno v CA), inventář v site_software
+- [x] End-to-end párování J5 i J6 s CA (větev feature/joomla-sites): párování, ping/capabilities, health refresh (updates, php-errors, email, security-monitor, vulnerabilities), SSO do administrace (jednorázový token), push IP banů, inventář v site_software; pull botích banů zatím neověřen (viz F1b)
 - [x] bin/build.mjs: verze z kořenového package.json (do manifestů i asset registru), pkg obsahuje všech 9 rozšíření, manifesty validní XML, zip 985 kB bez .map/.env
+- [ ] Opakovat čistou instalaci a běh všech modulů na zipu z commitu po commitu 2. dávky
+- [ ] Ověřit CSP pixel-tag-manageru s reálnými ID (GTM/GA4/Meta) na veřejné doméně; GTM vlastní HTML tagy ve strict režimu (nonce bez strict-dynamic) nemusí projít
 - [ ] Update ze skutečně starší verze balíčku (změna verze, nové migrace) - ověřen jen update stejným zipem
 - [ ] Skutečné odeslání e-mailů (lokální PHP mail() neumí; SMTP/Brevo ověřit na webu s odchozí poštou), reálná výzva Turnstile na veřejné doméně
 - [ ] Podpis odpovědí konektoru ověřovat v CA a otestovat proti reálnému webu (viz F1b), pull botích banů přes cron tick CA (cursor) - ověřena jen ruční cesta

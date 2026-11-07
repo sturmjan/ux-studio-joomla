@@ -14,7 +14,7 @@ use Joomla\CMS\Log\Log;
  * Serves BaseModule::publicRoutes(). Pipeline: module known + enabled, route + method, client IP rate limit,
  * body size cap, Origin check (auth "none"), authentication (none | token | hmac), then the handler.
  * Bodies: JSON (application/json) or multipart/form-data (text parts in ApiRequest::body(), uploads in ApiRequest::files(),
- * only when the route declares 'max_files' > 0; see publicRoutes() in BaseModule).
+ * only when the route declares 'max_files' > 0 or 'multipart' => true, never on hmac routes (415); see publicRoutes() in BaseModule).
  * There is no session / ACL / CSRF here by design: the handler validates its input itself.
  */
 final class PublicApi
@@ -70,6 +70,11 @@ final class PublicApi
             $raw     = $this->readBody($input, $method, $maxBody);
 
             $auth = (string) ($def['auth'] ?? 'none');
+            // Multipart only where the route asks for it (max_files > 0 or 'multipart' => true) and never on hmac routes:
+            // the parts live in $_POST / $_FILES, so the signature (computed over the raw body, empty here) would not cover them.
+            if ($this->isMultipart($input) && ($auth === 'hmac' || ((int) ($def['max_files'] ?? 0) <= 0 && empty($def['multipart'])))) {
+                throw new ApiException(Text::_('UXS_CORE_ERR_MEDIA'), 415, 'unsupported_media_type');
+            }
             match ($auth) {
                 'none'  => $this->checkOrigin($input),
                 'token' => $this->checkToken($input, $def),

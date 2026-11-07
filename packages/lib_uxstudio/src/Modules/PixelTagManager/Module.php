@@ -34,7 +34,7 @@ final class Module extends BaseModule
     }
 
     /**
-     * Hook csp.sources: hosts of the providers that have a valid ID (script, connect, image and frame sources).
+     * Hook csp.sources: hosts of the providers that have a valid ID (per directive, only what the provider needs).
      *
      * @param array<string,string[]> $sources
      *
@@ -47,8 +47,8 @@ final class Module extends BaseModule
             if (Providers::clean($provider, $ctx->setting(Providers::settingKey($provider), '')) === '') {
                 continue;
             }
-            foreach ($def['hosts'] as $host) {
-                foreach (['script-src', 'connect-src', 'img-src', 'frame-src'] as $directive) {
+            foreach ($def['csp'] as $directive => $hosts) {
+                foreach ($hosts as $host) {
                     $sources[$directive][] = 'https://' . $host;
                 }
             }

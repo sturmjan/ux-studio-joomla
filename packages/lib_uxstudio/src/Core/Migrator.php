@@ -45,6 +45,8 @@ final class Migrator
                 . '`module` VARCHAR(64) NOT NULL, `k` VARCHAR(190) NOT NULL, `v` MEDIUMTEXT NOT NULL, `expires_at` INT UNSIGNED NULL DEFAULT NULL, `updated_at` INT UNSIGNED NOT NULL DEFAULT 0, '
                 . 'PRIMARY KEY (`module`, `k`), KEY `idx_expires` (`expires_at`))' . self::TABLE_OPTIONS,
             ],
+            // Moves the client IP settings of security-optimization to the core (data step in ensureCore, see CoreSettings::migrateLegacy).
+            4 => [],
         ];
     }
 
@@ -64,7 +66,10 @@ final class Migrator
             return;
         }
         $this->ensureMigrationsTable();
-        $this->apply(self::CORE, $this->coreMigrations());
+        $applied = $this->apply(self::CORE, $this->coreMigrations());
+        if (\in_array(4, $applied, true)) {
+            CoreSettings::migrateLegacy($this->db);
+        }
         self::$coreChecked = true;
     }
 

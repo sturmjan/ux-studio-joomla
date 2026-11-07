@@ -98,7 +98,8 @@ abstract class BaseModule
      *   - max_body: maximum request body in bytes (default 65536), larger returns 413 (for multipart this is the whole request, uploads included).
      *   - max_files / max_file_size: accept multipart/form-data uploads (ApiRequest::files()): at most max_files files (default 0 = uploads
      *     are ignored), each at most max_file_size bytes (default 5 MB); more or larger returns 413. The text parts of a multipart request
-     *     are in ApiRequest::body() as raw strings, nested names like fields[email] arrive as arrays. Not for hmac routes (nothing to sign).
+     *     are in ApiRequest::body() as raw strings, nested names like fields[email] arrive as arrays. Not for hmac routes (nothing to sign): a multipart request to an hmac route, or to a route without max_files / 'multipart' => true, is
+     *     refused with 415. 'multipart' => true accepts text-only multipart forms (no uploads).
      * No Joomla session, ACL or CSRF token is involved, so a handler must validate everything itself.
      *
      * @return array<string,array<string,mixed>>

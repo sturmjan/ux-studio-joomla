@@ -112,6 +112,7 @@ final class Kernel
                     $ctx = new ModuleContext($id, $app, $this);
                     $module->setContext($ctx);
                     $module->boot($ctx);
+                    $this->registry()->bootSucceeded($id);
                 } catch (\Throwable $e) {
                     // One broken module never stops the boot of the others; the error is logged and shown in the SPA.
                     $this->registry()->recordError($id, $e);
