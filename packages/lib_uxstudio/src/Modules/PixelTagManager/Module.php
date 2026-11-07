@@ -6,6 +6,7 @@ use Joomla\CMS\Document\HtmlDocument;
 use Joomla\Event\Event;
 use Ux1\UxStudio\Core\ApiRequest;
 use Ux1\UxStudio\Core\BaseModule;
+use Ux1\UxStudio\Core\Hooks;
 use Ux1\UxStudio\Core\ModuleContext;
 
 \defined('_JEXEC') or die;
@@ -27,7 +28,33 @@ final class Module extends BaseModule
     {
         if ($ctx->isSite()) {
             $ctx->on('onBeforeCompileHead', [$this, 'inject']);
+            // An enforced CSP (security-optimization) must let the configured providers load: they contribute their own hosts.
+            Hooks::add('csp.sources', [$this, 'cspSources']);
         }
+    }
+
+    /**
+     * Hook csp.sources: hosts of the providers that have a valid ID (script, connect, image and frame sources).
+     *
+     * @param array<string,string[]> $sources
+     *
+     * @return array<string,string[]>
+     */
+    public function cspSources(array $sources): array
+    {
+        $ctx = $this->ctx();
+        foreach (Providers::all() as $provider => $def) {
+            if (Providers::clean($provider, $ctx->setting(Providers::settingKey($provider), '')) === '') {
+                continue;
+            }
+            foreach ($def['hosts'] as $host) {
+                foreach (['script-src', 'connect-src', 'img-src', 'frame-src'] as $directive) {
+                    $sources[$directive][] = 'https://' . $host;
+                }
+            }
+        }
+
+        return $sources;
     }
 
     /** onBeforeCompileHead: add the loader with the configuration to public HTML pages. */

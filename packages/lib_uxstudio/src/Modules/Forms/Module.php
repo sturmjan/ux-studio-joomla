@@ -7,6 +7,7 @@ use Joomla\Event\Event;
 use Ux1\UxStudio\Core\ApiException;
 use Ux1\UxStudio\Core\ApiRequest;
 use Ux1\UxStudio\Core\BaseModule;
+use Ux1\UxStudio\Core\Hooks;
 use Ux1\UxStudio\Core\ModuleContext;
 
 \defined('_JEXEC') or die;
@@ -21,6 +22,15 @@ final class Module extends BaseModule
     {
         if ($ctx->isSite()) {
             $ctx->on('onContentPrepare', [$this, 'shortcode']);
+            // Turnstile on forms needs challenges.cloudflare.com: an enforced CSP (security-optimization) must allow it.
+            Hooks::add('csp.sources', function (array $sources) use ($ctx): array {
+                if ((string) $ctx->setting('turnstile_site_key', '') !== '' && (string) $ctx->setting('turnstile_secret', '') !== '') {
+                    $sources['script-src'][] = 'https://challenges.cloudflare.com';
+                    $sources['frame-src'][]  = 'https://challenges.cloudflare.com';
+                }
+
+                return $sources;
+            });
         }
     }
 
