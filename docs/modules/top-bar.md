@@ -36,7 +36,7 @@ Validace na serveru: text projde `InputFilter` (HTML), povinný neprázdný text
 - Místo `wp_head` se lišta vkládá po `<body>`; `role="banner"` nahrazeno `role="region"` + `aria-label`.
 - Zprávy "další zprávy" (WP repeater v nastavení) jsou v samostatné tabulce, protože jádro neumí typ pole `repeater`;
   obrazovka má kvůli tomu záložku "Další zprávy" s tabulkou a modalem.
-- Nové: zavíratelná lišta (cookie), sticky, barvy ze šablony, náhled stavu na webu, dlaždice na přehledu UX Studia.
+- Nové: zavíratelná lišta (cookie), sticky, barvy ze šablony, náhled stavu na webu, dlaždice na přehledu UX1 Studia.
 - Barvy se v WP vypisovaly inline `<style>`, tady přes WebAssetManager (CSP).
 
 ## Co chybí / poznámky

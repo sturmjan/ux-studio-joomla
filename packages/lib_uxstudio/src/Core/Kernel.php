@@ -10,7 +10,7 @@ use Joomla\Database\DatabaseInterface;
 \defined('_JEXEC') or die;
 
 /**
- * Entry point of the UX Studio core. plg_system_uxstudio calls Kernel::instance()->boot($app) in onAfterInitialise
+ * Entry point of the UX1 Studio core. plg_system_uxstudio calls Kernel::instance()->boot($app) in onAfterInitialise
  * (site, administrator, cli); every enabled module then gets boot(ModuleContext).
  */
 final class Kernel
@@ -119,7 +119,7 @@ final class Kernel
                 }
             }
         } catch (\Throwable $e) {
-            Log::add('UX Studio boot failed: ' . $e->getMessage(), Log::ERROR, 'uxstudio');
+            Log::add('UX1 Studio boot failed: ' . $e->getMessage(), Log::ERROR, 'uxstudio');
         }
 
         // After an update (or a dev-link of new code): pending migrations and scheduler sync, with fresh classes.
@@ -127,12 +127,12 @@ final class Kernel
             try {
                 (new Upgrader($this))->runIfNeeded();
             } catch (\Throwable $e) {
-                Log::add('UX Studio upgrade step failed: ' . $e->getMessage(), Log::ERROR, 'uxstudio');
+                Log::add('UX1 Studio upgrade step failed: ' . $e->getMessage(), Log::ERROR, 'uxstudio');
                 // The detail (SQL, table names) goes to the log only; the message is shown to a signed-in manager and is generic.
                 if ($app->isClient('administrator')) {
                     $me = $app->getIdentity();
                     if ($me && !$me->guest && $me->authorise('core.manage', 'com_uxstudio')) {
-                        $app->enqueueMessage('UX Studio: the update step failed, see the "uxstudio" log.', 'error');
+                        $app->enqueueMessage('UX1 Studio: the update step failed, see the "uxstudio" log.', 'error');
                     }
                 }
             }

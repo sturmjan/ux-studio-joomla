@@ -98,9 +98,9 @@ export function App(): JSX.Element {
 		<PortalProvider getContainer={ () => portalRoot }>
 			<div ref={ shellRef } className={ `uxs-shell${ narrow ? ' is-narrow' : '' }${ ! narrow && folded ? ' is-folded' : '' }${ drawer ? ' is-drawer-open' : '' }` }>
 				{ narrow && drawer ? <div className="uxs-shell__backdrop" aria-hidden="true" onClick={ closeDrawer } /> : null }
-				<aside className="uxs-sidebar" aria-label="UX Studio">
+				<aside className="uxs-sidebar" aria-label="UX1 Studio">
 					<div className="uxs-sidebar__top">
-						<span className="uxs-sidebar__brand">UX Studio</span>
+						<span className="uxs-sidebar__brand">UX1 Studio</span>
 						<button
 							type="button"
 							className="uxs-sidebar__fold"
@@ -138,7 +138,7 @@ export function App(): JSX.Element {
 						<button type="button" className="uxs-sidebar__item" onClick={ toggleTheme }>
 							{ theme === 'dark' ? <Sun size={ 20 } aria-hidden="true" /> : <Moon size={ 20 } aria-hidden="true" /> } { theme === 'dark' ? t( 'Light mode' ) : t( 'Dark mode' ) }
 						</button>
-						<span>{ t( 'UX Studio {version}', { version: opts.version } ) }</span>
+						<span>{ t( 'UX1 Studio {version}', { version: opts.version } ) }</span>
 					</div>
 				</aside>
 				<main className="uxs-content">

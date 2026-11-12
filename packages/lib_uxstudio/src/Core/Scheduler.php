@@ -82,7 +82,7 @@ final class Scheduler
             return;
         }
         foreach ($this->jobsOf($module) as $jobId => $def) {
-            $this->ensureTask($moduleId . '.' . $jobId, 'UX Studio: ' . $def['label'], $def['interval'], true);
+            $this->ensureTask($moduleId . '.' . $jobId, 'UX1 Studio: ' . $def['label'], $def['interval'], true);
         }
     }
 
@@ -109,7 +109,7 @@ final class Scheduler
         try {
             $row = $this->findRow($job);
             if ($row === null) {
-                $this->ensureTask($job, 'UX Studio: ' . $jobs[$jobId]['label'], $jobs[$jobId]['interval'], true);
+                $this->ensureTask($job, 'UX1 Studio: ' . $jobs[$jobId]['label'], $jobs[$jobId]['interval'], true);
                 $row = $this->findRow($job);
             }
             if ($row === null || (int) $row['state'] !== 1) {
@@ -127,7 +127,7 @@ final class Scheduler
 
             return true;
         } catch (\Throwable $e) {
-            \Joomla\CMS\Log\Log::add('UX Studio scheduler runSoon failed: ' . $e->getMessage(), \Joomla\CMS\Log\Log::WARNING, 'uxstudio');
+            \Joomla\CMS\Log\Log::add('UX1 Studio scheduler runSoon failed: ' . $e->getMessage(), \Joomla\CMS\Log\Log::WARNING, 'uxstudio');
 
             return false;
         }
@@ -148,7 +148,7 @@ final class Scheduler
     /** Core housekeeping job (log retention), created on install / first migration. */
     public function syncCore(): void
     {
-        $this->ensureTask('core.retention', 'UX Studio: Clean up old log records', 'PT24H', true);
+        $this->ensureTask('core.retention', 'UX1 Studio: Clean up old log records', 'PT24H', true);
     }
 
     /** Stable text describing the declared jobs of a module (ids, intervals, labels), used to detect changes after an update. */
@@ -177,7 +177,7 @@ final class Scheduler
         $declared = [];
         foreach ($this->jobsOf($module) as $jobId => $def) {
             $declared[$moduleId . '.' . $jobId] = true;
-            $this->ensureTask($moduleId . '.' . $jobId, 'UX Studio: ' . $def['label'], $def['interval'], false, true);
+            $this->ensureTask($moduleId . '.' . $jobId, 'UX1 Studio: ' . $def['label'], $def['interval'], false, true);
         }
         foreach ($this->rows() as $row) {
             $job = (string) ($row['params']['job'] ?? '');
@@ -314,7 +314,7 @@ final class Scheduler
             $db->setQuery($query)->execute();
         } catch (\Throwable $e) {
             // com_scheduler tables missing / locked: jobs are optional, never break enabling a module.
-            \Joomla\CMS\Log\Log::add('UX Studio scheduler sync failed: ' . $e->getMessage(), \Joomla\CMS\Log\Log::WARNING, 'uxstudio');
+            \Joomla\CMS\Log\Log::add('UX1 Studio scheduler sync failed: ' . $e->getMessage(), \Joomla\CMS\Log\Log::WARNING, 'uxstudio');
         }
     }
 
@@ -344,7 +344,7 @@ final class Scheduler
                     ->bind(':s', $state, ParameterType::INTEGER)->bind(':t', $type)->bind(':p', $like)
             )->execute();
         } catch (\Throwable $e) {
-            \Joomla\CMS\Log\Log::add('UX Studio scheduler update failed: ' . $e->getMessage(), \Joomla\CMS\Log\Log::WARNING, 'uxstudio');
+            \Joomla\CMS\Log\Log::add('UX1 Studio scheduler update failed: ' . $e->getMessage(), \Joomla\CMS\Log\Log::WARNING, 'uxstudio');
         }
     }
 

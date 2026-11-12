@@ -1,6 +1,6 @@
-# UX Studio pro Joomla - plán
+# UX1 Studio pro Joomla - plán
 
-Edice UX Studia pro Joomla 5 a 6. Architektura a kontrakty: `ARCHITECTURE.md`, návod pro moduly `docs/MODULE-GUIDE.md`,
+Edice UX1 Studia pro Joomla 5 a 6. Architektura a kontrakty: `ARCHITECTURE.md`, návod pro moduly `docs/MODULE-GUIDE.md`,
 protokol s CA `docs/CA-INTEGRACE.md`, popis jednotlivých modulů `docs/modules/<id>.md`.
 Založeno 2026-11-06. Lokální testovací weby: http://localhost/joomla5 (5.4.10), http://localhost/joomla6 (6.2.0).
 Postup práce: každou oblast staví Sonnet agent, kontroluje Opus (bezpečnost, funkčnost, J5/J6, kontrakt) a nálezy opravuje Sonnet.

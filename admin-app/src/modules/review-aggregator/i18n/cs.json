@@ -58,7 +58,7 @@
 	"Import": "Importovat",
 	"Importing…": "Importuji…",
 	"Show reviews on the site": "Zobrazení recenzí na webu",
-	"Add the module \"UX Studio - Reviews\" to a position (Content - Site Modules), or put {tag} into an article or a Custom module. The tag accepts layout (grid, list, slider, badge), count, min_rating, order and platform, for example {example}.": "Přidejte modul „UX Studio - Recenze“ na pozici (Obsah - Moduly webu), nebo vložte {tag} do článku či modulu Vlastní. Značka přijímá layout (grid, list, slider, badge), count, min_rating, order a platform, například {example}.",
+	"Add the module \"UX1 Studio - Reviews\" to a position (Content - Site Modules), or put {tag} into an article or a Custom module. The tag accepts layout (grid, list, slider, badge), count, min_rating, order and platform, for example {example}.": "Přidejte modul „UX1 Studio - Recenze“ na pozici (Obsah - Moduly webu), nebo vložte {tag} do článku či modulu Vlastní. Značka přijímá layout (grid, list, slider, badge), count, min_rating, order a platform, například {example}.",
 	"Overview and import": "Přehled a import",
 	"Settings": "Nastavení"
 }

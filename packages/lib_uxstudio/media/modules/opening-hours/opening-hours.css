@@ -1,4 +1,4 @@
-/* UX Studio Opening Hours - front end */
+/* UX1 Studio Opening Hours - front end */
 .uxs-oh { max-width: 380px; border: 1px solid #d8dde3; border-radius: 10px; padding: 16px; font-size: 14px; line-height: 1.5; box-sizing: border-box; }
 .uxs-oh.is-hidden { display: none; }
 .uxs-oh__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }

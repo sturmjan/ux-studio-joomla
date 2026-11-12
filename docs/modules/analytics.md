@@ -6,7 +6,7 @@ Vlastní měření návštěvnosti bez cookies a bez osobních údajů.
   po vykreslení stránky pošle `fetch keepalive` na veřejnou routu `analytics/hit` (`index.php?option=com_uxstudio&task=public.dispatch&format=json&route=analytics/hit`).
   Same-origin kontrola Originu, max. tělo 4 kB. Limit jádra (`PublicApi`) počítá surovou `REMOTE_ADDR`, proto je u této routy jen záchytný (30000/hod); skutečný limit na návštěvníka dělá sdílený `BotThrottle\Guard` s IP určenou přes důvěryhodné proxy (viz core_requests).
 - **Filtr:** boti (regex na User-Agent, prázdný UA), prefetch/prerender, vyloučené cesty (nastavení), administrace, volitelně Do Not Track,
-  přihlášení správci UX Studia (nastavení "Nepočítat administrátory"). Zahozený hit vrací stejné `ok`.
+  přihlášení správci UX1 Studia (nastavení "Nepočítat administrátory"). Zahozený hit vrací stejné `ok`.
 - **Soukromí:** návštěvník = `sha256(IP|UA|den|náhodná sůl dne)`. Sůl je v `#__uxstudio_analytics_salt`, mažou se soli starší než 2 dny,
   takže hashe nejdou zpětně spárovat ani zrekonstruovat. Surová IP ani UA se neukládají. Interní prokliky (referer = vlastní web) se nepočítají jako zdroj.
 - **Data:** surové hity v bufferu `#__uxstudio_analytics_hits`; denní úloha plánovače `analytics.rollup` (a samoopravně při každém načtení přehledu)

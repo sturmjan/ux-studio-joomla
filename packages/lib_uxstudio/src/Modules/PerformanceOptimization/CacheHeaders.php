@@ -14,8 +14,8 @@ use Ux1\UxStudio\Core\HtaccessBlock;
  */
 final class CacheHeaders
 {
-    public const BEGIN = '# BEGIN UX Studio performance-optimization';
-    public const END   = '# END UX Studio performance-optimization';
+    public const BEGIN = '# BEGIN UX1 Studio performance-optimization';
+    public const END   = '# END UX1 Studio performance-optimization';
 
     /** setting value => seconds */
     public const TTLS = ['week' => 604800, 'month' => 2592000, 'halfyear' => 15552000, 'year' => 31536000];

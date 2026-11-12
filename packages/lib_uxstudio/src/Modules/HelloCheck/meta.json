@@ -1,7 +1,7 @@
 {
 	"id": "hello-check",
 	"name": "Hello check",
-	"description": "Sample module and smoke test of the UX Studio core (settings, API route, migration, scheduler job).",
+	"description": "Sample module and smoke test of the UX1 Studio core (settings, API route, migration, scheduler job).",
 	"group": "developer",
 	"icon": "hand",
 	"settings": true,

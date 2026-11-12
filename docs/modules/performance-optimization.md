@@ -36,7 +36,7 @@ prioritou (běží jako poslední, takže přepíše i značky, které přidaly 
    písma, CSS, JS. Doba `cache_ttl` (týden / měsíc / půl roku / rok). **Nikdy se nezapíše samo**: jen routou `POST htaccess/apply` s
    `confirm: true` (jen `core.admin`, na obrazovce přes potvrzovací dialog). Před zápisem se původní soubor zkopíruje do
    `administrator/logs/uxs-performance/htaccess-<čas>-<náhodně>.bak` (složka má `.htaccess` s `Require all denied`, `Options -Indexes` a
-   `index.html`; ověřeno 403; drží se posledních 5 záloh). Mimo blok `# BEGIN/END UX Studio performance-optimization` se nic nemění. Blok se hledá po řádcích mezi značkami (bez regexu); když
+   `index.html`; ověřeno 403; drží se posledních 5 záloh). Mimo blok `# BEGIN/END UX1 Studio performance-optimization` se nic nemění. Blok se hledá po řádcích mezi značkami (bez regexu); když
    značka BEGIN nemá END, soubor se nechá být (chyba, nic se nepřepíše). Zálohu dělá i odebrání bloku.
    Odebrání: tlačítko / `POST htaccess/remove`, a také automaticky při **vypnutí modulu** (`onDisable`). Pokud po odebrání zbude prázdný
    soubor (vytvořili jsme ho my), smaže se. Odmítne se na serveru, který není Apache/LiteSpeed (`not_apache`); na nginx je třeba hlavičky

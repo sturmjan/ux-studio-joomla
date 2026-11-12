@@ -27,7 +27,7 @@ Joomla modul `mod_uxstudio_reviews` nebo značku `{uxstudio_reviews ...}` v čl�
 - Značka: `{uxstudio_reviews layout=slider count=6 min_rating=4 platform=google schema=0 heading="..."}`.
 - Počty se skloňují (`Text::plural`, klíče `_0`, `_1`, `_2`, `_MORE`).
 - Po vypnutí modulu se značka `{uxstudio_reviews}` v článcích nahrazovat přestane a návštěvníkům se zobrazí doslovně: před vypnutím ji z obsahu odstraňte.
-- Modul: parametry přepisují výchozí hodnoty z UX Studia; cache modulu je výchozí vypnutá (assety se registrují při renderu).
+- Modul: parametry přepisují výchozí hodnoty z UX1 Studia; cache modulu je výchozí vypnutá (assety se registrují při renderu).
 
 ### Rozdíly proti WP verzi
 - Nahrazeno: shortcode -> modul + značka, přibyly ruční zadání/úpravy/import, rozložení slider/badge/list, JSON-LD, mazání.

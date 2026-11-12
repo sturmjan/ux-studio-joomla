@@ -1,6 +1,6 @@
-# UX Studio pro Joomla 5 a 6 - architektura (závazná)
+# UX1 Studio pro Joomla 5 a 6 - architektura (závazná)
 
-Port WordPress pluginu UX Studio (referenční kód: `D:\xampp\htdocs\_uxs-wt-csp`, jen ke čtení,
+Port WordPress pluginu UX1 Studio (referenční kód: `D:\xampp\htdocs\_uxs-wt-csp`, jen ke čtení,
 NIKDY tam nezapisovat). Neportujeme 1:1: přebíráme logiku, UI a vzhled, PHP vrstvu píšeme
 nativně proti Joomla API. Jeden kód musí běžet na **Joomla 5.4 i 6.x** beze změn.
 
@@ -122,7 +122,7 @@ packages/lib_uxstudio/media/modules/<id>/       # volitelně, frontendové asset
 | `retention(): array` | čištění logů |
 | `onEnable()/onDisable(): void` | vedlejší efekty (.htaccess bloky apod.); data se při vypnutí NEMAŽOU |
 | `acl(): string` | výchozí `core.manage`, rizikové moduly `core.admin` |
-| `dashboardWidget(): ?array` | volitelná karta na přehledu UX Studia |
+| `dashboardWidget(): ?array` | volitelná karta na přehledu UX1 Studia |
 
 ## 5. Admin SPA
 

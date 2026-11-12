@@ -9,7 +9,7 @@ use Ux1\UxStudio\Modules\DashboardWidgets\Module as DashboardWidgets;
 \defined('_JEXEC') or die;
 
 /**
- * Administrator module for the Joomla home screen (position "cpanel"): the cards come from UX Studio (module
+ * Administrator module for the Joomla home screen (position "cpanel"): the cards come from UX1 Studio (module
  * dashboard-widgets); the module itself has no parameters of its own beyond layout and cache.
  */
 class Dispatcher extends AbstractModuleDispatcher
@@ -19,7 +19,7 @@ class Dispatcher extends AbstractModuleDispatcher
         $data          = parent::getLayoutData();
         $data['cards'] = [];
 
-        // UX Studio library missing or the module is switched off: render nothing.
+        // UX1 Studio library missing or the module is switched off: render nothing.
         if (!class_exists(Kernel::class)) {
             return $data;
         }

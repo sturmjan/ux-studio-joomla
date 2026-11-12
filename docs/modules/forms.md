@@ -31,7 +31,7 @@ frontendový Joomla modul `packages/mod_uxstudio_form/`, assety `packages/lib_ux
 ## Vložení na web
 
 - **Zkratka** `{uxsform N}` (i `{uxsform id=N}`) v článku, modulu Vlastní HTML a čemkoli, co projde `onContentPrepare`.
-- **Joomla modul „UX Studio - Formulář“** (`mod_uxstudio_form`): výběr publikovaného formuláře v parametrech (pole typu `sql`), pozice šablony.
+- **Joomla modul „UX1 Studio - Formulář“** (`mod_uxstudio_form`): výběr publikovaného formuláře v parametrech (pole typu `sql`), pozice šablony.
 - Výstup je CSP-friendly: žádný inline skript ani styl, `forms.js`/`forms.css` přes `$ctx->useScript/useStyle`, konfigurace v `data-*`,
   barva zvýraznění přes `addInlineStyle` WebAssetManageru (nonce řeší Joomla). Turnstile se načítá jako externí skript.
   Výchozí CSS lze vypnout v nastavení (třídy `uxs-form*`, proměnné `--uxs-form-*`).

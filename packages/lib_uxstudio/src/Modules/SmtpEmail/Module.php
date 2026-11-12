@@ -235,7 +235,7 @@ final class Module extends BaseModule implements MailTransport
 
         $site = (string) Factory::getApplication()->get('sitename', '');
         MailHub::forceMailer($mailer !== '' ? $mailer : null);
-        MailHub::overrideSource('UX Studio: ' . Text::_('UXS_SMTP_EMAIL_NAME'));
+        MailHub::overrideSource('UX1 Studio: ' . Text::_('UXS_SMTP_EMAIL_NAME'));
         $error = '';
         $ok    = false;
         $mail  = null;

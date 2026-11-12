@@ -1,4 +1,4 @@
-/* UX Studio - Instagram Feed carousel: arrow buttons for the scroll-snap list (no inline code, CSP friendly). */
+/* UX1 Studio - Instagram Feed carousel: arrow buttons for the scroll-snap list (no inline code, CSP friendly). */
 ( function () {
 	'use strict';
 

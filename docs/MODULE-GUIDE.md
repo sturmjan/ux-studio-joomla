@@ -1,6 +1,6 @@
-# UX Studio pro Joomla - návod pro autory modulů
+# UX1 Studio pro Joomla - návod pro autory modulů
 
-Tento návod popisuje, jak přidat funkci (modul) do UX Studia. Závazná pravidla jsou v `ARCHITECTURE.md`,
+Tento návod popisuje, jak přidat funkci (modul) do UX1 Studia. Závazná pravidla jsou v `ARCHITECTURE.md`,
 vzorový modul je `packages/lib_uxstudio/src/Modules/HelloCheck` (id `hello-check`) včetně obrazovky
 `admin-app/src/modules/hello-check/Page.tsx`. **Začni zkopírováním těchto dvou složek.**
 
@@ -262,9 +262,9 @@ Nepiš si vlastní verze, použij tyto:
 - **`Http`** - `$ctx->http()->request($method, $url, $options)`; volby navíc: `follow_redirects` (výchozí `true`, nejvýš `max_redirects` = 3 hopy), `false` vrátí 3xx odpověď samotnou.
   Výsledek má `url` (adresa, ze které odpověď přišla), `redirected`, `redirect_chain[]` a `redirect_to` (absolutní `Location` nenásledovaného přesměrování, jinak `null`).
   S `allow_private` (pevná důvěryhodná adresa, např. vývojová CA na privátní IP) se přesměrování na jiný **origin** (scheme + host + port) odmítne (`ApiException` `redirect_blocked`). U ostatních požadavků se při přesměrování na jiný origin vynechají hlavičky `Authorization`, `Cookie`, `Proxy-Authorization` a `X-UXS-*`. Podepisované požadavky (HMAC přes URL) posílej s `follow_redirects => false`.
-- **`Mail`** - `Mail::send(['to' => .., 'subject' => .., 'body' => .., 'html' => true, 'reply_to' => .., 'attachments' => [cesta, ...], 'source' => 'UX Studio: Můj modul'])` vrací `bool` (`Mail::lastError()`),
+- **`Mail`** - `Mail::send(['to' => .., 'subject' => .., 'body' => .., 'html' => true, 'reply_to' => .., 'attachments' => [cesta, ...], 'source' => 'UX1 Studio: Můj modul'])` vrací `bool` (`Mail::lastError()`),
   `Mail::create()` vrátí Joomla mailer pro složitější zprávy. Zprávy jdou přes sdílený `MailHub`: použije se spojení z modulu smtp-email a zapíše je email-log, když jsou zapnuté;
-  když ne, odejdou nativním mailerem Joomly beze změny. Nikdy nevolej `MailerFactoryInterface::createMailer()` napřímo. **Povinné: žádné `mail()`, `PHPMailer` ani `Factory::getMailer()` v modulu** - jinak zpráva mine SMTP spojení i email-log (typicky `mail() vrátil false` v logu). Vždy `Mail::send([... 'source' => 'UX Studio: Název modulu'])` nebo `Mail::create()`.
+  když ne, odejdou nativním mailerem Joomly beze změny. Nikdy nevolej `MailerFactoryInterface::createMailer()` napřímo. **Povinné: žádné `mail()`, `PHPMailer` ani `Factory::getMailer()` v modulu** - jinak zpráva mine SMTP spojení i email-log (typicky `mail() vrátil false` v logu). Vždy `Mail::send([... 'source' => 'UX1 Studio: Název modulu'])` nebo `Mail::create()`.
 - **`SafeRegex`** - regulární výrazy zadané administrátorem a spouštěné na návštěvnickém vstupu (`delimit`, `match`, `compiles`, `probe`; zkrácený subjekt, nízký backtrack limit, ReDoS zkouška při uložení).
 - **`RateLimiter`** - `hit($klíč, $limit, $okno)` a `hitClient($název, $limit, $okno)` (klíč doplní IP z `ClientIp`).
 - **`Store`** (`$ctx->store()`) - obecné key/value úložiště modulu v `#__uxstudio_store` (hodnota cokoli pro `json_encode`): `get($k, $default)`, `set($k, $v, $ttlSekund = 0)`, `has`, `delete`,
@@ -273,7 +273,7 @@ Nepiš si vlastní verze, použij tyto:
   (security-optimization): callback dostane a vrátí pole `direktiva => [zdroje]`, např. `$s['form-action'][] = 'https://app.ux1.cz'`; zdroje projdou validací CSP builderu. ca-connector tím přidává adresu CA do `form-action`
   v administraci (párovací formulář), takže vynucené CSP párování nezablokuje.
 - **Upozornění v administraci** - `$ctx->notice('klic', 'Text (bez HTML)', 'warning|info|error', 'index.php?option=com_uxstudio#/module?id=muj-modul')` ukáže zprávu na přehledu Joomly (com_cpanel) a na obrazovce
-  UX Studia, jen uživatelům s `core.manage`, dokud ji modul nestáhne `$ctx->clearNotice('klic')` (nebo dokud je modul zapnutý). Odkaz musí být `index.php?...`.
+  UX1 Studia, jen uživatelům s `core.manage`, dokud ji modul nestáhne `$ctx->clearNotice('klic')` (nebo dokud je modul zapnutý). Odkaz musí být `index.php?...`.
 - **`ModuleRegistry`** - načtení nebo start jednoho modulu, který selže, zaloguje chybu a označí modul, ostatní nezasáhne (`$registry->error($id)`); chyba se uloží i do úložiště jádra, takže ji SPA ukáže i když selhala jen strana webu (site), a smaže se po úspěšném startu stejného klienta.
 
 ## 7. Překlady
@@ -306,7 +306,7 @@ Když funkce potřebuje pozici v šabloně (např. horní lišta), vlastní ji k
 ve složce `packages/mod_uxstudio_<x>/` (manifest `mod_uxstudio_<x>.xml`, `services/provider.php`, `src/Dispatcher/Dispatcher.php`,
 `tmpl/default.php`, `language/`). `bin/build.mjs` ho přidá do balíčku sám. Pro vývoj spusť `node bin/dev-link.mjs`:
 složku nalinkuje do `modules/` na obou webech a udělá `extension:discover` + `extension:discover:install`.
-Nastavení zdroje dat čti z UX Studia (`Kernel::instance()->settings()->get('<id>', 'klíč')`), neduplikuj ho v parametrech modulu.
+Nastavení zdroje dat čti z UX1 Studia (`Kernel::instance()->settings()->get('<id>', 'klíč')`), neduplikuj ho v parametrech modulu.
 
 ## 10. Testování přes `bin/jadmin.mjs`
 
@@ -333,7 +333,7 @@ Každou funkci ověř na **J5 i J6**. Navíc:
 - `php -l` na všech svých PHP souborech, `npm run typecheck` pro SPA, `npm run build` (nebo `npm run build:spa`).
 - Úlohy: `php D:/xampp/htdocs/joomla5/cli/joomla.php scheduler:run --id=<id>`; tabulky kontroluj
   `D:\xampp\mysql\bin\mysql.exe -uroot --default-character-set=utf8mb4 joomla5 -e "SHOW TABLES LIKE 'jos_uxstudio%'"`.
-- Frontend: `curl -s http://localhost/joomla5/ | grep 'UX Studio hello-check'`.
+- Frontend: `curl -s http://localhost/joomla5/ | grep 'UX1 Studio hello-check'`.
 - Veřejné routy: `curl -s "http://localhost/joomla5/index.php?option=com_uxstudio&task=public.dispatch&format=json&route=hello-check/hello"`.
 - Na J6 zkontroluj, že nic nepotřebuje plugin "Behaviour - Backward Compatibility" (vypni ho a test zopakuj).
 - Po změně PHP tříd se může hodit `php <site>/cli/joomla.php cache:clean`.

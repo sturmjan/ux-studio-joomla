@@ -1,4 +1,4 @@
-/* UX Studio Forms - front-end behaviour. No inline code: configuration comes from data-* attributes of the form. */
+/* UX1 Studio Forms - front-end behaviour. No inline code: configuration comes from data-* attributes of the form. */
 (function () {
 	'use strict';
 

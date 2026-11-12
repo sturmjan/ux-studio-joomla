@@ -1,4 +1,4 @@
-/* UX Studio - Review Aggregator: "show more / show less" toggle of long reviews (no inline code, CSP friendly). */
+/* UX1 Studio - Review Aggregator: "show more / show less" toggle of long reviews (no inline code, CSP friendly). */
 ( function () {
 	'use strict';
 	document.addEventListener( 'click', function ( e ) {

@@ -25,7 +25,7 @@ Protějšek WP modulu ImageOptimizer (v `_uxs-wt-csp`), přepsaný pro Joomla Sp
 5. **WebP / AVIF.** Vedle obrázku vznikne `obrazek.jpg.webp` / `obrazek.jpg.avif` (přípona se přidává, takže `a.jpg` a `a.png` nekolidují),
    jen když je sourozenec menší než hlavní soubor. AVIF je volitelný a pomalý (GD `imageavif`, speed 6). Starý sourozenec, který
    se při novém zpracování nevytvořil, se smaže.
-6. **Doručování.** Volitelně (`htaccess_delivery`) blok `# BEGIN/END UX Studio image-optimizer` v `images/.htaccess` (mod_rewrite:
+6. **Doručování.** Volitelně (`htaccess_delivery`) blok `# BEGIN/END UX1 Studio image-optimizer` v `images/.htaccess` (mod_rewrite:
    podle `Accept` interně přepíše na `.avif` / `.webp`, pokud existuje; `Vary: Accept`; AddType). Zbytek souboru se nikdy nemění.
    Synchronizace při každém načtení administrace (levná kontrola souboru) a při zapnutí modulu; při vypnutí modulu se blok odstraní.
    Jen Apache/LiteSpeed (nginx pravidla ignoruje, je třeba nastavit ručně).

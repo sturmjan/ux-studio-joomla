@@ -153,7 +153,7 @@ final class Engine
                 $app->setHeader('Cache-Control', 'public, max-age=' . $ttl, true);
             }
         }
-        $app->setHeader('X-Redirect-By', 'UX Studio Redirects', true);
+        $app->setHeader('X-Redirect-By', 'UX1 Studio Redirects', true);
         $app->redirect($target, $code);
     }
 

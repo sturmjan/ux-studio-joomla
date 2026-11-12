@@ -1,5 +1,5 @@
 /**
- * Typed client of the UX Studio JSON endpoint (administrator/index.php?option=com_uxstudio&task=api.dispatch).
+ * Typed client of the UX1 Studio JSON endpoint (administrator/index.php?option=com_uxstudio&task=api.dispatch).
  * URL, CSRF token and locale come from Joomla.getOptions('uxstudio') (set by the component view).
  */
 import { QueryClient } from '@tanstack/react-query';

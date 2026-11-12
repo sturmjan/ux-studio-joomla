@@ -12,7 +12,7 @@ use Ux1\UxStudio\Core\ModuleContext;
 \defined('_JEXEC') or die;
 
 /**
- * Redirects 404 pages to the homepage unless another redirect already answered the request: a rule of the UX Studio
+ * Redirects 404 pages to the homepage unless another redirect already answered the request: a rule of the UX1 Studio
  * Redirects module (including its 410 Gone rules, which must never turn into a homepage redirect) or Joomla's own
  * Redirect plugin (it redirects and exits before this listener runs).
  *

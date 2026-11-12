@@ -15,7 +15,7 @@ use Ux1\UxStudio\Core\RateLimiter;
  *   if (\Ux1\UxStudio\Modules\BotThrottle\Guard::exceeded('analytics_hit', 30, 10, 900)) { return http 429; }
  *
  * Once an address trips the burst limit it is banned for $banFor seconds in that context; further calls short-circuit on a
- * single indexed read. Respects the module: when Bot Throttle is turned off in UX Studio, nothing here acts.
+ * single indexed read. Respects the module: when Bot Throttle is turned off in UX1 Studio, nothing here acts.
  */
 final class Guard
 {

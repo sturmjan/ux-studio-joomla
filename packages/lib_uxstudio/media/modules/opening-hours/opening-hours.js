@@ -1,4 +1,4 @@
-/* UX Studio Opening Hours: location switcher (shows the card of the selected location). No inline code. */
+/* UX1 Studio Opening Hours: location switcher (shows the card of the selected location). No inline code. */
 (function () {
 	'use strict';
 

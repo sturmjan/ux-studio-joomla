@@ -1,4 +1,4 @@
-/* UX Studio Forms - default front-end styles. Override --uxs-form-* variables or turn this file off in the module settings. */
+/* UX1 Studio Forms - default front-end styles. Override --uxs-form-* variables or turn this file off in the module settings. */
 .uxs-form {
 	--uxs-form-accent: #2563eb;
 	--uxs-form-border: #cbd5e1;

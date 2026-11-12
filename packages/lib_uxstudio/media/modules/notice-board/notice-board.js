@@ -1,4 +1,4 @@
-/* UX Studio Notice Board: subscribe form (progressive enhancement, no inline code). Texts come from data attributes. */
+/* UX1 Studio Notice Board: subscribe form (progressive enhancement, no inline code). Texts come from data attributes. */
 (function () {
 	'use strict';
 

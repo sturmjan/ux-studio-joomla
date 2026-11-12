@@ -98,7 +98,7 @@ final class ModuleContext
     }
 
     /**
-     * Shows a notice on the Joomla control panel and the UX Studio screen of the administration until clearNotice() is called
+     * Shows a notice on the Joomla control panel and the UX1 Studio screen of the administration until clearNotice() is called
      * (see Core\Notices). $link is an administrator URL ("index.php?option=...") or ''.
      *
      * @param string $level info | warning | error

@@ -136,7 +136,7 @@ function Overview( { onSettings }: { onSettings: () => void } ): JSX.Element {
 			<div className="uxs-card" style={ { alignItems: 'flex-start', textAlign: 'left' } }>
 				<strong>{ t( 'Consent' ) }</strong>
 				<span className="uxs-muted">
-					{ s.consent_mode === 'uxstudio' ? t( 'UX Studio consent (cookie "uxs_consent")' ) : s.consent_mode === 'cookie' ? t( 'Cookie of another consent tool' ) : t( 'No consent required (not recommended)' ) }
+					{ s.consent_mode === 'uxstudio' ? t( 'UX1 Studio consent (cookie "uxs_consent")' ) : s.consent_mode === 'cookie' ? t( 'Cookie of another consent tool' ) : t( 'No consent required (not recommended)' ) }
 				</span>
 				<span className="uxs-muted">{ s.detected.length > 0 ? t( 'Detected on this site: {list}', { list: s.detected.join( ', ' ) } ) : t( 'No consent tool detected.' ) }</span>
 			</div>

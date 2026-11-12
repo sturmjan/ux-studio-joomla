@@ -1,5 +1,5 @@
 /**
- * UX Studio popup-manager front end. No dependencies, no inline code: the server renders every matching popup hidden
+ * UX1 Studio popup-manager front end. No dependencies, no inline code: the server renders every matching popup hidden
  * (div.uxs-popup[data-uxs-popup]), this script applies the style, evaluates device / schedule / frequency, waits for
  * the trigger (immediate | delay | scroll | exit intent) and shows the popup as an accessible dialog
  * (focus moved in and trapped for the centred modal variant, Esc closes, focus is returned, scroll lock).

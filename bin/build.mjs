@@ -170,7 +170,7 @@ const pkgXml = `<?xml version="1.0" encoding="UTF-8"?>
 	<authorUrl>https://ux1.cz</authorUrl>
 	<copyright>(C) UX1</copyright>
 	<license>GNU General Public License version 2 or later</license>
-	<description>UX Studio for Joomla: a modular toolbox (library, component, plugins and modules).</description>
+	<description>UX1 Studio for Joomla: a modular toolbox (library, component, plugins and modules).</description>
 	<scriptfile>script.php</scriptfile>
 	<files folder="packages">
 ${fileTags}

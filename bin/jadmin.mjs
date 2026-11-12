@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Joomla administrator CLI for testing the UX Studio API like the SPA does (session cookie + CSRF token).
+ * Joomla administrator CLI for testing the UX1 Studio API like the SPA does (session cookie + CSRF token).
  *
  *   (j5clean, j6clean = clean Joomla 5 / 6 for install/update tests, J5CLEAN_URL, J6CLEAN_URL in .env.local)
  *   node bin/jadmin.mjs <j5|j6> GET core/modules

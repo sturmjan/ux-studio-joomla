@@ -1,5 +1,5 @@
 /*
- * UX Studio - Pixel & Tag Manager loader. No inline code on the page: the configuration (validated IDs, consent rules)
+ * UX1 Studio - Pixel & Tag Manager loader. No inline code on the page: the configuration (validated IDs, consent rules)
  * comes in the data-config attribute of this script tag. A provider is injected only after consent for its category.
  *
  * Consent sources (config.consent.mode):
