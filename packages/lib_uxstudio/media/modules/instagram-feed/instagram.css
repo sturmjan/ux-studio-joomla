@@ -1,4 +1,4 @@
-/* UX Studio - Instagram Feed. Layout is driven by modifier classes only (no inline styles: CSP friendly). */
+/* UX1 Studio - Instagram Feed. Layout is driven by modifier classes only (no inline styles: CSP friendly). */
 .uxs-ig { --uxs-ig-cols: 4; --uxs-ig-gap: 8px; margin: 0 0 1.5rem; }
 .uxs-ig--cols-1 { --uxs-ig-cols: 1; }
 .uxs-ig--cols-2 { --uxs-ig-cols: 2; }

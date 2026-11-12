@@ -256,7 +256,7 @@ final class Module extends BaseModule
 
         $app  = Factory::getApplication();
         $site = (string) $app->get('sitename', '');
-        MailHub::overrideSource('UX Studio: ' . Text::_('UXS_EMAIL_HEALTH_NAME'));
+        MailHub::overrideSource('UX1 Studio: ' . Text::_('UXS_EMAIL_HEALTH_NAME'));
         $error  = '';
         $ok     = false;
         $result = null;

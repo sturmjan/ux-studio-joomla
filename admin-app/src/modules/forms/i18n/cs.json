@@ -95,7 +95,7 @@
 	"Optional. A path on this site or a full http(s) address; the thank-you message is then skipped.": "Volitelné. Cesta na tomto webu nebo úplná http(s) adresa; poděkování se pak přeskočí.",
 	"Options": "Možnosti",
 	"Page": "Stránka",
-	"Paste the code into an article or a Custom module, or add the module \"UX Studio - Form\" to a template position.": "Vložte kód do článku nebo modulu Vlastní HTML, případně přidejte modul „UX Studio - Formulář“ na pozici šablony.",
+	"Paste the code into an article or a Custom module, or add the module \"UX1 Studio - Form\" to a template position.": "Vložte kód do článku nebo modulu Vlastní HTML, případně přidejte modul „UX1 Studio - Formulář“ na pozici šablony.",
 	"Phone": "Telefon",
 	"Placeholder": "Zástupný text",
 	"Placeholders: {form_title}, {site_name}, {submission_id} and {field key}.": "Zástupné výrazy: {form_title}, {site_name}, {submission_id} a {klíč pole}.",

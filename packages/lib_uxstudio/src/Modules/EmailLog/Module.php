@@ -138,7 +138,7 @@ final class Module extends BaseModule
             throw new ApiException(Text::_('UXS_EMAIL_LOG_ERR_NO_BODY'), 422, 'not_resendable');
         }
 
-        MailHub::overrideSource('UX Studio: ' . Text::sprintf('UXS_EMAIL_LOG_RESEND_OF', $id));
+        MailHub::overrideSource('UX1 Studio: ' . Text::sprintf('UXS_EMAIL_LOG_RESEND_OF', $id));
         $error = '';
         $ok    = false;
         try {

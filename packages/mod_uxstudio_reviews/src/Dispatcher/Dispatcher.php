@@ -9,7 +9,7 @@ use Ux1\UxStudio\Modules\ReviewAggregator\Module as ReviewAggregator;
 \defined('_JEXEC') or die;
 
 /**
- * Front-end module of the UX Studio "Review Aggregator": data, defaults and schema settings come from UX Studio
+ * Front-end module of the UX1 Studio "Review Aggregator": data, defaults and schema settings come from UX1 Studio
  * (module review-aggregator); the module parameters only override what differs for this position.
  */
 class Dispatcher extends AbstractModuleDispatcher
@@ -19,7 +19,7 @@ class Dispatcher extends AbstractModuleDispatcher
         $data         = parent::getLayoutData();
         $data['html'] = '';
 
-        // UX Studio library missing or the aggregator is switched off: render nothing.
+        // UX1 Studio library missing or the aggregator is switched off: render nothing.
         if (!class_exists(Kernel::class)) {
             return $data;
         }

@@ -11,7 +11,7 @@ use Ux1\UxStudio\Core\ApiRequest;
 \defined('_JEXEC') or die;
 
 /**
- * Administrator API of the Redirects module (called by the SPA through the UX Studio JSON endpoint).
+ * Administrator API of the Redirects module (called by the SPA through the UX1 Studio JSON endpoint).
  */
 final class Api
 {

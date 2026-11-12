@@ -9,7 +9,7 @@ use Ux1\UxStudio\Modules\OpeningHours\Module as OpeningHours;
 \defined('_JEXEC') or die;
 
 /**
- * Front-end module of the UX Studio "Opening Hours": locations, hours and colours come from UX Studio (module
+ * Front-end module of the UX1 Studio "Opening Hours": locations, hours and colours come from UX1 Studio (module
  * opening-hours); the module parameters only choose which location is shown and how.
  */
 class Dispatcher extends AbstractModuleDispatcher
@@ -19,7 +19,7 @@ class Dispatcher extends AbstractModuleDispatcher
         $data         = parent::getLayoutData();
         $data['html'] = '';
 
-        // UX Studio library missing or the module is switched off: render nothing.
+        // UX1 Studio library missing or the module is switched off: render nothing.
         if (!class_exists(Kernel::class)) {
             return $data;
         }

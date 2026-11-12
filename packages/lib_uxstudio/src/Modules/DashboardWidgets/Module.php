@@ -15,7 +15,7 @@ use Ux1\UxStudio\Core\ModuleContext;
 \defined('_JEXEC') or die;
 
 /**
- * Cards on the Joomla administration home screen (com_cpanel): summaries that UX Studio modules supply through
+ * Cards on the Joomla administration home screen (com_cpanel): summaries that UX1 Studio modules supply through
  * dashboardWidget(), plus own notes and links. Every card can be hidden or limited to user groups. The cards are drawn by
  * the administrator module mod_uxstudio_dashboard (position "cpanel"), which this module publishes when it is turned on.
  */
@@ -494,7 +494,7 @@ final class Module extends BaseModule
             return true;
         }
 
-        $title = 'UX Studio';
+        $title = 'UX1 Studio';
         $db->setQuery(
             'INSERT INTO ' . $db->quoteName('#__modules')
             . ' (' . implode(', ', $db->quoteName(['title', 'note', 'content', 'ordering', 'position', 'published', 'module', 'access', 'showtitle', 'params', 'client_id', 'language'])) . ') VALUES ('

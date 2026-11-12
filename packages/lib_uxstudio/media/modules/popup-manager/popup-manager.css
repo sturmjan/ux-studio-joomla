@@ -1,4 +1,4 @@
-/* UX Studio popup-manager. Colours / width are set by popup-manager.js through CSS custom properties (CSP: no inline styles). */
+/* UX1 Studio popup-manager. Colours / width are set by popup-manager.js through CSS custom properties (CSP: no inline styles). */
 .uxs-popup {
 	position: fixed;
 	inset: 0;

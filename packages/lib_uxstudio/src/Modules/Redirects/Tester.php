@@ -115,7 +115,7 @@ final class Tester
             $seen[$url] = true;
             try {
                 if (Url::isSameOrigin($url)) {
-                    $client   = (new HttpFactory())->getHttp(['timeout' => 10, 'userAgent' => 'UX Studio Redirect Checker', 'follow_location' => false], 'curl');
+                    $client   = (new HttpFactory())->getHttp(['timeout' => 10, 'userAgent' => 'UX1 Studio Redirect Checker', 'follow_location' => false], 'curl');
                     $response = $client->get($url, [], 10);
                     $status   = $response->getStatusCode();
                     $location = (string) ($response->getHeaderLine('Location'));

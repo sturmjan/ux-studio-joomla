@@ -67,7 +67,7 @@ export async function adminLogin(ctx, site) {
 	return page;
 }
 
-/** Open a UX Studio SPA route, e.g. '#/module?id=forms'. */
+/** Open a UX1 Studio SPA route, e.g. '#/module?id=forms'. */
 export async function openStudio(page, site, hash = '#/modules') {
 	await page.goto(`${site.url}/administrator/index.php?option=com_uxstudio${hash}`);
 	await page.locator('#uxs-root').waitFor();

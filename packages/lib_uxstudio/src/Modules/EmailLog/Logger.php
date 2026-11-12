@@ -119,9 +119,9 @@ final class Logger implements MailObserver
             if ($file === '' || preg_match('#/Modules/(SmtpEmail|EmailLog|EmailHealth)/#', $file)) {
                 continue;
             }
-            // Another UX Studio module (forms, notifications ...) that sends mail itself.
+            // Another UX1 Studio module (forms, notifications ...) that sends mail itself.
             if (preg_match('#/Modules/([A-Za-z0-9]+)/#', $file, $m)) {
-                return 'UX Studio: ' . $m[1];
+                return 'UX1 Studio: ' . $m[1];
             }
             if (str_contains($file, '/libraries/') || str_contains($file, '/lib_uxstudio/')) {
                 continue;

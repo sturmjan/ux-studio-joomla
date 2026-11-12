@@ -5,7 +5,7 @@ e-mailem (double opt-in), RSS a otevřená data. Kód: `packages/lib_uxstudio/sr
 assety `media/modules/notice-board/`, obrazovka `admin-app/src/modules/notice-board`.
 
 POZOR k zadání: WP modul NoticeBoard je **veřejná úřední deska** (shortcode, odběratelé, RSS, OFN open data), ne zprávy pro
-administrátory. Portováno je to, co dělá WP verze. Pro adminy je jen dlaždice na přehledu UX Studia (aktivní / archivovaná
+administrátory. Portováno je to, co dělá WP verze. Pro adminy je jen dlaždice na přehledu UX1 Studia (aktivní / archivovaná
 oznámení, odběratelé); zprávy v `com_cpanel` modul neposílá.
 
 ## Co modul dělá

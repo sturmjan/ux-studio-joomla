@@ -9,7 +9,7 @@ use Ux1\UxStudio\Modules\InstagramFeed\Module as InstagramFeed;
 \defined('_JEXEC') or die;
 
 /**
- * Front-end module of the UX Studio "Instagram Feed": posts, defaults and the connection come from UX Studio (module
+ * Front-end module of the UX1 Studio "Instagram Feed": posts, defaults and the connection come from UX1 Studio (module
  * instagram-feed); the module parameters only override what differs for this position.
  */
 class Dispatcher extends AbstractModuleDispatcher
@@ -19,7 +19,7 @@ class Dispatcher extends AbstractModuleDispatcher
         $data         = parent::getLayoutData();
         $data['html'] = '';
 
-        // UX Studio library missing or the Instagram Feed is switched off: render nothing.
+        // UX1 Studio library missing or the Instagram Feed is switched off: render nothing.
         if (!class_exists(Kernel::class)) {
             return $data;
         }

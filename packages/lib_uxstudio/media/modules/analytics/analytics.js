@@ -1,4 +1,4 @@
-/* UX Studio - Visitor Statistics beacon. Cookie-free: sends the path and the referrer once per page view, after render. */
+/* UX1 Studio - Visitor Statistics beacon. Cookie-free: sends the path and the referrer once per page view, after render. */
 ( function () {
 	'use strict';
 	var script = document.currentScript;

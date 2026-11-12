@@ -10,7 +10,7 @@ use Joomla\DI\Container;
 use Joomla\DI\ServiceProviderInterface;
 
 /**
- * Install script of com_uxstudio: requirement check and database migrations of the UX Studio core.
+ * Install script of com_uxstudio: requirement check and database migrations of the UX1 Studio core.
  * (No SQL files in manifests - the Migrator in the library owns the schema.)
  */
 return new class () implements ServiceProviderInterface {
@@ -48,12 +48,12 @@ return new class () implements ServiceProviderInterface {
                         return true;
                     }
                     if (version_compare(PHP_VERSION, self::MIN_PHP, '<')) {
-                        $this->app->enqueueMessage('UX Studio requires PHP ' . self::MIN_PHP . ' or newer.', 'error');
+                        $this->app->enqueueMessage('UX1 Studio requires PHP ' . self::MIN_PHP . ' or newer.', 'error');
 
                         return false;
                     }
                     if (version_compare(JVERSION, self::MIN_JOOMLA, '<')) {
-                        $this->app->enqueueMessage('UX Studio requires Joomla ' . self::MIN_JOOMLA . ' or newer.', 'error');
+                        $this->app->enqueueMessage('UX1 Studio requires Joomla ' . self::MIN_JOOMLA . ' or newer.', 'error');
 
                         return false;
                     }
@@ -107,7 +107,7 @@ return new class () implements ServiceProviderInterface {
                         return true;
                     }
                     $this->app->enqueueMessage(
-                        'UX Studio is linked to a git repository (bin/dev-link.mjs), installing a package here would delete the repository files. '
+                        'UX1 Studio is linked to a git repository (bin/dev-link.mjs), installing a package here would delete the repository files. '
                         . 'Run "node bin/dev-link.mjs --unlink" first. Linked folders: ' . implode(', ', array_map('basename', $linked)),
                         'error'
                     );
@@ -133,7 +133,7 @@ return new class () implements ServiceProviderInterface {
                     });
 
                     if (!class_exists(\Ux1\UxStudio\Core\Kernel::class)) {
-                        $this->app->enqueueMessage('UX Studio library is missing, migrations were skipped.', 'warning');
+                        $this->app->enqueueMessage('UX1 Studio library is missing, migrations were skipped.', 'warning');
 
                         return true;
                     }
@@ -144,7 +144,7 @@ return new class () implements ServiceProviderInterface {
                         $kernel->migrator()->ensureCore();
                         \Ux1\UxStudio\Core\Upgrader::markDirty($kernel->db());
                     } catch (\Throwable $e) {
-                        $this->app->enqueueMessage('UX Studio setup failed: ' . $e->getMessage(), 'error');
+                        $this->app->enqueueMessage('UX1 Studio setup failed: ' . $e->getMessage(), 'error');
 
                         return false;
                     }

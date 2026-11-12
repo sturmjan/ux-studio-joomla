@@ -65,6 +65,6 @@ filtr `?status=new|in_progress|completed` (`rejected` vrací `[]`). **Aby ho CA 
 - Ruční Obnovit vrací při chybě CA pole `warning` (SPA ukáže toast).
 - Bez spojení s CA (nebo u nedoručeného požadavku) SPA ukazuje lokální stav (Otevřený / Řeší se / Hotovo), v detailu je select stavu (`items/{id}/status`) a potvrzení mazání říká, že lokální kopie je jediná.
 - `items/{id}/delete` vyžaduje `core.admin`.
-- Notifikace jde přes `Core\Mail::send()` (zdroj "UX Studio: Service requests").
+- Notifikace jde přes `Core\Mail::send()` (zdroj "UX1 Studio: Service requests").
 - Prostředí: jádrová rozšíření se vyřazují přes `ExtensionHelper::checkIfCoreExtension`, názvy jsou elementy (`com_x`, `plg_skupina_x`, `mod_x`, `lib_x`) + verze.
 - Feed `service-requests` pro CA je v modulu hotový, ale `CaConnector\Node::FEEDS` ani `CAPABILITY_MODULES` ho neobsahují, takže ho CA dnes nedosáhne (viz core_requests). Pozor: Node vrací 404, když je modul vypnutý, WP čte tabulku i při vypnutém modulu.

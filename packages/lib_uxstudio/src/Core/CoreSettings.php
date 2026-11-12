@@ -5,7 +5,7 @@ namespace Ux1\UxStudio\Core;
 \defined('_JEXEC') or die;
 
 /**
- * Settings of the core itself (module id "core" in #__uxstudio_settings, edited on the "Settings" screen of UX Studio).
+ * Settings of the core itself (module id "core" in #__uxstudio_settings, edited on the "Settings" screen of UX1 Studio).
  * Read them with CoreSettings::get('client_ip_mode').
  */
 final class CoreSettings

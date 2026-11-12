@@ -420,7 +420,7 @@ function RobotsTab(): JSX.Element {
 	return (
 		<>
 			<p className="uxs-form__help">
-				{ t( 'robots.txt tells crawlers what they may read. UX Studio never edits that file; here you see what it says today and can copy a suggestion into it.' ) }
+				{ t( 'robots.txt tells crawlers what they may read. UX1 Studio never edits that file; here you see what it says today and can copy a suggestion into it.' ) }
 			</p>
 			{ robots.isLoading ? <Loading /> : null }
 			{ robots.error ? <p role="alert">{ robots.error.message }</p> : null }

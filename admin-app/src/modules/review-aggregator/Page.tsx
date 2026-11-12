@@ -432,7 +432,7 @@ function OverviewTab(): JSX.Element {
 
 					<h3 className="uxs-section-title">{ t( 'Show reviews on the site' ) }</h3>
 					<p className="uxs-form__help">
-						{ t( 'Add the module "UX Studio - Reviews" to a position (Content - Site Modules), or put {tag} into an article or a Custom module. The tag accepts layout (grid, list, slider, badge), count, min_rating, order and platform, for example {example}.', {
+						{ t( 'Add the module "UX1 Studio - Reviews" to a position (Content - Site Modules), or put {tag} into an article or a Custom module. The tag accepts layout (grid, list, slider, badge), count, min_rating, order and platform, for example {example}.', {
 							tag: s.shortcode,
 							example: '{uxstudio_reviews layout=slider count=6 min_rating=4}',
 						} ) }

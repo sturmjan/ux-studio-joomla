@@ -18,7 +18,7 @@
 	"One year": "Rok",
 	"Remove the cache headers block from the .htaccess file? A copy of the current file is saved first.": "Odebrat blok s hlavičkami cache ze souboru .htaccess? Kopie aktuálního souboru se nejdřív uloží.",
 	"Already built into Joomla": "Co už umí Joomla",
-	"These speed-ups belong to Joomla itself, so UX Studio does not copy them. Turn them on in the places named here.": "Tato zrychlení patří přímo Joomle, proto je UX Studio nekopíruje. Zapněte je v místech, která jsou uvedena u každého řádku.",
+	"These speed-ups belong to Joomla itself, so UX1 Studio does not copy them. Turn them on in the places named here.": "Tato zrychlení patří přímo Joomle, proto je UX1 Studio nekopíruje. Zapněte je v místech, která jsou uvedena u každého řádku.",
 	"Page cache (plugin \"System - Page Cache\")": "Cache stránek (plugin „Systém - Cache stránek“)",
 	"System - Plugins": "Systém - Pluginy",
 	"Cache in Global Configuration": "Cache v Globální konfiguraci",

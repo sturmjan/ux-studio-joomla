@@ -139,7 +139,7 @@ export default function FormEditor( { id, hasTurnstile, onBack }: { id: number; 
 									<Copy size={ 14 } aria-hidden="true" /> { t( 'Copy' ) }
 								</button>
 							</span>,
-							t( 'Paste the code into an article or a Custom module, or add the module "UX Studio - Form" to a template position.' )
+							t( 'Paste the code into an article or a Custom module, or add the module "UX1 Studio - Form" to a template position.' )
 					  )
 					: null }
 			</div>

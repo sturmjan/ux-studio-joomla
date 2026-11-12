@@ -12,8 +12,8 @@ use Joomla\Event\Event;
  * Notices that modules show in the Joomla administration (for example "the vulnerability scanner found something new").
  * A module raises one with $ctx->notice('key', 'Message', 'warning', 'index.php?option=com_uxstudio#/module?id=my-module') and
  * withdraws it with $ctx->clearNotice('key') once the reason is gone. They are kept in the module's Store, listed on the
- * Joomla control panel (com_cpanel) and on the UX Studio screen as ordinary system messages, only for users who may manage
- * UX Studio, and only while the raising module is enabled. Nothing is rendered on other admin pages.
+ * Joomla control panel (com_cpanel) and on the UX1 Studio screen as ordinary system messages, only for users who may manage
+ * UX1 Studio, and only while the raising module is enabled. Nothing is rendered on other admin pages.
  */
 final class Notices
 {
@@ -68,7 +68,7 @@ final class Notices
         return $out;
     }
 
-    /** onAfterDispatch (administrator): list the notices on the control panel and the UX Studio screen. */
+    /** onAfterDispatch (administrator): list the notices on the control panel and the UX1 Studio screen. */
     public static function show(Event $event): void
     {
         try {
@@ -87,7 +87,7 @@ final class Notices
                 if ($notice['link'] !== '') {
                     $text .= ' <a href="' . htmlspecialchars($notice['link'], ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars(Text::_('UXS_CORE_NOTICE_OPEN'), ENT_QUOTES, 'UTF-8') . '</a>';
                 }
-                $app->enqueueMessage('UX Studio: ' . $text, self::LEVELS[$notice['level']] ?? 'warning');
+                $app->enqueueMessage('UX1 Studio: ' . $text, self::LEVELS[$notice['level']] ?? 'warning');
             }
         } catch (\Throwable $e) {
             // A broken notice must never break the administration.

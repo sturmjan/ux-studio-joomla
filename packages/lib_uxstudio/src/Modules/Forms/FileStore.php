@@ -49,7 +49,7 @@ final class FileStore
             throw new \RuntimeException('Cannot create the upload folder.');
         }
         $files = [
-            '.htaccess'  => "# UX Studio Forms: uploaded files are never served directly.\nOptions -Indexes\n<IfModule mod_authz_core.c>\n\tRequire all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\n\tOrder deny,allow\n\tDeny from all\n</IfModule>\n",
+            '.htaccess'  => "# UX1 Studio Forms: uploaded files are never served directly.\nOptions -Indexes\n<IfModule mod_authz_core.c>\n\tRequire all denied\n</IfModule>\n<IfModule !mod_authz_core.c>\n\tOrder deny,allow\n\tDeny from all\n</IfModule>\n",
             'web.config' => "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<configuration><system.webServer><authorization><deny users=\"*\" /></authorization></system.webServer></configuration>\n",
             'index.html' => '<!DOCTYPE html><title></title>',
         ];

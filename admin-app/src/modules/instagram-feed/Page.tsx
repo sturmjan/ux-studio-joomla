@@ -192,7 +192,7 @@ function OverviewTab( { status }: { status: Status } ): JSX.Element {
 
 			<h3 className="uxs-section-title">{ t( 'Show the feed on the site' ) }</h3>
 			<p className="uxs-form__help">
-				{ t( 'Add the module "UX Studio - Instagram" to a position (Content - Site Modules), or put {tag} into an article or a Custom module. The tag accepts layout (grid, carousel), count, columns, columns_tablet, columns_mobile, gap, show_caption, show_likes, show_follow and hashtags, for example {example}.', {
+				{ t( 'Add the module "UX1 Studio - Instagram" to a position (Content - Site Modules), or put {tag} into an article or a Custom module. The tag accepts layout (grid, carousel), count, columns, columns_tablet, columns_mobile, gap, show_caption, show_likes, show_follow and hashtags, for example {example}.', {
 					tag: status.tag,
 					example: '{uxstudio_instagram layout=carousel count=8 columns=4}',
 				} ) }

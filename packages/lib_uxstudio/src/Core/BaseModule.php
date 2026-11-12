@@ -5,7 +5,7 @@ namespace Ux1\UxStudio\Core;
 \defined('_JEXEC') or die;
 
 /**
- * Base class of every UX Studio module (src/Modules/<Name>/Module.php).
+ * Base class of every UX1 Studio module (src/Modules/<Name>/Module.php).
  * Only boot() is mandatory; everything else has a harmless default.
  */
 abstract class BaseModule
@@ -156,7 +156,7 @@ abstract class BaseModule
     }
 
     /**
-     * Optional card on the UX Studio overview: ['title' => string, 'value' => string|int, 'text' => string, 'status' => 'ok|warn|bad'].
+     * Optional card on the UX1 Studio overview: ['title' => string, 'value' => string|int, 'text' => string, 'status' => 'ok|warn|bad'].
      *
      * @return array<string,mixed>|null
      */

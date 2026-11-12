@@ -184,7 +184,7 @@ function LocationsTab(): JSX.Element {
 			{ list.data ? <DataTable columns={ columns } rows={ list.data.items } rowKey={ ( l ) => l.id } empty={ t( 'No locations yet.' ) } /> : null }
 			<h2 className="uxs-section-title">{ t( 'How to show it on the site' ) }</h2>
 			<ul className="uxs-muted">
-				<li>{ t( 'Joomla module "UX Studio - Opening Hours" (Content > Site Modules > New): choose the location and a template position.' ) }</li>
+				<li>{ t( 'Joomla module "UX1 Studio - Opening Hours" (Content > Site Modules > New): choose the location and a template position.' ) }</li>
 				<li>
 					{ t( 'In an article or a custom module:' ) } <code>{ '{opening-hours id=1}' }</code>, <code>{ '{opening-hours id=all}' }</code>, <code>{ '{opening-hours-status id=1}' }</code>
 				</li>

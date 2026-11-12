@@ -2,7 +2,7 @@
   "name": "ux-studio-joomla",
   "version": "0.1.0",
   "private": true,
-  "description": "UX Studio for Joomla 5 and 6 - build tooling",
+  "description": "UX1 Studio for Joomla 5 and 6 - build tooling",
   "type": "module",
   "workspaces": [
     "admin-app"

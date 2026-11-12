@@ -291,7 +291,7 @@ function Cards(): JSX.Element {
 			{ ! cpanel.installed || ! cpanel.published ? (
 				<div className="uxs-notice">
 					<TriangleAlert size={ 14 } aria-hidden="true" />{ ' ' }
-					{ cpanel.installed ? t( 'The block is not published on the Joomla home screen.' ) : t( 'The administrator module "UX Studio - Dashboard" is not installed.' ) }{ ' ' }
+					{ cpanel.installed ? t( 'The block is not published on the Joomla home screen.' ) : t( 'The administrator module "UX1 Studio - Dashboard" is not installed.' ) }{ ' ' }
 					{ cpanel.installed ? (
 						<button type="button" className="uxs-btn uxs-btn--small" disabled={ publish.isPending } onClick={ () => publish.mutate() }>{ t( 'Publish it' ) }</button>
 					) : null }

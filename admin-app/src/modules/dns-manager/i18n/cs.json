@@ -105,7 +105,7 @@
 	"Settings saved.": "Nastavení uloženo.",
 	"Only a Super User can change who may edit DNS and whether critical records can be deleted.": "Kdo smí upravovat DNS a zda lze mazat kritické záznamy, může měnit jen Super uživatel.",
 	"Administrators who may edit DNS": "Správci, kteří smějí upravovat DNS",
-	"Only the selected Super Users can add, change, delete and revert DNS records. Everybody else with access to UX Studio can only view. Nobody is selected by default.": "Přidávat, měnit, mazat a vracet DNS záznamy smějí jen vybraní Super uživatelé. Ostatní s přístupem do UX Studia je mohou jen prohlížet. Ve výchozím stavu není vybrán nikdo.",
+	"Only the selected Super Users can add, change, delete and revert DNS records. Everybody else with access to UX1 Studio can only view. Nobody is selected by default.": "Přidávat, měnit, mazat a vracet DNS záznamy smějí jen vybraní Super uživatelé. Ostatní s přístupem do UX1 Studia je mohou jen prohlížet. Ve výchozím stavu není vybrán nikdo.",
 	"Allow deleting critical records": "Povolit mazání kritických záznamů",
 	"Mail (MX) records and the records of the website itself (the domain, www and the host name of this site) cannot be deleted, renamed or reverted away unless this is on. Changing them stays possible, but needs the record name retyped.": "Záznamy pošty (MX) a záznamy samotného webu (doména, www a jméno hostitele tohoto webu) nejde smazat, přejmenovat ani vrátit zpět, dokud to není zapnuté. Měnit je zůstane možné, ale je nutné přepsat název záznamu.",
 	"Confirm your password": "Potvrďte své heslo",

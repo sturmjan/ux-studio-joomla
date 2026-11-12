@@ -27,7 +27,7 @@ návštěvníka** (Navigation Timing), protože na Joomle nemáme admin bar ani 
    denní vývoj.
 5. **Nejpomalejší stránky**: seskupeno podle cesty, řazení podle doby načtení / TTFB / FCP / LCP (průměr), minimum měření (1/3/10), top 50;
    barva podle `slow_ms` (3000) a jeho dvojnásobku.
-6. **Smazání dat** (`POST clear`, jen `core.admin`, s potvrzením). Karta na přehledu UX Studia: medián doby načtení za 7 dní (warn/bad podle `slow_ms`).
+6. **Smazání dat** (`POST clear`, jen `core.admin`, s potvrzením). Karta na přehledu UX1 Studia: medián doby načtení za 7 dní (warn/bad podle `slow_ms`).
 7. **Centrální aplikace**: `caFeed()` vrací `{summary, slowest}`. Aby ho CaConnector vystavil, musí mít v `Node::FEEDS` řádek
    `'page-load' => ['page-load', 'GET']` (viz core_requests); protokol CA tuto routu zatím nezná.
 

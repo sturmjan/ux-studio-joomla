@@ -11,7 +11,7 @@ use Joomla\DI\ServiceProviderInterface;
 
 /**
  * Install script of the pkg_uxstudio package: runs after ALL extensions of the package are installed.
- * Enables the UX Studio plugins (Joomla installs plugins disabled) and applies pending migrations.
+ * Enables the UX1 Studio plugins (Joomla installs plugins disabled) and applies pending migrations.
  */
 return new class () implements ServiceProviderInterface {
     public function register(Container $container): void
@@ -106,7 +106,7 @@ return new class () implements ServiceProviderInterface {
                         return true;
                     }
                     $this->app->enqueueMessage(
-                        'UX Studio is linked to a git repository (bin/dev-link.mjs), installing a package here would delete the repository files. '
+                        'UX1 Studio is linked to a git repository (bin/dev-link.mjs), installing a package here would delete the repository files. '
                         . 'Run "node bin/dev-link.mjs --unlink" first. Linked folders: ' . implode(', ', array_map('basename', $linked)),
                         'error'
                     );
@@ -151,7 +151,7 @@ return new class () implements ServiceProviderInterface {
                             \Ux1\UxStudio\Core\Kernel::instance()->migrator()->ensureCore();
                             \Ux1\UxStudio\Core\Upgrader::markDirty($db);
                         } catch (\Throwable $e) {
-                            $this->app->enqueueMessage('UX Studio setup failed: ' . $e->getMessage(), 'error');
+                            $this->app->enqueueMessage('UX1 Studio setup failed: ' . $e->getMessage(), 'error');
 
                             return false;
                         }

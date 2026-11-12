@@ -42,7 +42,7 @@ final class Module extends BaseModule
                 'type'      => 'text',
                 'label'     => 'UXS_HELLO_CHECK_GREETING',
                 'help'      => 'UXS_HELLO_CHECK_GREETING_HELP',
-                'default'   => 'Hello from UX Studio',
+                'default'   => 'Hello from UX1 Studio',
                 'maxlength' => 120,
             ],
             [
@@ -164,7 +164,7 @@ final class Module extends BaseModule
             return;
         }
         $text = str_replace('--', '- -', htmlspecialchars((string) $this->ctx()->setting('greeting', ''), ENT_QUOTES, 'UTF-8'));
-        $app->setBody(str_ireplace('</body>', '<!-- UX Studio hello-check: ' . $text . ' -->' . "\n</body>", $body));
+        $app->setBody(str_ireplace('</body>', '<!-- UX1 Studio hello-check: ' . $text . ' -->' . "\n</body>", $body));
     }
 
     private function count(): int

@@ -63,7 +63,7 @@ export function ConfigPanel( { isAdmin }: { isAdmin: boolean } ): JSX.Element {
 		>
 			<div className="uxs-form__row uxs-form__row--wide">
 				<strong>{ t( 'Administrators who may edit DNS' ) }</strong>
-				<p className="uxs-muted">{ t( 'Only the selected Super Users can add, change, delete and revert DNS records. Everybody else with access to UX Studio can only view. Nobody is selected by default.' ) }</p>
+				<p className="uxs-muted">{ t( 'Only the selected Super Users can add, change, delete and revert DNS records. Everybody else with access to UX1 Studio can only view. Nobody is selected by default.' ) }</p>
 				<div className="uxs-checklist">
 					{ Object.entries( config.data.admins ).map( ( [ id, label ] ) => (
 						<label key={ id } className="uxs-checklist__item">

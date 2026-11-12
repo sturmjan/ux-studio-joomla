@@ -1,5 +1,5 @@
 /**
- * UX Studio exit-popup front end. No dependencies, no inline code: the server renders the dialog hidden
+ * UX1 Studio exit-popup front end. No dependencies, no inline code: the server renders the dialog hidden
  * (div#uxs-exit-popup[data-uxs-exit]); this script applies the style, arms the exit detections (mouse leave, tab change,
  * window blur, inactivity, fast scroll up, time on page), enforces device / schedule / frequency and runs the e-mail form.
  * The dialog is a modal: focus moves in and is trapped, Esc closes, focus returns to where it was, the page does not scroll.

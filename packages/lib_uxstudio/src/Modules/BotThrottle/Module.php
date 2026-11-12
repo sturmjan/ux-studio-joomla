@@ -20,7 +20,7 @@ use Ux1\UxStudio\Core\ClientIp;
  * (GREEN .. RED), keeps a hard per-IP rate limit with automatic bans, an optional microcache for bots and a notification
  * when an address gets banned. Also offers Guard::exceeded() to other modules.
  *
- * Frontend only: the administrator, the UX Studio endpoints (com_uxstudio) and the Central App channel are never touched.
+ * Frontend only: the administrator, the UX1 Studio endpoints (com_uxstudio) and the Central App channel are never touched.
  */
 final class Module extends BaseModule
 {
@@ -92,7 +92,7 @@ final class Module extends BaseModule
             $s    = $this->s();
             $mode = (string) ($s['ip_source'] ?? 'inherit');
             if ($mode === 'inherit') {
-                // Core setting (Settings screen of UX Studio).
+                // Core setting (Settings screen of UX1 Studio).
                 $this->ip      = ClientIp::current();
                 $this->trusted = ClientIp::trusted();
             } else {
@@ -146,7 +146,7 @@ final class Module extends BaseModule
         if (!\in_array(strtoupper($input->getMethod()), ['GET', 'HEAD'], true)) {
             return;
         }
-        // UX Studio's own endpoints and the Central App channel must never be throttled.
+        // UX1 Studio's own endpoints and the Central App channel must never be throttled.
         if ($input->getCmd('option') === 'com_uxstudio' || $input->get('uxstudio_node') !== null) {
             return;
         }

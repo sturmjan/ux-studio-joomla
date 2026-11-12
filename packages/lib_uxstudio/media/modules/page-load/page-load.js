@@ -1,4 +1,4 @@
-/* UX Studio - Page Load beacon. Sends one anonymous timing sample (Navigation Timing, paint, LCP, CLS) per sampled page view. */
+/* UX1 Studio - Page Load beacon. Sends one anonymous timing sample (Navigation Timing, paint, LCP, CLS) per sampled page view. */
 ( function () {
 	'use strict';
 	var script = document.currentScript;

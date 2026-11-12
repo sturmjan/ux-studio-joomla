@@ -11,7 +11,7 @@ use Ux1\UxStudio\Core\Kernel;
 \defined('_JEXEC') or die;
 
 /**
- * Component extension class. Makes sure the UX Studio kernel is booted even if the system plugin is disabled.
+ * Component extension class. Makes sure the UX1 Studio kernel is booted even if the system plugin is disabled.
  */
 class UxstudioComponent extends MVCComponent implements BootableExtensionInterface
 {

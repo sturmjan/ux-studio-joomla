@@ -53,13 +53,13 @@ final class UxStudio extends CMSPlugin implements SubscriberInterface
             $kernel->boot($this->getApplication());
             $output = $kernel->scheduler()->run($job);
         } catch (\Throwable $e) {
-            $this->logTask('UX Studio job "' . $job . '" failed: ' . $e->getMessage(), 'error');
+            $this->logTask('UX1 Studio job "' . $job . '" failed: ' . $e->getMessage(), 'error');
             $this->snapshot['output'] = $e->getMessage();
 
             return TaskStatus::KNOCKOUT;
         }
 
-        $this->logTask('UX Studio job "' . $job . '" finished.');
+        $this->logTask('UX1 Studio job "' . $job . '" finished.');
         $this->snapshot['output'] = $output;
 
         return TaskStatus::OK;
