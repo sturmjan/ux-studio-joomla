@@ -97,3 +97,7 @@ Aby ho CA dostala, musí `CaConnector\Node::FEEDS` obsahovat `'ai-markdown' => [
 Rozdíly proti WP verzi: žádná kategorie `taxonomies`/CPT, místo toho kategorie, menu a štítky Joomly; `Accept: text/markdown`,
 přípona `.md`, `ETag/304`, `canonical`, robots.txt analýza a konvertor přes DOM jsou nové; WooCommerce šablona produktu odpadá;
 automatická regenerace podle intervalu je řešena denní úlohou plánovače (úklid + ohřev), plné přegenerování je ruční nebo při uložení.
+
+## E2E test v prohlížeči
+
+`node tests/e2e/tracking.mjs all` (skupina tracking: analytics, pixel-tag-manager, page-load, ai-markdown) projde skutečné toky na J5 i J6 (SPA v cs/en, světlý/tmavý režim, frontend jako anonym, koncept i úpravy článků přes administraci Joomly). Poznámky: po uložení nastavení se přehled modulu znovu načte (cache react-query se zneplatní); KPI čísla v Analytics se animují (počítání od 0), proto testy čekají; `HeadlessChrome` v User-Agentu je v Analytics i Page load brán jako bot.

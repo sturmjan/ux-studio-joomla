@@ -52,3 +52,7 @@ markup se vkládá do stránky v `onAfterRender`, assety jen na stránkách, kde
 - Destruktivní akce (smazání popupu, reset statistik) vyžadují `core.admin`; v SPA se tlačítka bez tohoto práva skryjí.
 - Popup-manager a exit-popup se vzájemně nepřekrývají: modální okno druhého modulu počká (kontrola každou sekundu), dokud je otevřené první; Esc a focus trap obsluhuje vždy jen otevřené okno.
 - Odkazy `target=_blank` v obsahu dostanou vždy `rel="noopener noreferrer"` (vlastní `rel` se přepíše); atribut `class` se ze sanitizace odstraňuje.
+- Bloky `<script>`, `<style>`, `<iframe>`, `<object>`, `<embed>`, `<noscript>` a `<template>` se z textu odstraňují i s obsahem (InputFilter by nechal vnitřní kód jako viditelný text). Čistí se opakovaně (rozdělená značka `<scr<script>…` se nesloží znovu) a neuzavřený blok se ořízne až do konce textu. Samotné „<“ v textu (např. „Sleva <50 %“) zůstává zachováno; odstraňují se jen skutečné značky. Nekorektně zapsané atributy (`src=x onerror=...` bez uvozovek) Joomla InputFilter slije do jedné hodnoty `src`; je to neškodné (nic se nespustí), jen zbytečný 404 na obrázek.
+- Browser E2E scénář: `node tests/e2e/popups.mjs all` (popup-manager + exit-popup, J5 i J6).
+- Dvojklik na Uložit i na Duplikovat vytvoří jediný záznam (ochrana v SPA přes ref, ne jen `disabled` po vykreslení).
+- E-mail odběratele (exit-popup) se ověřuje s `FILTER_FLAG_EMAIL_UNICODE`: diakritika v lokální části je povolená; IDN doména (příklad.cz) se před uložením převede na punycode (`idn_to_ascii`, je-li dostupné rozšíření intl).

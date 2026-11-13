@@ -3,7 +3,7 @@
 Zaznamenává každý e-mail odeslaný Joomlou a rozšířeními (včetně jádra, např. reset hesla) do `#__uxstudio_email_log`.
 
 - Zachycení přes `MailHub` (viz smtp-email.md): řádek `pending` před odesláním, po odeslání `success`/`error` + `mailer` + `attempts` (JSON).
-- Zdroj (`source`): plugin/komponenta/modul/šablona z backtrace, `UX Studio: <Modul>` pro jiné moduly UX Studia.
+- Zdroj (`source`): plugin/komponenta/modul/šablona z backtrace, `UX1 Studio: <Modul>` pro jiné moduly UX1 Studia.
 - Detail (text, hlavičky, názvy příloh), opětovné odeslání (nový řádek se zdrojem "resend of #id"; přílohy se nepřipojují),
   smazání záznamu, vyčištění, export CSV (UTF-8 BOM, ochrana proti formula injection), filtr stav/hledání/data.
 - Nastavení: retence ve dnech (0 = navždy; denní úloha jádra), ukládat text zprávy, detekce zdroje.

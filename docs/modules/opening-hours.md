@@ -19,8 +19,8 @@ včerejšího dne. Ruční "zavřít na N minut" (1 min až 7 dní, volitelný v
 
 ## Zobrazení na webu
 
-- Joomla modul **UX Studio - Otevírací doba** (`mod_uxstudio_opening_hours`): parametr pobočka (konkrétní / první / všechny),
-  zobrazení karta / jen odznak; nastavení čte z UX Studia.
+- Joomla modul **UX1 Studio - Otevírací doba** (`mod_uxstudio_opening_hours`): parametr pobočka (konkrétní / první / všechny),
+  zobrazení karta / jen odznak; nastavení čte z UX1 Studia.
 - V obsahu (článek, vlastní modul s "Prepare content"): `{opening-hours id=1}`, `{opening-hours id=all}`, `{opening-hours-status id=1}`.
 - Karta: název, odznak Otevřeno/Zavřeno, "Otevřeno do 17:00" / "Otevírá zítra v 08:00", oznámení podle závažnosti
   (info / warning / critical, barvy v nastavení), adresa, telefon (`tel:`), týdenní tabulka s dneškem, nadcházející výjimky a svátky
@@ -55,3 +55,8 @@ Veřejně bez přihlášení (limit 60/min na IP): `index.php?option=com_uxstudi
 - JSON-LD se vkládá přes WebAssetManager (`addInlineScript`, `type=application/ld+json`), ne přes zastaralé `addScriptDeclaration`.
 - Souřadnice mimo rozsah (šířka ±90, délka ±180) vrací 422 místo tichého oříznutí. Datum nadcházejících výjimek se formátuje jazykovým klíčem `UXS_OPENING_HOURS_DATE_SHORT` (cs `j. n.`, en `j M`).
 - Důvod ručního uzavření je veřejný (vrací ho i veřejná routa `status`); pole v administraci je označeno "Public reason".
+
+## Revize (browser E2E, `tests/e2e/notice.mjs`)
+
+- Okna "Přidat / upravit pobočku" a "Zavřít na...": tělo okna nově `uxs-form uxs-form--grid` (dřív bez stylů formuláře, v tmavém režimu bílá pole a nečitelné popisky).
+- Scénář prochází: vytvoření pobočky přes UI (validace souřadnic, geokódování bez klíče = chyba), týden + kopie pondělí, výjimka na dnes (zavřeno) i budoucí, oznámení, ruční uzavření a znovuotevření, veřejné JSON API, Joomla modul vytvořený v administraci Joomly (karta i jen odznak), `{opening-hours}` / `{opening-hours-status}` / `id=all` s výběrem pobočky a schema.org JSON-LD na úvodní stránce.

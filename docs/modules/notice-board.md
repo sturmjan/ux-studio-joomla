@@ -5,7 +5,7 @@ e-mailem (double opt-in), RSS a otevřená data. Kód: `packages/lib_uxstudio/sr
 assety `media/modules/notice-board/`, obrazovka `admin-app/src/modules/notice-board`.
 
 POZOR k zadání: WP modul NoticeBoard je **veřejná úřední deska** (shortcode, odběratelé, RSS, OFN open data), ne zprávy pro
-administrátory. Portováno je to, co dělá WP verze. Pro adminy je jen dlaždice na přehledu UX Studia (aktivní / archivovaná
+administrátory. Portováno je to, co dělá WP verze. Pro adminy je jen dlaždice na přehledu UX1 Studia (aktivní / archivovaná
 oznámení, odběratelé); zprávy v `com_cpanel` modul neposílá.
 
 ## Co modul dělá
@@ -60,3 +60,9 @@ a open data; prázdné = první článek obsahující značku, jinak úvodní st
 - Odběrový formulář funguje i bez JS: klasický POST na `?uxs_nb=subscribe` (Joomla form token, rate limit 5 / 5 min na IP, přesměrování s hláškou).
 - Opakované kliknutí na potvrzovací odkaz už neukáže chybu.
 - Neexistující kategorie oznámení = 422. Z administračního požadavku se odešle nejvýše 50 e-mailů; větší rozesílka zůstává na hodinové úloze.
+
+## Revize (browser E2E, `tests/e2e/notice.mjs`)
+
+- Text oznámení: `<script>` / `<style>` se odstraní i s obsahem ještě před `InputFilter` (jinak z `<script>alert(1)</script>` zůstal viditelný text `alert(1)`).
+- Okna "Přidat / upravit oznámení" byla bez stylů formuláře (popisky vedle polí, bílá pole v tmavém režimu): tělo okna je nově `uxs-form uxs-form--grid`.
+- E2E scénář projde web jako anonym (seznam, detail, archiv, budoucí datum, formulář odběru, RSS, otevřená data) a administraci (kategorie, oznámení, odběratelé, dlaždice v com_cpanel). Formulář odběru má rate limit 5 / 5 min na IP, proto scénář odesílá jednou na průchod.

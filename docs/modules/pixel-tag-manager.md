@@ -10,7 +10,7 @@ GA4, Google Ads (AW-), Google Tag Manager, Meta Pixel, Microsoft Clarity, Pinter
   `off` (bez souhlasu, v adminu varování). Pomalý polling (10 min) pokryje nástroje, které jen zapíšou cookie.
 - Admin přehled: stav každé značky (aktivní / neplatné ID / nenastaveno), varování když web nemá žádné řešení souhlasu (hledá aktivní rozšíření cookie/consent/gdpr/
   cookiebot/complianz/iubenda...; Joomla "Privacy consent" se nepočítá) nebo když je souhlas vypnutý, a seznam hostů pro CSP (`script-src`, `img-src`, `connect-src`).
-- ID se validují regexem na serveru při vykreslení (neplatné se ignoruje a hlásí v přehledu); správci UX Studia skripty nenačítají (nastavení).
+- ID se validují regexem na serveru při vykreslení (neplatné se ignoruje a hlásí v přehledu); správci UX1 Studia skripty nenačítají (nastavení).
 - **Google Consent Mode v2:** před prvním Google tagem (GA4/Ads/GTM) se pošle `consent default` vše `denied`, po souhlasu `consent update` (`analytics_storage` pro analytiku; `ad_storage`, `ad_user_data`, `ad_personalization` pro marketing); při změně souhlasu se update opakuje.
 - **Seznam/Sklik:** po načtení `rc.js` (`onload`) se zavolá `window.rc.retargetingHit({rtgId, consent:1})`.
 - Přehled hlásí i neplatný/prázdný název cookie v režimu `cookie` u kategorie s aktivními značkami (taková kategorie by se nikdy nepovolila). Seznam CSP hostů používá wildcardy (`*.google-analytics.com`, `*.analytics.google.com`, `*.clarity.ms`...).
@@ -22,3 +22,7 @@ externí loader (CSP) a varování. Chybí: noscript fallbacky (nejdou podmínit
 propojení s připravovaným modulem consent (kontrakt `uxs_consent` / `UXSConsent.has` / `uxs:consent` je připraven).
 
 CSP hosty se přidávají po direktivách jen tam, kde je poskytovatel potřebuje (`Providers::all()[...]['csp']`). Omezení: ve strict režimu security-optimization (nonce bez `strict-dynamic`) neprojdou inline skripty z vlastních HTML tagů uvnitř kontejneru GTM; ověřit s reálnými ID.
+
+## E2E test v prohlížeči
+
+`node tests/e2e/tracking.mjs all` (skupina tracking: analytics, pixel-tag-manager, page-load, ai-markdown) projde skutečné toky na J5 i J6 (SPA v cs/en, světlý/tmavý režim, frontend jako anonym, koncept i úpravy článků přes administraci Joomly). Poznámky: po uložení nastavení se přehled modulu znovu načte (cache react-query se zneplatní); KPI čísla v Analytics se animují (počítání od 0), proto testy čekají; `HeadlessChrome` v User-Agentu je v Analytics i Page load brán jako bot.

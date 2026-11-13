@@ -6,7 +6,7 @@ Vlastní měření návštěvnosti bez cookies a bez osobních údajů.
   po vykreslení stránky pošle `fetch keepalive` na veřejnou routu `analytics/hit` (`index.php?option=com_uxstudio&task=public.dispatch&format=json&route=analytics/hit`).
   Same-origin kontrola Originu, max. tělo 4 kB. Limit jádra (`PublicApi`) počítá surovou `REMOTE_ADDR`, proto je u této routy jen záchytný (30000/hod); skutečný limit na návštěvníka dělá sdílený `BotThrottle\Guard` s IP určenou přes důvěryhodné proxy (viz core_requests).
 - **Filtr:** boti (regex na User-Agent, prázdný UA), prefetch/prerender, vyloučené cesty (nastavení), administrace, volitelně Do Not Track,
-  přihlášení správci UX Studia (nastavení "Nepočítat administrátory"). Zahozený hit vrací stejné `ok`.
+  přihlášení správci UX1 Studia (nastavení "Nepočítat administrátory"). Zahozený hit vrací stejné `ok`.
 - **Soukromí:** návštěvník = `sha256(IP|UA|den|náhodná sůl dne)`. Sůl je v `#__uxstudio_analytics_salt`, mažou se soli starší než 2 dny,
   takže hashe nejdou zpětně spárovat ani zrekonstruovat. Surová IP ani UA se neukládají. Interní prokliky (referer = vlastní web) se nepočítají jako zdroj.
 - **Data:** surové hity v bufferu `#__uxstudio_analytics_hits`; denní úloha plánovače `analytics.rollup` (a samoopravně při každém načtení přehledu)
@@ -24,3 +24,7 @@ Vlastní měření návštěvnosti bez cookies a bez osobních údajů.
 - Interní referery se nepočítají; filtr botů je v modulu (WP spoléhal jen na Guard); nastavení pro vyloučené cesty, administrátory, DNT, retenci.
 - Neznámá hodnota dimenze se ukládá jako `-` (UI ji zobrazí jako "Neznámé"). Den = den v časové zóně webu.
 - Chybí: CA feed (CA-INTEGRACE.md pro analytics routu nedefinuje), nahrazení IPv6 v GeoIP (jako ve WP), export dat.
+
+## E2E test v prohlížeči
+
+`node tests/e2e/tracking.mjs all` (skupina tracking: analytics, pixel-tag-manager, page-load, ai-markdown) projde skutečné toky na J5 i J6 (SPA v cs/en, světlý/tmavý režim, frontend jako anonym, koncept i úpravy článků přes administraci Joomly). Poznámky: po uložení nastavení se přehled modulu znovu načte (cache react-query se zneplatní); KPI čísla v Analytics se animují (počítání od 0), proto testy čekají; `HeadlessChrome` v User-Agentu je v Analytics i Page load brán jako bot.

@@ -36,7 +36,7 @@ Validace na serveru: text projde `InputFilter` (HTML), povinný neprázdný text
 - Místo `wp_head` se lišta vkládá po `<body>`; `role="banner"` nahrazeno `role="region"` + `aria-label`.
 - Zprávy "další zprávy" (WP repeater v nastavení) jsou v samostatné tabulce, protože jádro neumí typ pole `repeater`;
   obrazovka má kvůli tomu záložku "Další zprávy" s tabulkou a modalem.
-- Nové: zavíratelná lišta (cookie), sticky, barvy ze šablony, náhled stavu na webu, dlaždice na přehledu UX Studia.
+- Nové: zavíratelná lišta (cookie), sticky, barvy ze šablony, náhled stavu na webu, dlaždice na přehledu UX1 Studia.
 - Barvy se v WP vypisovaly inline `<style>`, tady přes WebAssetManager (CSP).
 
 ## Co chybí / poznámky
@@ -49,3 +49,9 @@ Validace na serveru: text projde `InputFilter` (HTML), povinný neprázdný text
 - `POST slides/{id}/delete` vyžaduje `core.admin`.
 - Text delší než 5000 znaků se odmítne (422) před filtrováním, nikdy se neřeže HTML uprostřed tagu.
 - `GET preview` už nevrací markup (`html`), jen `active` a `count`; SPA zobrazuje stav.
+
+## Revize (browser E2E, `tests/e2e/notice.mjs`)
+
+- Text zprávy: `<script>` / `<style>` se odstraní i s obsahem před `InputFilter` (dřív zůstal obsah skriptu jako viditelný text).
+- Okno "Přidat / upravit zprávu" nově používá `uxs-form uxs-form--grid` (správné rozložení a barvy v tmavém režimu).
+- Scénář pokrývá text, odkaz, barvy, zavření + zapamatování (cookie, návrat po změně textu), sticky, plánování celé lišty i jednotlivých zpráv, rotaci, marquee a mobil (375 px).

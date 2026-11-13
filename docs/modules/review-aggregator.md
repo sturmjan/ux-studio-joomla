@@ -24,10 +24,10 @@ Joomla modul `mod_uxstudio_reviews` nebo značku `{uxstudio_reviews ...}` v čl�
 - Web: rozložení grid / list / slider (scroll-snap) / badge, počet, min. hodnocení, řazení, platforma; JSON-LD `AggregateRating`
   (jednou na stránku, typ Organization/LocalBusiness/Product/Service s `@id` `<web>/#organization`; volitelně i `Review`, ale jen u ručně zadaných recenzí, recenze z Google/Facebooku/Mapy.cz se podle pravidel Google neznačkují). Průměr počítá všechny viditelné
   hodnocené recenze bez filtru min. hodnocení. Bez inline JS/CSS (assety `media/modules/review-aggregator/`).
-- Značka: `{uxstudio_reviews layout=slider count=6 min_rating=4 platform=google schema=0 heading="..."}`.
+- Značka: `{uxstudio_reviews layout=slider count=6 min_rating=4 platform=google schema=0 heading="..."}`. V modulu Vlastní (mod_custom) se značka provede jen při zapnutém "Připravit obsah" (Prepare Content, výchozí je Ne).
 - Počty se skloňují (`Text::plural`, klíče `_0`, `_1`, `_2`, `_MORE`).
 - Po vypnutí modulu se značka `{uxstudio_reviews}` v článcích nahrazovat přestane a návštěvníkům se zobrazí doslovně: před vypnutím ji z obsahu odstraňte.
-- Modul: parametry přepisují výchozí hodnoty z UX Studia; cache modulu je výchozí vypnutá (assety se registrují při renderu).
+- Modul: parametry přepisují výchozí hodnoty z UX1 Studia; cache modulu je výchozí vypnutá (assety se registrují při renderu).
 
 ### Rozdíly proti WP verzi
 - Nahrazeno: shortcode -> modul + značka, přibyly ruční zadání/úpravy/import, rozložení slider/badge/list, JSON-LD, mazání.

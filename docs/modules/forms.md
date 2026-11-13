@@ -31,7 +31,7 @@ frontendový Joomla modul `packages/mod_uxstudio_form/`, assety `packages/lib_ux
 ## Vložení na web
 
 - **Zkratka** `{uxsform N}` (i `{uxsform id=N}`) v článku, modulu Vlastní HTML a čemkoli, co projde `onContentPrepare`.
-- **Joomla modul „UX Studio - Formulář“** (`mod_uxstudio_form`): výběr publikovaného formuláře v parametrech (pole typu `sql`), pozice šablony.
+- **Joomla modul „UX1 Studio - Formulář“** (`mod_uxstudio_form`): výběr publikovaného formuláře v parametrech (pole typu `sql`), pozice šablony.
 - Výstup je CSP-friendly: žádný inline skript ani styl, `forms.js`/`forms.css` přes `$ctx->useScript/useStyle`, konfigurace v `data-*`,
   barva zvýraznění přes `addInlineStyle` WebAssetManageru (nonce řeší Joomla). Turnstile se načítá jako externí skript.
   Výchozí CSS lze vypnout v nastavení (třídy `uxs-form*`, proměnné `--uxs-form-*`).
@@ -54,8 +54,15 @@ Migrace verze 1 v `Module::migrations()`.
   galerie šablon, revize formuláře, šablony HTML e-mailu (e-mail je jednoduchá tabulka), akce webhook a vytvoření příspěvku, sledování
   (Pixel/GA události), Elementor/Gutenberg widgety (nahrazeno zkratkou a Joomla modulem), vzhled formuláře po polích (jen barva zvýraznění
   a CSS proměnné), widget na dashboardu je jen počet nepřečtených.
-- **Soubory jdou v JSON jako base64** (PublicApi umí jen JSON tělo, ne multipart). Strop těla je 8 MB, proto max. 5 MB na soubor a 5 souborů na pole,
-  prohlížeč soubory čte přes FileReader. Návrh na jádro: podpora `multipart/form-data` v PublicApi.
+- **Soubory jdou jako skutečný `multipart/form-data`** (`FormData` ve `forms.js`, bez nafouknutí base64), max. 5 MB na soubor a 5 souborů na pole;
+  stažení souboru v administraci jde přes JSON s base64 (`submissions/file`).
+- **Validace při uložení formuláře (422 s hláškou):** klíč pole musí odpovídat `^[a-z]([a-z0-9_]*[a-z0-9])?$`, minimální délka nesmí být větší než maximální,
+  minimum čísla větší než maximum, volba (select/radio/checkboxy) musí mít aspoň jednu možnost, příjemci musí být platné e-maily, přesměrování cesta nebo
+  http(s) adresa a minimální doba 0 až 60 s. Dřív se špatné hodnoty tiše opravily nebo zahodily. Editor navíc nepustí do formuláře pole s takovými
+  hodnotami a při odchodu s neuloženými změnami se ptá na potvrzení.
+- **Délka textu:** pole bez vlastního `maxlength` mají na webu `maxlength` 1000 (textarea 10000); server delší text odmítne chybou místo tichého oříznutí.
+- Textový blok: `<script>`, `<style>`, `<iframe>`, `<object>`, `<embed>` se odstraní i s obsahem (opakovaně, takže vnořené obcházení nefunguje; neuzavřený
+  prvek se uřízne do konce), zbytek projde whitelistem `InputFilter`.
 - Formulář nefunguje bez JavaScriptu (`<form action="#">` se nativně neodešle a `<noscript>` to návštěvníkovi řekne; surový JSON se nezobrazí).
 - Po odeslání se jen vypíše stav a formulář se resetuje (WP umí režim „nahradit formulář poděkováním“).
 - Chybí (priorita od nejvyšší): režim náhrady formuláře poděkováním, akce (webhook, další e-maily), šablony HTML e-mailů, vícekrokové formuláře, šablony formulářů,
@@ -75,3 +82,10 @@ chybný/chybějící token, Origin cizího webu 403, rate limit 429, příliš r
 příliš velký), skutečný e-mail zachycený SMTP výlevkou (příjemci, předmět s placeholdery, Reply-To, tabulka, potvrzení), CSV export, smazání odpovědi
 smaže soubor, plánovaná úloha retence, přístup k uloženému souboru 403, prohlížeč (Playwright): podmíněné pole, nativní validace, odeslání s přílohou,
 obrazovky administrace.
+
+## Browser E2E
+
+`node tests/e2e/forms.mjs all` (J5 i J6): editor (všechna pole, podmínky, řazení, duplikace), Joomla modul + zkratka v článku, anonymní odeslání
+(nativní i serverová validace, soubor, honeypot, příliš rychlé odeslání, přesměrování), archiv, stažení souboru, CSV, e-mail log, tmavý režim, cs-CZ, úklid dat.
+Opraveno při testování: duplicitní klíče polí v editoru se automaticky zpřesní (`_2`), obsah `<script>/<style>` v textovém bloku se zahazuje i s obsahem,
+zaškrtávátka v záložce E-maily nepřekrývají popisek řádku, `<code>` klíčů a zkratek je čitelný v tmavém režimu.

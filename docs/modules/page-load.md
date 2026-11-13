@@ -27,7 +27,7 @@ návštěvníka** (Navigation Timing), protože na Joomle nemáme admin bar ani 
    denní vývoj.
 5. **Nejpomalejší stránky**: seskupeno podle cesty, řazení podle doby načtení / TTFB / FCP / LCP (průměr), minimum měření (1/3/10), top 50;
    barva podle `slow_ms` (3000) a jeho dvojnásobku.
-6. **Smazání dat** (`POST clear`, jen `core.admin`, s potvrzením). Karta na přehledu UX Studia: medián doby načtení za 7 dní (warn/bad podle `slow_ms`).
+6. **Smazání dat** (`POST clear`, jen `core.admin`, s potvrzením). Karta na přehledu UX1 Studia: medián doby načtení za 7 dní (warn/bad podle `slow_ms`).
 7. **Centrální aplikace**: `caFeed()` vrací `{summary, slowest}`. Aby ho CaConnector vystavil, musí mít v `Node::FEEDS` řádek
    `'page-load' => ['page-load', 'GET']` (viz core_requests); protokol CA tuto routu zatím nezná.
 
@@ -59,3 +59,7 @@ návštěvníka** (Navigation Timing), protože na Joomle nemáme admin bar ani 
 
 - Při testech na localhostu se rychle vyčerpá limit 40/10 min na klienta; vyčistit ho jde `DELETE FROM jos_uxstudio_ratelimit`.
 - Obrazovka byla ověřena buildem, typecheckem a načtením stránky komponenty, ne vizuálně (Playwright MCP nebyl dostupný).
+
+## E2E test v prohlížeči
+
+`node tests/e2e/tracking.mjs all` (skupina tracking: analytics, pixel-tag-manager, page-load, ai-markdown) projde skutečné toky na J5 i J6 (SPA v cs/en, světlý/tmavý režim, frontend jako anonym, koncept i úpravy článků přes administraci Joomly). Poznámky: po uložení nastavení se přehled modulu znovu načte (cache react-query se zneplatní); KPI čísla v Analytics se animují (počítání od 0), proto testy čekají; `HeadlessChrome` v User-Agentu je v Analytics i Page load brán jako bot.

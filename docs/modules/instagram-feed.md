@@ -54,8 +54,8 @@ CA je proxy Graph API: web nikdy nevidí token Mety, zná jen `connection_id` (u
   a požádá CA o zrušení připojení).
 
 ## Zobrazení na webu
-- **Modul `UX Studio - Instagram`** (`mod_uxstudio_instagram`): nadpis, rozložení, počet, sloupce, popisky, odkaz pro sledování, hashtagy;
-  parametry přepisují výchozí hodnoty z UX Studia (prázdné = výchozí). Cache modulu je výchozí vypnutá (assety se registrují při renderu).
+- **Modul `UX1 Studio - Instagram`** (`mod_uxstudio_instagram`): nadpis, rozložení, počet, sloupce, popisky, odkaz pro sledování, hashtagy;
+  parametry přepisují výchozí hodnoty z UX1 Studia (prázdné = výchozí). Cache modulu je výchozí vypnutá (assety se registrují při renderu).
 - **Značka** `{uxstudio_instagram layout=carousel count=8 columns=4 gap=8 show_caption=1 show_follow=0 hashtags=kava exclude=reklama heading="..."}` v článku / modulu Vlastní.
 - Rozložení: `grid` (CSS grid) a `carousel` (scroll-snap + šipky z `instagram.js`; bez JS jde posouvat prstem/kolečkem). Sloupce 1-8; na tabletu a telefonu nastavitelné (`columns_tablet`, `columns_mobile`: Automaticky = max 3 / 2, nebo 1-6) přes třídy `uxs-ig--tcols-N` / `uxs-ig--mcols-N`. `show_likes` zobrazí srdíčko s počtem (když ho Instagram vrátil).
 - CSP: žádný inline `style`, `<script>` ani `on*`; rozložení řídí třídy `uxs-ig--cols-N` / `uxs-ig--gap-N`, assety přes WebAssetManager, ikony jsou inline SVG.
