@@ -10,7 +10,7 @@ use Ux1\UxStudio\Core\Kernel;
 \defined('_JEXEC') or die;
 
 /**
- * Boots the UX Studio kernel (and through it every enabled module) on every request.
+ * Boots the UX1 Studio kernel (and through it every enabled module) on every request.
  */
 final class UxStudio extends CMSPlugin implements SubscriberInterface
 {

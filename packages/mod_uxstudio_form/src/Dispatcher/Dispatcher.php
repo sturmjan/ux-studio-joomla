@@ -11,7 +11,7 @@ use Ux1\UxStudio\Modules\Forms\Renderer;
 \defined('_JEXEC') or die;
 
 /**
- * Front-end module that shows one form of the UX Studio "forms" module (chosen in the module parameters).
+ * Front-end module that shows one form of the UX1 Studio "forms" module (chosen in the module parameters).
  */
 class Dispatcher extends AbstractModuleDispatcher
 {
@@ -20,7 +20,7 @@ class Dispatcher extends AbstractModuleDispatcher
         $data         = parent::getLayoutData();
         $data['html'] = '';
 
-        // UX Studio library missing or the forms module is switched off: render nothing.
+        // UX1 Studio library missing or the forms module is switched off: render nothing.
         if (!class_exists(Kernel::class)) {
             return $data;
         }
