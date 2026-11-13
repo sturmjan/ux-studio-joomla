@@ -39,7 +39,7 @@ final class ReviewStore
     }
 
     /**
-     * Normalises one review from the central app, an import file or the manual form. Returns null when unusable.
+     * Normalises one review from UX1 Network app, an import file or the manual form. Returns null when unusable.
      *
      * @param array<string,mixed> $item
      * @return array{source:string,external_id:string,author:string,rating:int,text:string,review_date:?string}|null

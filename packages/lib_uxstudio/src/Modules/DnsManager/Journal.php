@@ -9,8 +9,8 @@ use Joomla\Database\ParameterType;
 \defined('_JEXEC') or die;
 
 /**
- * Local audit log of DNS changes (#__uxstudio_dns_log). The Central App keeps the authoritative log (with the IP address);
- * this copy is what the administrator still sees when the Central App is down, and it holds the "risks acknowledged" marks.
+ * Local audit log of DNS changes (#__uxstudio_dns_log). UX1 Network app keeps the authoritative log (with the IP address);
+ * this copy is what the administrator still sees when UX1 Network app is down, and it holds the "risks acknowledged" marks.
  */
 final class Journal
 {

@@ -164,7 +164,7 @@ Handler vždy sám validuje vstup (typy, délky, whitelist) a používá paramet
 
 ### Veřejné (site) routy - `publicRoutes()`
 
-Pro formuláře, consent, webhooky a Centrální aplikaci (bez přihlášení): jeden endpoint
+Pro formuláře, consent, webhooky a UX1 Network app (bez přihlášení): jeden endpoint
 `index.php?option=com_uxstudio&task=public.dispatch&format=json&route=<module-id>/<path>` (stejná JSON obálka).
 
 ```php

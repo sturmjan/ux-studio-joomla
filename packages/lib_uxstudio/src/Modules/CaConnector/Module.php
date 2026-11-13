@@ -14,7 +14,7 @@ use Ux1\UxStudio\Core\ModuleContext;
 \defined('_JEXEC') or die;
 
 /**
- * Site side of the UX1 Central App (CA) protocol, see docs/CA-INTEGRACE.md:
+ * Site side of UX1 Network app (CA) protocol, see docs/CA-INTEGRACE.md:
  *  - pairing (browser form POST to the CA, key generated here and stored encrypted),
  *  - the signed node endpoint index.php?uxstudio_node=<route> (Node.php),
  *  - single sign-on into the administration (Sso.php),
@@ -25,7 +25,7 @@ final class Module extends BaseModule
 {
     public function boot(ModuleContext $ctx): void
     {
-        // The pairing form of the administration POSTs to the Central App: an enforced CSP (security-optimization) must allow it.
+        // The pairing form of the administration POSTs to UX1 Network app: an enforced CSP (security-optimization) must allow it.
         if ($ctx->isAdmin()) {
             Hooks::add('csp.sources', function (array $sources) use ($ctx): array {
                 $base  = Pairing::normalizeBaseUrl((string) $ctx->setting('ca_url', ''));
@@ -222,7 +222,7 @@ final class Module extends BaseModule
         if ($key === '' || $r->bool('rotate')) {
             $key                 = Hmac::generateKey();
             $new['node_api_key'] = $key;
-            $store->delete('paired_at'); // a new key means the Central App has to confirm again
+            $store->delete('paired_at'); // a new key means UX1 Network app has to confirm again
         }
         $settings->save($ctx->id(), $new);
 
@@ -243,7 +243,7 @@ final class Module extends BaseModule
         return ['form' => $form, 'ca_url' => $base];
     }
 
-    /** POST ca-connector/connected: the browser came back from the Central App with ux1_connected=1. */
+    /** POST ca-connector/connected: the browser came back from UX1 Network app with ux1_connected=1. */
     public function connected(ApiRequest $r): array
     {
         $store = $this->store();

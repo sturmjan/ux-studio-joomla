@@ -88,7 +88,7 @@ abstract class BaseModule
     }
 
     /**
-     * Public (site) endpoint routes for visitors and external systems (forms, consent, webhooks, Central App):
+     * Public (site) endpoint routes for visitors and external systems (forms, consent, webhooks, UX1 Network app):
      *   index.php?option=com_uxstudio&task=public.dispatch&format=json&route=<module-id>/<path>
      * Format: ['POST subscribe' => ['handler' => [$this, 'subscribe'], 'auth' => 'none', 'limit' => [10, 60], 'max_body' => 16384]].
      *   - auth: 'none' (default; browsers only: a present Origin header must be this site) | 'token' (Authorization: Bearer <secret>)

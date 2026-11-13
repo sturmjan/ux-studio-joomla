@@ -1,5 +1,5 @@
 /**
- * Instagram Feed: connect an Instagram account through the Central App, synchronise and moderate the cached posts,
+ * Instagram Feed: connect an Instagram account through UX1 Network app, synchronise and moderate the cached posts,
  * see how to show the feed on the site; plus the settings.
  */
 import { useEffect, useState } from 'react';
@@ -74,7 +74,7 @@ function typeLabel( type: string ): string {
 
 function reasonLabel( reason: string ): string {
 	const labels: Record< string, string > = {
-		invalid_callback: t( 'The answer from the Central App could not be verified or has expired. Try connecting again.' ),
+		invalid_callback: t( 'The answer from UX1 Network app could not be verified or has expired. Try connecting again.' ),
 		denied: t( 'The Instagram login was cancelled or refused.' ),
 	};
 	return labels[ reason ] ?? t( 'The connection failed ({reason}).', { reason } );
@@ -120,17 +120,17 @@ function OverviewTab( { status }: { status: Status } ): JSX.Element {
 			{ ! caOk ? (
 				<div className="uxs-notice" role="status">
 					{ status.ca.availability === 'connector_missing'
-						? t( 'The Central App module is switched off, so no Instagram account can be connected or synchronised. Posts that are already stored are still shown on the site.' )
-						: t( 'This site is not connected to the Central App, so no Instagram account can be connected or synchronised. Posts that are already stored are still shown on the site.' ) }{ ' ' }
+						? t( 'UX1 Network app module is switched off, so no Instagram account can be connected or synchronised. Posts that are already stored are still shown on the site.' )
+						: t( 'This site is not connected to UX1 Network app, so no Instagram account can be connected or synchronised. Posts that are already stored are still shown on the site.' ) }{ ' ' }
 					<button type="button" className="uxs-btn uxs-btn--small" onClick={ () => navigate( 'module', { id: 'ca-connector' } ) }>
-						{ t( 'Open Central App' ) }
+						{ t( 'Open UX1 Network app' ) }
 					</button>
 				</div>
 			) : null }
 
 			{ c.lost ? (
 				<div className="uxs-notice uxs-notice--error" role="alert">
-					{ t( 'The Central App no longer knows this Instagram connection (the access was revoked or expired). Connect the account again.' ) }
+					{ t( 'UX1 Network app no longer knows this Instagram connection (the access was revoked or expired). Connect the account again.' ) }
 				</div>
 			) : null }
 
@@ -143,7 +143,7 @@ function OverviewTab( { status }: { status: Status } ): JSX.Element {
 					{ c.connected_at ? <span className="uxs-muted"> · { t( 'connected {when}', { when: formatDate( c.connected_at ) } ) }</span> : null }
 				</p>
 			) : (
-				<p className="uxs-muted">{ t( 'No Instagram account is connected yet. Connecting opens the Central App, where you sign in to Instagram and approve access (a business or creator account linked to a Facebook page is required).' ) }</p>
+				<p className="uxs-muted">{ t( 'No Instagram account is connected yet. Connecting opens UX1 Network app, where you sign in to Instagram and approve access (a business or creator account linked to a Facebook page is required).' ) }</p>
 			) }
 			<div className="uxs-actions" style={ { marginBottom: 'var(--uxs-sp-5)' } }>
 				<button type="button" className="uxs-btn uxs-btn--primary" disabled={ ! caOk || connect.isPending } onClick={ () => connect.mutate() }>
@@ -159,7 +159,7 @@ function OverviewTab( { status }: { status: Status } ): JSX.Element {
 						disabled={ disconnect.isPending }
 						onClick={ () =>
 							void confirm( {
-								message: t( 'Disconnect the Instagram account? The cached posts and the images stored on this server are deleted and the Central App forgets the connection.' ),
+								message: t( 'Disconnect the Instagram account? The cached posts and the images stored on this server are deleted and UX1 Network app forgets the connection.' ),
 								danger: true,
 								confirmLabel: t( 'Disconnect' ),
 							} ).then( ( ok ) => ok && disconnect.mutate() )
@@ -199,7 +199,7 @@ function OverviewTab( { status }: { status: Status } ): JSX.Element {
 			</p>
 			<p className="uxs-form__help">
 				{ status.store_images
-					? t( 'The images are copied to {dir} and the feed is served from this site, so visitors never contact Instagram and the feed keeps working when the Central App is down. A post whose image could not be downloaded is not shown.', { dir: status.image_dir } )
+					? t( 'The images are copied to {dir} and the feed is served from this site, so visitors never contact Instagram and the feed keeps working when UX1 Network app is down. A post whose image could not be downloaded is not shown.', { dir: status.image_dir } )
 					: t( 'Storing images is switched off: the browsers of visitors load the pictures straight from Instagram (their IP address goes to Meta and the links expire after a few days). Switch "Store images on this server" on in the settings.' ) }
 			</p>
 		</>
@@ -281,7 +281,7 @@ export default function Page( { module }: { module: ModuleInfo } ): JSX.Element 
 	const [ tab, setTab ] = useState( 'overview' );
 	const status = useQuery( { queryKey: [ 'instagram-feed', 'status' ], queryFn: () => api.get< Status >( 'instagram-feed/status' ) } );
 
-	// Back from the Central App: ...#/module?id=instagram-feed&ig=connected (or ig=error&reason=...).
+	// Back from UX1 Network app: ...#/module?id=instagram-feed&ig=connected (or ig=error&reason=...).
 	useEffect( () => {
 		const result = hashParam( 'ig' );
 		if ( ! result ) {

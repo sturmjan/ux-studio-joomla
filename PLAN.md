@@ -19,7 +19,7 @@ Postup práce: každou oblast staví Sonnet agent, kontroluje Opus (bezpečnost,
 - [x] Průvodce nastavením (onboarding wizard jako WP verze) - commit 0f6e23c
 - [x] Požadavky modulů na jádro (izolace bootu modulů, sdílený ClientIp, Core\Mail, SafeRegex, repeater/media/richtext pole, multipart v PublicApi, Http redirecty, Store, CSP zdroje, admin upozornění)
 
-## F1b Centrální aplikace
+## F1b UX1 Network app
 - [x] CMS adaptér v CA (WordPress vs Joomla) - větev `feature/joomla-sites` ve worktree `D:\xampp\htdocs\_ca-wt-joomla`, migrace 121, detail v CA PLAN.md §39 (souhlas uživatele 2026-11-06)
 - [x] Modul ca-connector (párování, HMAC endpoint ?uxstudio_node, SSO, dispatch na caFeed modulů, CaClient) - commit cbac5f9
 - [x] End-to-end párování skutečného Joomla webu s CA a ověření health/SSO v CA (2026-11-07, J5 i J6)

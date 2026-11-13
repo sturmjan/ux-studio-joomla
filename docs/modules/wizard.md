@@ -5,7 +5,7 @@ Není modul, ale funkce jádra. Soubory: `packages/lib_uxstudio/src/Core/Onboard
 
 ## Co dělá
 SPA route `#/wizard`. Kroky: Úvod, Typ webu (firemní web, e-shop, ubytování, blog, jiné), Moduly, Základní nastavení,
-Centrální aplikace (jen když v registru existuje `ca-connector`), Shrnutí (zapnutí po jednom přes `core/modules/<id>`, průběh, výsledek).
+UX1 Network app (jen když v registru existuje `ca-connector`), Shrnutí (zapnutí po jednom přes `core/modules/<id>`, průběh, výsledek).
 
 - Seznam modulů se bere z registru (`GET core/onboarding`, bez dev modulů a bez `ca-connector`). Doporučení = mapa id -> typy webu
   v `OnboardingCatalog::recommendations()`; neexistující id se prostě neukážou, moduly mimo mapu jsou pod "Další moduly".

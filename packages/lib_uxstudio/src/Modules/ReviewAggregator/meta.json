@@ -1,7 +1,7 @@
 {
 	"id": "review-aggregator",
 	"name": "Review Aggregator",
-	"description": "Aggregate Google, Facebook and Mapy.cz reviews through the central app (or add them by hand), show them on the site and publish schema.org AggregateRating.",
+	"description": "Aggregate Google, Facebook and Mapy.cz reviews through UX1 Network app (or add them by hand), show them on the site and publish schema.org AggregateRating.",
 	"group": "content",
 	"icon": "star",
 	"settings": true

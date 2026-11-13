@@ -15,7 +15,7 @@ use Ux1\UxStudio\Core\RateLimiter;
 \defined('_JEXEC') or die;
 
 /**
- * The site side of the Central App protocol: GET/POST {site}/index.php?uxstudio_node=<route>.
+ * The site side of UX1 Network app protocol: GET/POST {site}/index.php?uxstudio_node=<route>.
  * Handled in onAfterInitialise (before Joomla routes), so it works with and without SEF URLs.
  * Every request is HMAC signed (docs/CA-INTEGRACE.md); every answer to an authenticated request is signed back.
  */
@@ -153,7 +153,7 @@ final class Node
 
     /**
      * Counts a failed authentication per IP. A VALID signature is never throttled (forging a 256 bit HMAC is not a
-     * realistic threat, and a failure budget must not lock the Central App out), only repeated failures get a 429.
+     * realistic threat, and a failure budget must not lock UX1 Network app out), only repeated failures get a 429.
      */
     private function failed(string $message): never
     {
@@ -178,7 +178,7 @@ final class Node
         $query = $_GET;
         unset($query[self::QUERY]);
 
-        // Any signed call other than the pairing challenge proves the Central App accepted this site (the site's own self-check does not count).
+        // Any signed call other than the pairing challenge proves UX1 Network app accepted this site (the site's own self-check does not count).
         if (($_SERVER['HTTP_X_UXS_SELFCHECK'] ?? '') === '') {
             if ($route !== 'ping' && $this->store->get('paired_at') === '') {
                 $this->store->set('paired_at', gmdate('Y-m-d H:i:s'));

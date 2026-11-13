@@ -12,13 +12,13 @@ use Ux1\UxStudio\Modules\CaConnector\CaClient;
 \defined('_JEXEC') or die;
 
 /**
- * Outbound queue and inbound mirror of the Central App ticket system (page "ticket_api").
+ * Outbound queue and inbound mirror of UX1 Network app ticket system (page "ticket_api").
  *
- * The Central App owns a request: its number, status and conversation come from there. Locally a row is kept so the
- * administrator sees their requests even when the Central App is unreachable. Every write is stored first, pushed at
+ * UX1 Network app owns a request: its number, status and conversation come from there. Locally a row is kept so the
+ * administrator sees their requests even when UX1 Network app is unreachable. Every write is stored first, pushed at
  * once as a best effort and retried with backoff by the scheduler task. Permanent failures (HTTP 4xx other than 429:
  * unknown site, wrong key, invalid payload) stop retrying and stay visible as sync_state "error" with the reason.
- * The external id ("uxs-<local id>") makes every retry idempotent on the Central App side.
+ * The external id ("uxs-<local id>") makes every retry idempotent on UX1 Network app side.
  */
 final class Sync
 {
@@ -50,7 +50,7 @@ final class Sync
     {
     }
 
-    /** True when the site is paired with a Central App and the connector is on. */
+    /** True when the site is paired with UX1 Network app and the connector is on. */
     public function isConfigured(): bool
     {
         return $this->client() !== null;
@@ -101,7 +101,7 @@ final class Sync
         return $done;
     }
 
-    /** @param array<string,mixed> $row raw request row @return bool true when the Central App accepted it */
+    /** @param array<string,mixed> $row raw request row @return bool true when UX1 Network app accepted it */
     public function pushOne(array $row): bool
     {
         $client = $this->client();
@@ -125,7 +125,7 @@ final class Sync
             ]);
             if (empty($result['success'])) {
                 // A well-formed refusal (success = false) describes THIS payload: repeating it never helps.
-                throw new \RuntimeException((string) ($result['error'] ?? 'Central App refused the request.'), self::REFUSED);
+                throw new \RuntimeException((string) ($result['error'] ?? 'UX1 Network app refused the request.'), self::REFUSED);
             }
         } catch (\Throwable $e) {
             $this->recordFailure($id, (int) $row['sync_attempts'], $e);
@@ -232,7 +232,7 @@ final class Sync
                     'author_email'        => (string) $row['author_email'],
                 ]);
                 if (empty($result['success'])) {
-                    throw new \RuntimeException((string) ($result['error'] ?? 'Central App refused the message.'), self::REFUSED);
+                    throw new \RuntimeException((string) ($result['error'] ?? 'UX1 Network app refused the message.'), self::REFUSED);
                 }
             } catch (\Throwable $e) {
                 $this->store->outboxFailed((int) $row['id'], self::isPermanent($e) ? self::MAX_ATTEMPTS : (int) $row['attempts'] + 1, $e->getMessage());
@@ -275,7 +275,7 @@ final class Sync
             return false;
         }
         if (empty($result['success'])) {
-            $this->lastError = (string) ($result['error'] ?? 'Central App refused the request.');
+            $this->lastError = (string) ($result['error'] ?? 'UX1 Network app refused the request.');
 
             return false;
         }
@@ -322,7 +322,7 @@ final class Sync
 
     /**
      * What was true on this site when the request was filed (collected once, at submit time). Keys are plain labels:
-     * the Central App flattens them to "label => text".
+     * UX1 Network app flattens them to "label => text".
      *
      * @return array<string,string>
      */

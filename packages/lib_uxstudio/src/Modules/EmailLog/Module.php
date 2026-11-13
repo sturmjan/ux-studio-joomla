@@ -15,7 +15,7 @@ use Ux1\UxStudio\Modules\SmtpEmail\Mail\MailHub;
 /**
  * Log of every e-mail sent by Joomla and its extensions. Capturing is done by the shared MailHub (Joomla has no "mail
  * sent" event, so the mailer factory service of the DI container is decorated); this module owns the table, the screen
- * and the Central App feed. Message bodies may contain one-time links (password reset), so the module is admin only.
+ * and UX1 Network app feed. Message bodies may contain one-time links (password reset), so the module is admin only.
  */
 final class Module extends BaseModule
 {
@@ -95,7 +95,7 @@ final class Module extends BaseModule
         ];
     }
 
-    /** Central App feed: route "email-log" => {items,total}, see docs/CA-INTEGRACE.md. */
+    /** UX1 Network app feed: route "email-log" => {items,total}, see docs/CA-INTEGRACE.md. */
     public function caFeed(string $route, array $query, array $body): array
     {
         if ($route !== 'email-log') {

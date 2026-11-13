@@ -76,7 +76,7 @@ Prázdný název/popis = `sitename` / `MetaDesc` z globální konfigurace. Struk
 Úloha plánovače `ai-markdown.refresh` (P1D): smaže cache článků, které už nejsou veřejné, a ohřeje agregáty.
 Dashboard karta: požadavky AI botů za 24 h.
 
-## Centrální aplikace
+## UX1 Network app
 `caFeed('ai-markdown', [], [])` vrací `{endpoints:{llms_txt,llms_full,sitemap}, markdown, public_items, cached_items, bot_requests:{total,last_24h,by_bot[]}}`.
 Aby ho CA dostala, musí `CaConnector\Node::FEEDS` obsahovat `'ai-markdown' => ['ai-markdown', 'GET']` (viz core_requests).
 

@@ -9,7 +9,7 @@ use Ux1\UxStudio\Core\ModuleContext;
 \defined('_JEXEC') or die;
 
 /**
- * Instagram data from the central app (CA) `instagram_api` (a Graph API proxy: the site never sees a Meta token, it only
+ * Instagram data from UX1 Network app (CA) `instagram_api` (a Graph API proxy: the site never sees a Meta token, it only
  * knows its `connection_id`) and the browser OAuth hand-over `instagram_auth`.
  *
  * The CA verifies this endpoint with the legacy request signature (no nonce):
@@ -36,7 +36,7 @@ final class CaSource implements MediaSource
     }
 
     /**
-     * Why the central app cannot be used: 'ok' | 'connector_missing' (CaConnector not installed or off) | 'not_paired'.
+     * Why UX1 Network app cannot be used: 'ok' | 'connector_missing' (CaConnector not installed or off) | 'not_paired'.
      */
     public static function availability(ModuleContext $ctx): string
     {
@@ -51,7 +51,7 @@ final class CaSource implements MediaSource
         }
     }
 
-    /** null = the site is not connected to the central app. $connectionId may be 0 for the OAuth start only. */
+    /** null = the site is not connected to UX1 Network app. $connectionId may be 0 for the OAuth start only. */
     public static function create(ModuleContext $ctx, int $connectionId): ?self
     {
         if (self::availability($ctx) !== 'ok') {
@@ -85,7 +85,7 @@ final class CaSource implements MediaSource
         return $this->siteUrl;
     }
 
-    /** Browser URL that starts the Instagram login at the central app (it redirects back to $returnUrl). */
+    /** Browser URL that starts the Instagram login at UX1 Network app (it redirects back to $returnUrl). */
     public function authorizeUrl(string $returnUrl, string $nonce): string
     {
         $params = [
@@ -99,7 +99,7 @@ final class CaSource implements MediaSource
         return $this->baseUrl . '?' . http_build_query(['page' => 'instagram_auth', 'action' => 'init'] + $params, '', '&', PHP_QUERY_RFC3986);
     }
 
-    /** Signature of the browser hand-over (GoogleProxySigner::sign of the central app). */
+    /** Signature of the browser hand-over (GoogleProxySigner::sign of UX1 Network app). */
     public static function proxySignature(array $params, string $key): string
     {
         unset($params['sig']);
@@ -118,7 +118,7 @@ final class CaSource implements MediaSource
     }
 
     /**
-     * Verifies the redirect the central app sends the browser back with. Pure (no I/O) so it can be tested alone.
+     * Verifies the redirect UX1 Network app sends the browser back with. Pure (no I/O) so it can be tested alone.
      *
      * @param array<string,mixed> $params query of the callback (connection_id, ig_*, nonce, ts, sig)
      * @throws ApiException

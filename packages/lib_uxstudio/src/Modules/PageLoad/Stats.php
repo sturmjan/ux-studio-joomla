@@ -45,7 +45,7 @@ final class Stats
         $parts = parse_url($path);
         $p     = (string) ($parts['path'] ?? $path);
         $p     = '/' . ltrim((string) preg_replace('/[\x00-\x1F\x7F]/u', '', $p), '/');
-        // The path is untrusted input (it ends up in the admin screen and in the Central App): only characters that can
+        // The path is untrusted input (it ends up in the admin screen and in UX1 Network app): only characters that can
         // appear in a URL path are accepted, anything else (markup, quotes) rejects the whole sample.
         if (!preg_match('~^/[\p{L}\p{N}/._\~%:@!$&()*+,;=-]*$~u', $p)) {
             return '';

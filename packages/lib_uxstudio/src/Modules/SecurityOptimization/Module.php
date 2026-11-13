@@ -381,7 +381,7 @@ final class Module extends BaseModule
     }
 
     /**
-     * Single sign-on from the Central App: the gate steps aside ONLY when the ca-connector module is enabled (it redeems the
+     * Single sign-on from UX1 Network app: the gate steps aside ONLY when the ca-connector module is enabled (it redeems the
      * token in onAfterInitialise and always redirects) and the parameter has the shape of a token. Otherwise the parameter
      * is ignored, exactly as if it was not there.
      */
@@ -968,10 +968,10 @@ final class Module extends BaseModule
         return ['stored' => true];
     }
 
-    /* ------------------------------------------------------- Central App feed */
+    /* ------------------------------------------------------- UX1 Network app feed */
 
     /**
-     * Data for the Central App connector (docs/CA-INTEGRACE.md). Routes: security-monitor, ip-bans (GET), ip-bans/sync (POST).
+     * Data for UX1 Network app connector (docs/CA-INTEGRACE.md). Routes: security-monitor, ip-bans (GET), ip-bans/sync (POST).
      *
      * @param array<string,mixed> $query
      * @param array<string,mixed> $body

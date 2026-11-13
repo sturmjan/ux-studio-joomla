@@ -46,7 +46,7 @@ export interface OnboardingData {
 	/** Profile field => ids of modules whose settings it fills (only modules that exist and have such a setting). */
 	profile_targets: Record< ProfileField, string[] >;
 	site: { name: string; url: string };
-	/** The Central App connector, null when this installation has no such module. */
+	/** UX1 Network app connector, null when this installation has no such module. */
 	ca: ModuleInfo | null;
 }
 

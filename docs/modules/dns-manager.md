@@ -1,6 +1,6 @@
 # dns-manager (WP: DnsManager)
 
-Správa DNS záznamů domény webu přes broker `dns_manage` Centrální aplikace (`CaClient`). Token Cloudflare je jen v CA, web nikdy
+Správa DNS záznamů domény webu přes broker `dns_manage` UX1 Network app (`CaClient`). Token Cloudflare je jen v CA, web nikdy
 neposílá, kterou zónu upravit: CA ji odvodí z podepsané `site_url`. Modul je tedy strana webu: kdo smí, pojistky kolem kritických
 záznamů, čerstvé potvrzení hesla, lokální auditní log a kontrola propagace. Vzor ve WP: `includes/Modules/DnsManager/*`,
 `src/modules/dns-manager/Page.tsx`; protokol brokeru: `_ca-wt-joomla/controllers/DnsManageController.php`.
@@ -12,7 +12,7 @@ Soubory: `packages/lib_uxstudio/src/Modules/DnsManager/` (`Module`, `Guard`, `Jo
 
 `GET status` vrací `state`: `connector_off` (modul ca-connector vypnutý), `not_paired`, `ca_unreachable`, `ca_error`, `inactive`
 (CA zná web, ale DNS není zapnutá: `reason` = `not_configured | disabled | zone_mismatch | broken`) a `active`. SPA ke každému stavu
-ukáže srozumitelný text (cs + en) a u prvních dvou tlačítko na modul Centrální aplikace. `records` vrací v neaktivním stavu prázdný
+ukáže srozumitelný text (cs + en) a u prvních dvou tlačítko na modul UX1 Network app. `records` vrací v neaktivním stavu prázdný
 seznam, zápisy `409 not_active`, historie spadne na lokální kopii.
 
 ## Oprávnění

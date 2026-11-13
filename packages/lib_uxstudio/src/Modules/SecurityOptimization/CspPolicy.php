@@ -82,7 +82,7 @@ final class CspPolicy
             }
         }
 
-        // Sources contributed by other modules (hook "csp.sources", e.g. the Central App address for form-action).
+        // Sources contributed by other modules (hook "csp.sources", e.g. UX1 Network app address for form-action).
         foreach ((array) Hooks::filter('csp.sources', []) as $directive => $extra) {
             if (!\in_array((string) $directive, self::DIRECTIVES, true)) {
                 continue;

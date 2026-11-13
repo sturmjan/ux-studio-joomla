@@ -443,7 +443,7 @@
 	}
 	.uxs-wizhint-again { display: flex; justify-content: flex-end; margin: 0 0 var(--uxs-sp-2); font-size: var(--uxs-fs-s); }
 
-	/* -- Central app step -- */
+	/* -- UX1 Network app step -- */
 	.uxs-wiz-ca .uxs-wiz-ca__h { margin: var(--uxs-sp-6) 0 var(--uxs-sp-3); font-size: var(--uxs-fs-m); }
 
 	.uxs-wiz-ca__hero {
@@ -540,7 +540,7 @@
 		svg { flex-shrink: 0; margin-top: 2px; color: var(--uxs-brand-text); }
 	}
 
-	/* Sticky bar of the Central app step: stays at the bottom edge while the step is taller than the window. */
+	/* Sticky bar of UX1 Network app step: stays at the bottom edge while the step is taller than the window. */
 	.uxs-wiz-ca__bar {
 		position: sticky;
 		bottom: 0;

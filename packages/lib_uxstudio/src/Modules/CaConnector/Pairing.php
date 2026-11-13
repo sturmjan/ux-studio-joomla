@@ -18,7 +18,7 @@ final class Pairing
     public const SITE_TYPE   = 'joomla';
 
     /**
-     * Central App address typed by the administrator, normalised: https, or plain http only for a machine of the
+     * UX1 Network app address typed by the administrator, normalised: https, or plain http only for a machine of the
      * developer (localhost, 127.0.0.1, [::1]); no credentials, query or fragment. Empty input = production address.
      *
      * @return string|null `scheme://host[:port]/path/` or null when not acceptable
@@ -74,7 +74,7 @@ final class Pairing
         return hash_hmac('sha256', $payload, $apiKey);
     }
 
-    /** The Central App only follows a return_url on the same origin as the site. */
+    /** UX1 Network app only follows a return_url on the same origin as the site. */
     public static function sameOrigin(string $a, string $b): bool
     {
         $pa = parse_url($a);

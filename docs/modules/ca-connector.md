@@ -1,6 +1,6 @@
-# Modul ca-connector (konektor Centrální aplikace)
+# Modul ca-connector (konektor UX1 Network app)
 
-Strana webu protokolu Centrální aplikace (CA), viz `docs/CA-INTEGRACE.md`. Vzor ve WP verzi:
+Strana webu protokolu UX1 Network app (CA), viz `docs/CA-INTEGRACE.md`. Vzor ve WP verzi:
 `includes/Modules/ContentSync/{NodeController,NodeHealth,HmacAuth,Sso*}.php` a `includes/Core/Onboarding/CentralApp.php`.
 
 Soubory: `packages/lib_uxstudio/src/Modules/CaConnector/` (`Module`, `Node`, `Hmac`, `Pairing`, `Sso`, `Health`, `Store`, `CaClient`),
@@ -8,7 +8,7 @@ Soubory: `packages/lib_uxstudio/src/Modules/CaConnector/` (`Module`, `Node`, `Hm
 
 ## Co modul dělá
 
-1. **Párování.** Tlačítko "Připojit k Centrální aplikaci" (`POST ca-connector/prepare`): uloží adresu CA, vygeneruje 64hex klíč
+1. **Párování.** Tlačítko "Připojit k UX1 Network app" (`POST ca-connector/prepare`): uloží adresu CA, vygeneruje 64hex klíč
    (nastavení `node_api_key`, typ password = šifrovaně), stálé ID webu (UUID, `site_id`) a vrátí pole formuláře. SPA je odešle
    z prohlížeče metodou POST na `{CA}/?page=connect_site` (`site_type=joomla`, `return_url` = stránka modulu v administraci,
    podpis `site_url|site_name|timestamp|site_type|site_id`). CA zavolá podepsaný `ping` (živá výzva), po potvrzení vrátí prohlížeč

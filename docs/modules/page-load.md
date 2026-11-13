@@ -17,7 +17,7 @@ návštěvníka** (Navigation Timing), protože na Joomle nemáme admin bar ani 
    proxy režim jádra), validace (čísla oříznuta na 0 až 120 s, `load` musí být > 0, cesta očištěná jako v Analytics: bez dotazu kromě
    `option=com_*` parametrů, bez podsložky webu, 255 znaků). **`path` je nedůvěryhodný vstup**: povoleny jsou jen znaky URL cesty
    (písmena, číslice, `/._~%:@!$&()*+,;=-`), cokoli jiného (`<>"'`, zpětné lomítko) celé měření odmítne; nové (dosud neviděné) cesty
-   jsou omezeny na 1000 různých za 24 h, další se zahodí (už známé cesty se zapisují dál). Příjemce (admin, Centrální aplikace přes
+   jsou omezeny na 1000 různých za 24 h, další se zahodí (už známé cesty se zapisují dál). Příjemce (admin, UX1 Network app přes
    `caFeed()`) musí `path` přesto escapovat při výpisu. `data-endpoint` je relativní URL (`Uri::root(true)`), takže se z hlavičky Host
    nic nedostane do HTML uloženého page cache. Vždy odpoví `ok` (měření nikdy nehlásí chybu návštěvníkovi, výjimky jdou do logu `uxstudio`).
 3. **Ukládání**: tabulka `#__uxstudio_page_load` (migrace 1): čas, cesta, třída zařízení (mobil < 768, tablet < 1100, počítač), typ navigace,
@@ -28,7 +28,7 @@ návštěvníka** (Navigation Timing), protože na Joomle nemáme admin bar ani 
 5. **Nejpomalejší stránky**: seskupeno podle cesty, řazení podle doby načtení / TTFB / FCP / LCP (průměr), minimum měření (1/3/10), top 50;
    barva podle `slow_ms` (3000) a jeho dvojnásobku.
 6. **Smazání dat** (`POST clear`, jen `core.admin`, s potvrzením). Karta na přehledu UX1 Studia: medián doby načtení za 7 dní (warn/bad podle `slow_ms`).
-7. **Centrální aplikace**: `caFeed()` vrací `{summary, slowest}`. Aby ho CaConnector vystavil, musí mít v `Node::FEEDS` řádek
+7. **UX1 Network app**: `caFeed()` vrací `{summary, slowest}`. Aby ho CaConnector vystavil, musí mít v `Node::FEEDS` řádek
    `'page-load' => ['page-load', 'GET']` (viz core_requests); protokol CA tuto routu zatím nezná.
 
 ## API

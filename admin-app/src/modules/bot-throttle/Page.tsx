@@ -157,7 +157,7 @@ function OverviewTab(): JSX.Element {
 				</button>
 				<span className="uxs-muted">{ t( 'Your address as seen by the module: {ip}', { ip: o.client_ip } ) }</span>
 			</div>
-			{ ! o.report_hash_enabled ? <p className="uxs-muted">{ t( 'Bans stay local: no central report secret is set, so nothing is reported to the Central App.' ) }</p> : null }
+			{ ! o.report_hash_enabled ? <p className="uxs-muted">{ t( 'Bans stay local: no central report secret is set, so nothing is reported to UX1 Network app.' ) }</p> : null }
 			<h2 className="uxs-form__section">{ t( 'Top bots (24 h)' ) }</h2>
 			<DataTable columns={ botCols } rows={ o.stats_24h.top_bots } rowKey={ ( b ) => `${ b.bot_category }/${ b.bot_name }` } empty={ t( 'No bots seen yet.' ) } />
 			<h2 className="uxs-form__section">{ t( 'Rules by category' ) }</h2>
@@ -222,7 +222,7 @@ function BansTab(): JSX.Element {
 		{ key: 'ip_hash', header: t( 'IP hash' ), render: ( b ) => <code>{ b.ip_hash }</code> },
 		{ key: 'context', header: t( 'Where' ) },
 		{ key: 'reason', header: t( 'Reason' ) },
-		{ key: 'reported', header: t( 'Reported to Central App' ), render: ( b ) => ( b.reported ? t( 'Yes' ) : t( 'No' ) ) },
+		{ key: 'reported', header: t( 'Reported to UX1 Network app' ), render: ( b ) => ( b.reported ? t( 'Yes' ) : t( 'No' ) ) },
 		{ key: 'active', header: t( 'Status' ), render: ( b ) => <span className={ `uxs-badge ${ b.active ? 'is-danger' : '' }` }>{ b.active ? t( 'Active' ) : t( 'Ended' ) }</span> },
 		{
 			key: 'actions',

@@ -1,6 +1,6 @@
 /**
- * DNS management through the Central App: record list, add / edit / delete with a confirmation, propagation check,
- * change history with revert. Validation, locks and the authoritative log live in the Central App and the module API.
+ * DNS management through UX1 Network app: record list, add / edit / delete with a confirmation, propagation check,
+ * change history with revert. Validation, locks and the authoritative log live in UX1 Network app and the module API.
  */
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -164,7 +164,7 @@ function fullName( name: string, zone: string ): string {
 	return n === '' || n === '@' ? zone : n === zone || n.endsWith( `.${ zone }` ) ? n : `${ n }.${ zone }`;
 }
 
-/** Cloudflare cannot proxy mail or verification records; mirrors the Central App, which decides. */
+/** Cloudflare cannot proxy mail or verification records; mirrors UX1 Network app, which decides. */
 function proxyForbidden( type: string, name: string, content: string ): boolean {
 	if ( ! [ 'A', 'AAAA', 'CNAME' ].includes( type ) ) {
 		return true;
@@ -866,7 +866,7 @@ function HistoryTab( { status, zone, needsPassword }: { status: Status; zone: st
 
 	return (
 		<>
-			{ log.data?.source === 'local' ? <div className="uxs-notice">{ t( 'The central app is not reachable, showing the local copy of the history.' ) }</div> : null }
+			{ log.data?.source === 'local' ? <div className="uxs-notice">{ t( 'UX1 Network app is not reachable, showing the local copy of the history.' ) }</div> : null }
 			<div className="uxs-actions" style={ { marginBottom: 'var(--uxs-sp-4)' } }>
 				<select aria-label={ t( 'Action' ) } value={ action } onChange={ ( e ) => setAction( e.target.value ) }>
 					<option value="">{ t( 'All actions' ) }</option>
@@ -902,12 +902,12 @@ function StateNotice( { status }: { status: Status } ): JSX.Element {
 	return (
 		<div className="uxs-notice" role="status">
 			<p>
-				<strong>{ status.state === 'ca_unreachable' || status.state === 'ca_error' ? t( 'The Central App is not available' ) : t( 'DNS management is not active' ) }</strong>
+				<strong>{ status.state === 'ca_unreachable' || status.state === 'ca_error' ? t( 'UX1 Network app is not available' ) : t( 'DNS management is not active' ) }</strong>
 			</p>
 			<p>{ status.message }</p>
 			{ status.state === 'connector_off' || status.state === 'not_paired' ? (
 				<button type="button" className="uxs-btn uxs-btn--small" onClick={ () => navigate( 'module', { id: 'ca-connector' } ) }>
-					{ t( 'Open the Central App module' ) }
+					{ t( 'Open UX1 Network app module' ) }
 				</button>
 			) : null }
 		</div>

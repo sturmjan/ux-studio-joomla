@@ -233,7 +233,7 @@ function FirewallTab(): JSX.Element {
 		{
 			key: 'origin',
 			header: t( 'Origin' ),
-			render: ( b ) => <span className={ `uxs-badge ${ b.origin === 'central' ? 'is-info' : b.origin === 'auto' ? 'is-warning' : '' }` }>{ b.origin === 'central' ? t( 'Central App' ) : b.origin === 'auto' ? t( 'Automatic' ) : t( 'Manual' ) }</span>,
+			render: ( b ) => <span className={ `uxs-badge ${ b.origin === 'central' ? 'is-info' : b.origin === 'auto' ? 'is-warning' : '' }` }>{ b.origin === 'central' ? t( 'UX1 Network app' ) : b.origin === 'auto' ? t( 'Automatic' ) : t( 'Manual' ) }</span>,
 		},
 		{ key: 'expires_at', header: t( 'Expires' ), render: ( b ) => ( b.expires_at ? <span className={ b.expired ? 'uxs-muted' : '' }>{ formatDate( b.expires_at ) }</span> : t( 'Never' ) ) },
 		{ key: 'hit_count', header: t( 'Blocked requests' ), render: ( b ) => b.hit_count },
@@ -268,13 +268,13 @@ function FirewallTab(): JSX.Element {
 				<select className="uxs-input" value={ origin } aria-label={ t( 'Origin' ) } onChange={ ( e ) => { setOrigin( e.target.value ); setPage( 1 ); } }>
 					<option value="">{ t( 'All origins' ) }</option>
 					<option value="local">{ t( 'Local (manual and automatic)' ) }</option>
-					<option value="central">{ t( 'Central App' ) }</option>
+					<option value="central">{ t( 'UX1 Network app' ) }</option>
 				</select>
 				<button type="button" className="uxs-btn uxs-btn--primary" onClick={ () => setAdding( true ) }>
 					<Plus size={ 14 } aria-hidden="true" /> { t( 'Add ban' ) }
 				</button>
 			</div>
-			<p className="uxs-muted">{ t( 'Bans pushed by the Central App are replaced as a whole on every sync and cannot be edited here. The firewall never blocks loopback, allowlisted addresses or a logged-in super user.' ) }</p>
+			<p className="uxs-muted">{ t( 'Bans pushed by UX1 Network app are replaced as a whole on every sync and cannot be edited here. The firewall never blocks loopback, allowlisted addresses or a logged-in super user.' ) }</p>
 			{ q.isLoading ? <Loading /> : null }
 			{ q.error ? <p role="alert">{ errorMessage( q.error ) }</p> : null }
 			{ q.data ? <DataTable columns={ columns } rows={ q.data.items } rowKey={ ( b ) => b.id } empty={ t( 'No IP bans.' ) } page={ q.data.page } pages={ q.data.pages } onPage={ setPage } /> : null }

@@ -212,7 +212,7 @@ final class Hardening
         $conf      = JPATH_CONFIGURATION . '/configuration.php';
 
         return [
-            // Keys shared with the WordPress report (the Central App renders both CMS from one view).
+            // Keys shared with the WordPress report (UX1 Network app renders both CMS from one view).
             'disallow_file_edit'        => true,
             'disallow_file_mods'        => false,
             'xmlrpc_enabled'            => false,

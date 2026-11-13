@@ -13,7 +13,7 @@ use Ux1\UxStudio\Modules\CaConnector\Store as CaStore;
 \defined('_JEXEC') or die;
 
 /**
- * Client of the central app public reviews API (`?page=reviews_api`), same protocol as the WordPress CentralReviewsClient.
+ * Client of UX1 Network app public reviews API (`?page=reviews_api`), same protocol as the WordPress CentralReviewsClient.
  * The endpoint does not use the pairing-key headers of CaClient; it verifies a per-site secret (`google_login_secret`):
  *
  *   1. The secret is fetched once from `?page=site_config&action=google_secret`, authenticated with the pairing key
@@ -39,7 +39,7 @@ final class CentralReviewsClient
     ) {
     }
 
-    /** null = the site is not paired with a central app, or the connector is off. */
+    /** null = the site is not paired with UX1 Network app, or the connector is off. */
     public static function create(ModuleContext $ctx, ReviewStore $store): ?self
     {
         if (!class_exists(CaClient::class) || CaClient::fromContext($ctx) === null) {
@@ -151,7 +151,7 @@ final class CentralReviewsClient
         if ($res['status'] < 200 || $res['status'] >= 300 || empty($json['success'])) {
             $msg = (string) ($json['error'] ?? '');
 
-            throw new \RuntimeException('Central App HTTP ' . $res['status'] . ($msg !== '' ? ': ' . $msg : ''), $res['status']);
+            throw new \RuntimeException('UX1 Network app HTTP ' . $res['status'] . ($msg !== '' ? ': ' . $msg : ''), $res['status']);
         }
 
         return $json;
@@ -185,7 +185,7 @@ final class CentralReviewsClient
         }
     }
 
-    /** True when the configured Central App host is not a public address (development setup): the SSRF guard is lifted for it. */
+    /** True when the configured UX1 Network app host is not a public address (development setup): the SSRF guard is lifted for it. */
     private function hostIsPrivate(): bool
     {
         $host = trim((string) parse_url($this->baseUrl, PHP_URL_HOST), '[]');

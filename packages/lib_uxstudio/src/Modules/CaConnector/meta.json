@@ -1,7 +1,7 @@
 {
 	"id": "ca-connector",
-	"name": "Central App connector",
-	"description": "Connects this site to the UX1 Central App: pairing, signed health and security endpoints, single sign-on and the client for calls back to the Central App.",
+	"name": "UX1 Network app connector",
+	"description": "Connects this site to UX1 Network app: pairing, signed health and security endpoints, single sign-on and the client for calls back to UX1 Network app.",
 	"group": "admin",
 	"icon": "link",
 	"settings": true
