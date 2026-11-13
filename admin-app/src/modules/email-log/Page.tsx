@@ -56,7 +56,29 @@ interface Stats {
 }
 
 const PER_PAGE = 20;
+/** The shared .uxs-link-btn does not reset the browser/Joomla button background, which is a light grey patch in dark mode. */
+const LINK_BTN = { border: 0, textAlign: 'left' } as const;
+/** Longest error text shown inside a table row; the whole text is in the detail. */
+const ERROR_PREVIEW = 120;
 const { t, tn } = createT( 'email-log' );
+
+/** Subject link: the inline style resets the Joomla button look, so the hover state is applied here (brand colour + underline). */
+function SubjectButton( { children, onClick }: { children: string; onClick: () => void } ): JSX.Element {
+	const [ hover, setHover ] = useState( false );
+
+	return (
+		<button
+			type="button"
+			className="uxs-link-btn"
+			style={ { ...LINK_BTN, color: hover ? 'var(--uxs-brand-text)' : 'var(--uxs-text)', textDecoration: hover ? 'underline' : 'none', background: hover ? 'var(--uxs-surface-2)' : 'none' } }
+			onMouseEnter={ () => setHover( true ) }
+			onMouseLeave={ () => setHover( false ) }
+			onClick={ onClick }
+		>
+			{ children }
+		</button>
+	);
+}
 
 function StatusBadge( { status }: { status: Status } ): JSX.Element {
 	if ( status === 'success' ) {
@@ -200,7 +222,7 @@ function DetailModal( { id, onClose }: { id: number | null; onClose: () => void 
 							<label className="uxs-checklist__item">
 								<input type="checkbox" checked={ images } onChange={ ( e ) => setImages( e.target.checked ) } /> { t( 'Load remote images (the sender may see that you opened the message)' ) }
 							</label>
-							<iframe title={ t( 'E-mail body' ) } sandbox="" srcDoc={ previewDoc( d.message, images ) } style={ { width: '100%', height: 320, border: '1px solid var(--uxs-border)', borderRadius: 'var(--uxs-radius-s)' } } />
+							<iframe title={ t( 'E-mail body' ) } tabIndex={ -1 } sandbox="" srcDoc={ previewDoc( d.message, images ) } style={ { width: '100%', height: 320, border: '1px solid var(--uxs-border)', borderRadius: 'var(--uxs-radius-s)' } } />
 						</>
 					) : (
 						<pre className="uxs-code-editor" style={ { whiteSpace: 'pre-wrap', wordBreak: 'break-word' } }>{ d.message }</pre>
@@ -259,11 +281,7 @@ function Messages(): JSX.Element {
 		{
 			key: 'subject',
 			header: t( 'Subject' ),
-			render: ( r ) => (
-				<button type="button" className="uxs-link-btn" onClick={ () => setDetail( r.id ) }>
-					{ r.subject || t( '(no subject)' ) }
-				</button>
-			),
+				render: ( r ) => <SubjectButton onClick={ () => setDetail( r.id ) }>{ r.subject || t( '(no subject)' ) }</SubjectButton>,
 		},
 		{ key: 'source', header: t( 'Source' ), render: ( r ) => sourceLabel( r.source ) },
 		{
@@ -273,7 +291,7 @@ function Messages(): JSX.Element {
 				<>
 					<StatusBadge status={ r.status } />
 					{ r.mailer ? <span className="uxs-muted"> { mailerLabel( r.mailer ) }</span> : null }
-					{ r.error_message ? <span className="uxs-form__help" style={ { display: 'block' } }>{ r.error_message }</span> : null }
+					{ r.error_message ? <span className="uxs-form__help" style={ { display: 'block' } } title={ r.error_message }>{ r.error_message.length > ERROR_PREVIEW ? r.error_message.slice( 0, ERROR_PREVIEW ) + '…' : r.error_message }</span> : null }
 				</>
 			),
 		},
@@ -343,7 +361,7 @@ function Messages(): JSX.Element {
 			{ data ? (
 				<>
 					<p className="uxs-muted uxs-list-toolbar__count">{ tn( '{n} message', '{n} messages', data.total ) }</p>
-					<DataTable columns={ columns } rows={ data.items } rowKey={ ( r ) => r.id } page={ page } pages={ pages } onPage={ setPage } empty={ t( 'No mail has been sent yet.' ) } />
+					<DataTable columns={ columns } rows={ data.items } rowKey={ ( r ) => r.id } page={ page } pages={ pages } onPage={ setPage } empty={ term !== '' || status !== '' ? t( 'No messages match the search.' ) : t( 'No mail has been sent yet.' ) } />
 				</>
 			) : null }
 

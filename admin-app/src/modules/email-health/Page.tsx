@@ -1,7 +1,7 @@
 /**
  * E-mail health: test delivery from the site and DNS check (MX / SPF / DKIM / DMARC) of the sender domain.
  */
-import { useState } from 'react';
+import { useRef, useState, type FormEvent } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Globe, Send } from 'lucide-react';
 import { api, queryClient, type ModuleInfo } from '../../app/api';
@@ -92,9 +92,16 @@ function Overview( { status }: { status: Status } ): JSX.Element {
 	const [ domain, setDomain ] = useState( '' );
 	const [ outcome, setOutcome ] = useState< TestResult | null >( null );
 
+	// State updates are asynchronous, so a double click or a repeated Enter would fire twice (and burn the rate limit) without these flags.
+	const testBusy = useRef( false );
+	const dnsBusy = useRef( false );
+
 	const refresh = (): void => void queryClient.invalidateQueries( { queryKey: [ 'email-health' ] } );
 	const test = useMutation( {
 		mutationFn: () => api.post< TestResult >( 'email-health/test', { recipient: recipient.trim() } ),
+		onSettled: () => {
+			testBusy.current = false;
+		},
 		onSuccess: ( r ) => {
 			setOutcome( r );
 			refresh();
@@ -104,9 +111,29 @@ function Overview( { status }: { status: Status } ): JSX.Element {
 	} );
 	const dns = useMutation( {
 		mutationFn: () => api.post( 'email-health/dns', { domain: domain.trim() } ),
+		onSettled: () => {
+			dnsBusy.current = false;
+		},
 		onSuccess: refresh,
 		onError: ( e: Error ) => pushToast( 'error', e.message ),
 	} );
+
+	const sendTest = ( e?: FormEvent ): void => {
+		e?.preventDefault();
+		if ( testBusy.current || test.isPending ) {
+			return;
+		}
+		testBusy.current = true;
+		test.mutate();
+	};
+	const checkDns = ( e?: FormEvent ): void => {
+		e?.preventDefault();
+		if ( dnsBusy.current || dns.isPending ) {
+			return;
+		}
+		dnsBusy.current = true;
+		dns.mutate();
+	};
 
 	const last = status.test;
 	const checked = status.dns?.data;
@@ -144,7 +171,7 @@ function Overview( { status }: { status: Status } ): JSX.Element {
 				</div>
 				<div className="uxs-card">
 					<span className="uxs-card__label">{ t( 'Sender address' ) }</span>
-					<span className="uxs-card__num">{ status.sender.email || '-' }</span>
+					<span className="uxs-card__num" style={ { fontSize: '1.1rem', overflowWrap: 'anywhere' } }>{ status.sender.email || '-' }</span>
 				</div>
 			</div>
 
@@ -152,12 +179,12 @@ function Overview( { status }: { status: Status } ): JSX.Element {
 			<p className="uxs-form__help">
 				{ t( 'Sends a short message through the same mailer as all other mail of the site. A passed test means the message left the site; it does not prove it reached the inbox, so look in the spam folder too.' ) }
 			</p>
-			<div className="uxs-actions" style={ { marginBottom: 'var(--uxs-sp-4)' } }>
+			<form className="uxs-actions" style={ { marginBottom: 'var(--uxs-sp-4)' } } onSubmit={ sendTest } noValidate>
 				<input type="email" className="uxs-input" value={ recipient } placeholder={ t( 'Recipient (blank: your address)' ) } aria-label={ t( 'Recipient' ) } onChange={ ( e ) => setRecipient( e.target.value ) } />
-				<button type="button" className="uxs-btn uxs-btn--primary" disabled={ test.isPending } onClick={ () => test.mutate() }>
+				<button type="submit" className="uxs-btn uxs-btn--primary" disabled={ test.isPending }>
 					<Send size={ 14 } aria-hidden="true" /> { test.isPending ? t( 'Sending…' ) : t( 'Send test e-mail' ) }
 				</button>
-			</div>
+			</form>
 			{ outcome ? (
 				<div className={ `uxs-notice${ outcome.success ? '' : ' is-error' }` } role="status">
 					<p>
@@ -170,21 +197,21 @@ function Overview( { status }: { status: Status } ): JSX.Element {
 
 			<h2 className="uxs-section-title">{ t( 'Sender domain DNS' ) }</h2>
 			<p className="uxs-form__help">{ t( 'Checks the DNS records that mailbox providers use to decide whether your mail is trustworthy. Only DNS queries are made.' ) }</p>
-			<div className="uxs-actions" style={ { marginBottom: 'var(--uxs-sp-4)' } }>
+			<form className="uxs-actions" style={ { marginBottom: 'var(--uxs-sp-4)' } } onSubmit={ checkDns }>
 				<input type="text" className="uxs-input" value={ domain } placeholder={ status.sender.domain || 'example.com' } aria-label={ t( 'Domain' ) } onChange={ ( e ) => setDomain( e.target.value ) } />
-				<button type="button" className="uxs-btn" disabled={ dns.isPending } onClick={ () => dns.mutate() }>
+				<button type="submit" className="uxs-btn" disabled={ dns.isPending }>
 					<Globe size={ 14 } aria-hidden="true" /> { dns.isPending ? t( 'Checking…' ) : t( 'Check DNS' ) }
 				</button>
-			</div>
+			</form>
 			{ checked ? (
 				<div className="uxs-groups">
 					{ checked.checks.map( ( c ) => (
-						<div key={ c.id } className="uxs-card" style={ { marginBottom: 'var(--uxs-sp-3)' } }>
+						<div key={ c.id } className="uxs-card" style={ { marginBottom: 'var(--uxs-sp-3)', textAlign: 'left' } }>
 							<p>
 								<span className={ `uxs-badge ${ BADGE[ c.status ] }` }>{ levelLabel( c.status ) }</span> <strong>{ checkTitle( c.id ) }</strong>
 							</p>
 							<p>{ c.summary }</p>
-							{ c.notes.length > 0 ? <ul>{ c.notes.map( ( n, i ) => <li key={ i }>{ n }</li> ) }</ul> : null }
+							{ c.notes.length > 0 ? <ul style={ { paddingLeft: '1.25rem' } }>{ c.notes.map( ( n, i ) => <li key={ i }>{ n }</li> ) }</ul> : null }
 							{ c.records.length > 0 ? <pre className="uxs-code-editor" style={ { whiteSpace: 'pre-wrap', wordBreak: 'break-all' } }>{ c.records.join( '\n' ) }</pre> : null }
 						</div>
 					) ) }
@@ -206,7 +233,11 @@ export default function Page( { module }: { module: ModuleInfo } ): JSX.Element 
 			<Tabs
 				label={ module.name }
 				active={ tab }
-				onChange={ setTab }
+				onChange={ ( id ) => {
+					setTab( id );
+					// Settings may have changed on the other tab; the overview must not show a cached status.
+					void queryClient.invalidateQueries( { queryKey: [ 'email-health', 'status' ] } );
+				} }
 				items={ [
 					{ id: 'overview', label: t( 'Overview' ) },
 					{ id: 'settings', label: t( 'Settings' ) },

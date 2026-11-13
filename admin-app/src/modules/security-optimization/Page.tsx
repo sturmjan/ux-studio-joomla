@@ -430,7 +430,7 @@ function HardeningTab(): JSX.Element {
 
 	return (
 		<>
-			<p className="uxs-muted">{ t( 'This report only looks. UX Studio never edits your files, .htaccess or configuration.' ) }</p>
+			<p className="uxs-muted">{ t( 'This report only looks. UX1 Studio never edits your files, .htaccess or configuration.' ) }</p>
 			<ul className="uxs-status-list">
 				{ h.checks.map( ( c ) => (
 					<li key={ c.id } className="uxs-status-list__row">

@@ -59,6 +59,8 @@
 	"Only URLs without a redirect": "Jen adresy bez přesměrování",
 	"Clear the whole 404 log?": "Vymazat celý log 404?",
 	"Clear log": "Vymazat log",
+	"Delete this URL from the 404 log?": "Smazat tuto adresu z logu 404?",
+	"Rewrite the targets of rules that point into other redirects so they go straight to the final address?": "Přepsat cíle pravidel, která vedou do jiných přesměrování, aby mířila rovnou na konečnou adresu?",
 	"Suggestions compare the address with the aliases and titles of your published articles, categories and menu items. Nothing is created until you click.": "Návrhy porovnávají adresu s aliasy a názvy publikovaných článků, kategorií a položek menu. Nic se nevytvoří, dokud nekliknete.",
 	"No 404 errors logged.": "Žádné chyby 404 nejsou zalogované.",
 	"Test a URL": "Vyzkoušet adresu",

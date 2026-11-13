@@ -150,7 +150,7 @@ function OverviewTab(): JSX.Element {
 	return (
 		<>
 			<h2 className="uxs-form__section">{ t( 'Already built into Joomla' ) }</h2>
-			<p className="uxs-muted">{ t( 'These speed-ups belong to Joomla itself, so UX Studio does not copy them. Turn them on in the places named here.' ) }</p>
+			<p className="uxs-muted">{ t( 'These speed-ups belong to Joomla itself, so UX1 Studio does not copy them. Turn them on in the places named here.' ) }</p>
 			<div className="uxs-table-wrap"><table className="uxs-table">
 				<tbody>
 					<tr>

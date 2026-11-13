@@ -2,7 +2,7 @@
  * AI Markdown: overview of the AI-facing addresses, the public articles with their cache state, the AI bot access log,
  * robots.txt guidance for AI crawlers, and the settings.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Copy, ExternalLink, Eye, RefreshCw, Trash2 } from 'lucide-react';
 import { api, queryClient, type ModuleInfo } from '../../app/api';
@@ -147,8 +147,11 @@ function Overview( { onPreview }: { onPreview: ( r: { kind: string; title: strin
 	} );
 
 	const s = status.data;
-	if ( status.isLoading || ! s ) {
+	if ( status.isLoading ) {
 		return <Loading />;
+	}
+	if ( ! s ) {
+		return <p role="alert">{ status.error instanceof Error ? status.error.message : t( 'Something went wrong.' ) }</p>;
 	}
 	const rows: Array< { kind: string; label: string; url: string } > = [
 		{ kind: 'llms', label: 'llms.txt', url: s.urls.llms_txt },
@@ -342,7 +345,7 @@ function BotLog(): JSX.Element {
 			render: ( r ) => <a href={ r.url } target="_blank" rel="noreferrer" style={ { wordBreak: 'break-all' } }>{ r.url.length > 70 ? r.url.slice( 0, 70 ) + '…' : r.url }</a>,
 		},
 		{ key: 'via', header: t( 'Requested by' ), render: ( r ) => viaLabel( r.via ) },
-		{ key: 'ip_address', header: t( 'IP address' ), render: ( r ) => <code>{ r.ip_address || '—' }</code> },
+		{ key: 'ip_address', header: t( 'IP address' ), render: ( r ) => <code style={ { color: 'var(--uxs-text)' } }>{ r.ip_address || '—' }</code> },
 		{
 			key: 'actions',
 			header: '',
@@ -412,7 +415,7 @@ function RobotsTab(): JSX.Element {
 		return <span className="uxs-badge is-success">{ b.source === 'none' ? t( 'Allowed (no rule)' ) : t( 'Allowed' ) }</span>;
 	};
 	const columns: Column< RobotBot >[] = [
-		{ key: 'name', header: t( 'AI bot' ), render: ( b ) => <><strong>{ b.name }</strong> <code>{ b.token }</code></> },
+		{ key: 'name', header: t( 'AI bot' ), render: ( b ) => <><strong>{ b.name }</strong> <code style={ { color: 'var(--uxs-text)' } }>{ b.token }</code></> },
 		{ key: 'purpose', header: t( 'Purpose' ), render: ( b ) => ( b.purpose === 'training' ? t( 'Model training' ) : t( 'Search and answers' ) ) },
 		{ key: 'status', header: t( 'Your robots.txt' ), render: badge },
 	];
@@ -420,7 +423,7 @@ function RobotsTab(): JSX.Element {
 	return (
 		<>
 			<p className="uxs-form__help">
-				{ t( 'robots.txt tells crawlers what they may read. UX Studio never edits that file; here you see what it says today and can copy a suggestion into it.' ) }
+				{ t( 'robots.txt tells crawlers what they may read. UX1 Studio never edits that file; here you see what it says today and can copy a suggestion into it.' ) }
 			</p>
 			{ robots.isLoading ? <Loading /> : null }
 			{ robots.error ? <p role="alert">{ robots.error.message }</p> : null }
@@ -450,13 +453,23 @@ function RobotsTab(): JSX.Element {
 export default function Page( { module }: { module: ModuleInfo } ): JSX.Element {
 	const [ tab, setTab ] = useState( 'overview' );
 	const [ preview, setPreview ] = useState< { kind?: string; id?: number; title: string } | null >( null );
+	// Settings saved elsewhere (or a leave and return within the cache time) must never leave an old overview on screen.
+	useEffect( () => {
+		void queryClient.invalidateQueries( { queryKey: [ 'ai-markdown' ] } );
+	}, [] );
 
 	return (
 		<>
 			<Tabs
 				label={ module.name }
 				active={ tab }
-				onChange={ setTab }
+				onChange={ ( id ) => {
+					// Settings change addresses, public articles and the cache: drop cached results after the settings.
+					if ( tab === 'settings' ) {
+						refreshAll();
+					}
+					setTab( id );
+				} }
 				items={ [
 					{ id: 'overview', label: t( 'Overview' ) },
 					{ id: 'articles', label: t( 'Articles' ) },

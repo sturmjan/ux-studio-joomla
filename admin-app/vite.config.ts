@@ -24,7 +24,7 @@ function joomlaAssets(): Plugin {
 				$schema: 'https://developer.joomla.org/schemas/json-schema/web_assets.json',
 				name: 'com_uxstudio',
 				version,
-				description: 'UX Studio admin app',
+				description: 'UX1 Studio admin app',
 				license: 'GPL-2.0-or-later',
 				assets: [
 					{ name: 'com_uxstudio.app', type: 'script', uri: 'com_uxstudio/app.js', attributes: { type: 'module' }, version: hash(js) },

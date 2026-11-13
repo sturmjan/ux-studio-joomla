@@ -1,5 +1,5 @@
 /** Editor of one location: basics (+ geocoding), weekly hours, exceptions and dated announcements. */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Copy, MapPin, Plus, Trash2 } from 'lucide-react';
 import { api, ApiError } from '../../app/api';
@@ -61,6 +61,8 @@ export function LocationModal( { draft, onClose, onSaved }: { draft: Draft; onCl
 	const [ tab, setTab ] = useState( 'basic' );
 	const [ error, setError ] = useState( '' );
 
+	// Guards a double click: `isPending` only flips after a re-render, so a second click in the same tick would post twice.
+	const busy = useRef( false );
 	const save = useMutation( {
 		mutationFn: () => ( d.id ? api.post< Location >( `opening-hours/locations/${ d.id }`, d ) : api.post< Location >( 'opening-hours/locations', d ) ),
 		onSuccess: () => {
@@ -69,7 +71,17 @@ export function LocationModal( { draft, onClose, onSaved }: { draft: Draft; onCl
 			onClose();
 		},
 		onError: ( e ) => setError( errorMessage( e ) ),
+		onSettled: () => {
+			busy.current = false;
+		},
 	} );
+	const submit = (): void => {
+		if ( busy.current ) {
+			return;
+		}
+		busy.current = true;
+		save.mutate();
+	};
 
 	const geocode = useMutation( {
 		mutationFn: () => api.get< { lat: number; lng: number; formatted_address: string } >( 'opening-hours/geocode', { address: d.address } ),
@@ -101,7 +113,7 @@ export function LocationModal( { draft, onClose, onSaved }: { draft: Draft; onCl
 					<button type="button" className="uxs-btn" onClick={ onClose }>
 						{ t( 'Cancel' ) }
 					</button>
-					<button type="button" className="uxs-btn uxs-btn--primary" disabled={ ! d.title.trim() || save.isPending } onClick={ () => save.mutate() }>
+					<button type="button" className="uxs-btn uxs-btn--primary" disabled={ ! d.title.trim() } aria-busy={ save.isPending } onClick={ submit }>
 						{ t( 'Save' ) }
 					</button>
 				</>
@@ -118,7 +130,7 @@ export function LocationModal( { draft, onClose, onSaved }: { draft: Draft; onCl
 					{ id: 'announcements', label: t( 'Announcements' ) },
 				] }
 			/>
-			<div className="uxs-modal__body">
+			<div className="uxs-modal__body uxs-form uxs-form--grid" style={ { border: 'none', padding: 0, background: 'transparent' } }>
 				{ tab === 'basic' ? (
 					<>
 						<div className="uxs-form__row">

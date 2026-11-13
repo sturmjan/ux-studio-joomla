@@ -62,7 +62,7 @@ function WelcomeStep( { ctx }: { ctx: WizardCtx } ): JSX.Element {
 	return (
 		<section className="uxs-wiz-panel">
 			<StepHead icon={ <Rocket size={ 26 } aria-hidden="true" /> } title={ t( 'Set up your website' ) }>
-				{ t( 'UX Studio can turn on the modules that suit your kind of website and preset the basics in a few minutes.' ) }
+				{ t( 'UX1 Studio can turn on the modules that suit your kind of website and preset the basics in a few minutes.' ) }
 			</StepHead>
 			<ul className="uxs-wiz-points">
 				{ points.map( ( p ) => (

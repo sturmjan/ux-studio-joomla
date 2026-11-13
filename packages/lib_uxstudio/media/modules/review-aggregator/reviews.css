@@ -1,10 +1,10 @@
-/* UX Studio - Review Aggregator front end. Colours inherit from the template; override the custom properties to restyle. */
+/* UX1 Studio - Review Aggregator front end. Colours inherit from the template; override the custom properties to restyle. */
 .uxs-reviews {
 	--uxs-rev-border: rgba(128, 128, 128, .28);
 	--uxs-rev-radius: 12px;
 	--uxs-rev-star: #f4b400;
 	--uxs-rev-star-off: rgba(128, 128, 128, .35);
-	--uxs-rev-muted: rgba(128, 128, 128, .95);
+	--uxs-rev-muted: color-mix(in srgb, currentColor 72%, transparent);
 	--uxs-rev-bg: transparent;
 	margin: 1.5rem 0;
 }

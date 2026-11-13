@@ -1,4 +1,4 @@
-/* UX Studio Top Bar: marquee for long text, slideshow for several messages, dismiss button (cookie). No inline code. */
+/* UX1 Studio Top Bar: marquee for long text, slideshow for several messages, dismiss button (cookie). No inline code. */
 (function () {
 	'use strict';
 

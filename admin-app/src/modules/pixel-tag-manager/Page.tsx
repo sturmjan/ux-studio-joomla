@@ -1,10 +1,10 @@
 /**
  * Pixel & Tag Manager screen: Overview (state of each tag, consent warnings, hosts for a CSP) + Settings.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CircleAlert, CircleCheck, CircleDashed, ShieldAlert } from 'lucide-react';
-import { api, type ModuleInfo } from '../../app/api';
+import { api, queryClient, type ModuleInfo } from '../../app/api';
 import { createT } from '../../app/i18n';
 import { SettingsPanel } from '../../app/SettingsForm';
 import { Loading, TabPanel, Tabs } from '../../app/ui';
@@ -121,7 +121,7 @@ function Overview( { onSettings }: { onSettings: () => void } ): JSX.Element {
 							<tr key={ p.key }>
 								<td>{ p.label }</td>
 								<td>
-									<code>{ p.id || '-' }</code>
+									<code style={ { color: 'var(--uxs-text)' } }>{ p.id || '-' }</code>
 								</td>
 								<td>{ p.category === 'analytics' ? t( 'Analytics' ) : t( 'Marketing' ) }</td>
 								<td>
@@ -136,7 +136,7 @@ function Overview( { onSettings }: { onSettings: () => void } ): JSX.Element {
 			<div className="uxs-card" style={ { alignItems: 'flex-start', textAlign: 'left' } }>
 				<strong>{ t( 'Consent' ) }</strong>
 				<span className="uxs-muted">
-					{ s.consent_mode === 'uxstudio' ? t( 'UX Studio consent (cookie "uxs_consent")' ) : s.consent_mode === 'cookie' ? t( 'Cookie of another consent tool' ) : t( 'No consent required (not recommended)' ) }
+					{ s.consent_mode === 'uxstudio' ? t( 'UX1 Studio consent (cookie "uxs_consent")' ) : s.consent_mode === 'cookie' ? t( 'Cookie of another consent tool' ) : t( 'No consent required (not recommended)' ) }
 				</span>
 				<span className="uxs-muted">{ s.detected.length > 0 ? t( 'Detected on this site: {list}', { list: s.detected.join( ', ' ) } ) : t( 'No consent tool detected.' ) }</span>
 			</div>
@@ -145,7 +145,7 @@ function Overview( { onSettings }: { onSettings: () => void } ): JSX.Element {
 				<div className="uxs-card" style={ { alignItems: 'flex-start', textAlign: 'left' } }>
 					<strong>{ t( 'Content Security Policy' ) }</strong>
 					<span className="uxs-muted">{ t( 'The loader is a normal script file with the page nonce. If your site sends a strict CSP, allow these hosts in script-src, img-src and connect-src:' ) }</span>
-					<code style={ { wordBreak: 'break-word' } }>{ s.hosts.join( ' ' ) }</code>
+					<code style={ { wordBreak: 'break-word', color: 'var(--uxs-text)' } }>{ s.hosts.join( ' ' ) }</code>
 				</div>
 			) : null }
 		</>
@@ -154,12 +154,22 @@ function Overview( { onSettings }: { onSettings: () => void } ): JSX.Element {
 
 export default function Page( { module }: { module: ModuleInfo } ): JSX.Element {
 	const [ tab, setTab ] = useState( 'overview' );
+	// Settings saved elsewhere (or a leave and return within the cache time) must never leave an old overview on screen.
+	useEffect( () => {
+		void queryClient.invalidateQueries( { queryKey: [ 'pixel-tag-manager' ] } );
+	}, [] );
 	return (
 		<>
 			<Tabs
 				label={ module.name }
 				active={ tab }
-				onChange={ setTab }
+				onChange={ ( id ) => {
+					// Settings change what the overview reports (IDs, consent): never show the cached status afterwards.
+					if ( tab === 'settings' ) {
+						void queryClient.invalidateQueries( { queryKey: [ 'pixel-tag-manager' ] } );
+					}
+					setTab( id );
+				} }
 				items={ [
 					{ id: 'overview', label: t( 'Overview' ) },
 					{ id: 'settings', label: t( 'Settings' ) },

@@ -140,9 +140,11 @@ export default function SubmissionsTab( { forms }: { forms: FormSummary[] } ): J
 				<button type="submit" className="uxs-btn">
 					{ t( 'Search' ) }
 				</button>
-				<label style={ { display: 'inline-flex', gap: 6, alignItems: 'center' } }>
-					<input type="checkbox" checked={ unread } onChange={ ( e ) => { setUnread( e.target.checked ); setPage( 1 ); } } /> { t( 'Unread only' ) }
-				</label>
+				<span className="uxs-checklist">
+					<label className="uxs-checklist__item" style={ { display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 400, color: 'var(--uxs-text)' } }>
+						<input type="checkbox" checked={ unread } onChange={ ( e ) => { setUnread( e.target.checked ); setPage( 1 ); } } /> { t( 'Unread only' ) }
+					</label>
+				</span>
 				<button type="button" className="uxs-btn" disabled={ formId === 0 } title={ formId === 0 ? t( 'Choose a form to export' ) : undefined } onClick={ () => void exportCsv() }>
 					<Download size={ 14 } aria-hidden="true" /> { t( 'Export CSV' ) }
 				</button>

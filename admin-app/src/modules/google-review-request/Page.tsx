@@ -10,6 +10,7 @@ import { createT, formatDate } from '../../app/i18n';
 import { SettingsPanel } from '../../app/SettingsForm';
 import { DataTable, Loading, Modal, TabPanel, Tabs, pushToast, type Column } from '../../app/ui';
 
+type Recipient = { email: string; name: string; ref: string };
 type Result = { email: string; status: string; reason: string };
 
 interface SendResponse {
@@ -79,7 +80,7 @@ function channelLabel( channel: string ): string {
 }
 
 /** One line = "email; name; reference" (comma, semicolon or tab separated). */
-function parseRecipients( text: string ): Array< { email: string; name: string; ref: string } > {
+function parseRecipients( text: string ): Recipient[] {
 	return text
 		.split( /\r?\n/ )
 		.map( ( line ) => line.trim() )
@@ -103,15 +104,30 @@ function SendTab( { stats }: { stats: Stats | undefined } ): JSX.Element {
 
 	const send = useMutation( {
 		mutationFn: async () => {
+			// De-duplicate over the WHOLE list (the server only sees one batch at a time).
+			const seen = new Set< string >();
+			const uniq: Recipient[] = [];
 			const all: Result[] = [];
+			const dups: Result[] = [];
+			for ( const rc of recipients ) {
+				const key = rc.email.toLowerCase();
+				if ( key !== '' && seen.has( key ) ) {
+					dups.push( { email: key, status: 'skipped', reason: 'duplicate_in_list' } );
+				} else {
+					seen.add( key );
+					uniq.push( rc );
+				}
+			}
 			setResults( [] );
-			setProgress( { done: 0, total: recipients.length } );
-			for ( let i = 0; i < recipients.length; i += batch ) {
-				const r = await api.post< SendResponse >( 'google-review-request/send', { recipients: recipients.slice( i, i + batch ), force } );
+			setProgress( { done: 0, total: uniq.length } );
+			for ( let i = 0; i < uniq.length; i += batch ) {
+				const r = await api.post< SendResponse >( 'google-review-request/send', { recipients: uniq.slice( i, i + batch ), force } );
 				all.push( ...r.results );
 				setResults( [ ...all ] );
-				setProgress( { done: Math.min( recipients.length, i + batch ), total: recipients.length } );
+				setProgress( { done: Math.min( uniq.length, i + batch ), total: uniq.length } );
 			}
+			all.push( ...dups );
+			setResults( [ ...all ] );
 			return all;
 		},
 		onSuccess: ( all ) => {

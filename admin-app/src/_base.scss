@@ -1,5 +1,5 @@
 /**
- * UX Studio for Joomla - design tokens and shared component styles.
+ * UX1 Studio for Joomla - design tokens and shared component styles.
  * Ported from the WordPress edition (src/style.scss). Everything is scoped under #uxs-root (or .uxs-portal for
  * overlays rendered into document.body) so it never fights the Atum admin template.
  * Rules (DESIGN.md): modules never define their own colors, sizes, shadows or motion; they only use --uxs-* tokens.
@@ -216,6 +216,13 @@ $uxs-text-fields: 'input[type="text"], input[type="url"], input[type="email"], i
 	a.uxs-sidebar__item,
 	button.uxs-sidebar__item {
 		display: flex;
+		width: 100%;
+		border: 0;
+		background: transparent;
+		box-shadow: none;
+		text-align: left;
+		font-family: inherit;
+		cursor: pointer;
 		align-items: center;
 		gap: var(--uxs-sp-2);
 		padding: var(--uxs-sp-3) var(--uxs-sp-4);

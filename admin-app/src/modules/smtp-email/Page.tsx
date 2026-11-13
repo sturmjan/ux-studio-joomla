@@ -1,7 +1,7 @@
 /**
  * SMTP e-mail: overview of the connection, a test send (also through one chosen connection) and the settings.
  */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { BadgeCheck, Send } from 'lucide-react';
 import { api, queryClient, type ModuleInfo } from '../../app/api';
@@ -70,9 +70,14 @@ function Overview( { status }: { status: Status } ): JSX.Element {
 	const [ via, setVia ] = useState( '' );
 	const [ result, setResult ] = useState< TestResult | null >( null );
 	const [ brevo, setBrevo ] = useState< BrevoCheck | null >( null );
+	// State updates are asynchronous, so a double click or a repeated Enter would send twice without this flag.
+	const busy = useRef( false );
 
 	const test = useMutation( {
 		mutationFn: () => api.post< TestResult >( 'smtp-email/test', { to: to.trim(), mailer: via } ),
+		onSettled: () => {
+			busy.current = false;
+		},
 		onSuccess: ( r ) => {
 			setResult( r );
 			void queryClient.invalidateQueries( { queryKey: [ 'email-log' ] } );
@@ -84,6 +89,14 @@ function Overview( { status }: { status: Status } ): JSX.Element {
 		onSuccess: setBrevo,
 		onError: ( e: Error ) => pushToast( 'error', e.message ),
 	} );
+
+	const send = (): void => {
+		if ( busy.current || test.isPending ) {
+			return;
+		}
+		busy.current = true;
+		test.mutate();
+	};
 
 	const setUp = ( id: Connection ): boolean => id === 'joomla' || status.ready[ id ];
 
@@ -102,7 +115,7 @@ function Overview( { status }: { status: Status } ): JSX.Element {
 				</div>
 				<div className="uxs-card">
 					<span className="uxs-card__label">{ t( 'From e-mail' ) }</span>
-					<span className="uxs-card__num">{ status.from_email || t( 'From Joomla configuration' ) }</span>
+					<span className="uxs-card__num" style={ { fontSize: '1.1rem', overflowWrap: 'anywhere' } }>{ status.from_email || t( 'From Joomla configuration' ) }</span>
 				</div>
 			</div>
 
@@ -125,7 +138,7 @@ function Overview( { status }: { status: Status } ): JSX.Element {
 				className="uxs-form uxs-form--grid"
 				onSubmit={ ( e ) => {
 					e.preventDefault();
-					test.mutate();
+					send();
 				} }
 			>
 				<div className="uxs-form__row">
@@ -144,7 +157,7 @@ function Overview( { status }: { status: Status } ): JSX.Element {
 				</div>
 			</form>
 			<div className="uxs-actions" style={ { marginBottom: 'var(--uxs-sp-4)' } }>
-				<button type="button" className="uxs-btn uxs-btn--primary" disabled={ test.isPending } onClick={ () => test.mutate() }>
+				<button type="button" className="uxs-btn uxs-btn--primary" disabled={ test.isPending } onClick={ send }>
 					<Send size={ 14 } aria-hidden="true" /> { test.isPending ? t( 'Sending…' ) : t( 'Send test e-mail' ) }
 				</button>
 				{ status.ready.brevo ? (
@@ -184,14 +197,18 @@ function Overview( { status }: { status: Status } ): JSX.Element {
 
 export default function Page( { module }: { module: ModuleInfo } ): JSX.Element {
 	const [ tab, setTab ] = useState( 'overview' );
-	const status = useQuery( { queryKey: [ 'smtp-email', 'status', tab ], queryFn: () => api.get< Status >( 'smtp-email/status' ) } );
+	const status = useQuery( { queryKey: [ 'smtp-email', 'status' ], queryFn: () => api.get< Status >( 'smtp-email/status' ) } );
 
 	return (
 		<>
 			<Tabs
 				label={ module.name }
 				active={ tab }
-				onChange={ setTab }
+				onChange={ ( id ) => {
+					setTab( id );
+					// Settings may have changed on the other tab; the overview must not show a cached status.
+					void queryClient.invalidateQueries( { queryKey: [ 'smtp-email', 'status' ] } );
+				} }
 				items={ [
 					{ id: 'overview', label: t( 'Overview' ) },
 					{ id: 'settings', label: t( 'Settings' ) },

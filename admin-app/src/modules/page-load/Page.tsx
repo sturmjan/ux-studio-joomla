@@ -1,7 +1,7 @@
 /**
  * Page load: real-user timing overview (percentiles, trend, devices), the slowest pages and the settings.
  */
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { RefreshCw, Trash2 } from 'lucide-react';
 import { api, queryClient, type ModuleInfo } from '../../app/api';
@@ -38,7 +38,7 @@ interface PageRow extends Record< string, unknown > {
 	lcp_avg: number;
 }
 
-const { t } = createT( 'page-load' );
+const { t, tn } = createT( 'page-load' );
 
 const BADGE: Record< Rating, string > = { good: 'is-success', ok: 'is-warning', poor: 'is-danger', none: 'is-info' };
 
@@ -132,7 +132,7 @@ function OverviewTab(): JSX.Element {
 				<p className="uxs-muted">{ t( 'No measurements yet. Visit the site as an anonymous visitor (not logged in) and come back in a few seconds; with a share of {rate} % it may take several visits.', { rate: s.sample_rate } ) }</p>
 			) : (
 				<>
-					<p className="uxs-muted">{ t( '{n} measurements. Values are the 75th percentile: three of four visits were at least this fast.', { n: s.samples } ) }</p>
+					<p className="uxs-muted">{ tn( '{n} measurement. Values are the 75th percentile: three of four visits were at least this fast.', '{n} measurements. Values are the 75th percentile: three of four visits were at least this fast.', s.samples ) }</p>
 					<div className="uxs-cards">
 						<div className="uxs-card">
 							<span className="uxs-card__label">{ t( 'Page load (median)' ) }</span>
@@ -197,7 +197,7 @@ function PagesTab(): JSX.Element {
 
 	const load = ( n: number ): JSX.Element => <span className={ `uxs-badge ${ n > slow * 2 ? 'is-danger' : n > slow ? 'is-warning' : 'is-success' }` }>{ ms( n ) }</span>;
 	const columns: Column< PageRow >[] = [
-		{ key: 'path', header: t( 'Page' ), render: ( r ) => <code>{ r.path }</code> },
+		{ key: 'path', header: t( 'Page' ), render: ( r ) => <code style={ { color: 'var(--uxs-text)' } }>{ r.path }</code> },
 		{ key: 'samples', header: t( 'Measurements' ), sortable: true },
 		{ key: 'ttfb_avg', header: t( 'Server response (TTFB)' ), sortable: true, render: ( r ) => ms( r.ttfb_avg ) },
 		{ key: 'fcp_avg', header: t( 'First contentful paint' ), sortable: true, render: ( r ) => ms( r.fcp_avg ) },
@@ -232,12 +232,22 @@ function PagesTab(): JSX.Element {
 
 export default function Page( { module }: { module: ModuleInfo } ): JSX.Element {
 	const [ tab, setTab ] = useState( 'overview' );
+	// A leave and return within the cache time must never show a stale overview.
+	useEffect( () => {
+		void queryClient.invalidateQueries( { queryKey: [ 'page-load' ] } );
+	}, [] );
 	return (
 		<>
 			<Tabs
 				label={ module.name }
 				active={ tab }
-				onChange={ setTab }
+				onChange={ ( id ) => {
+					// Sampling rate / slow limit change what the screens show: drop cached results after the settings.
+					if ( tab === 'settings' ) {
+						void queryClient.invalidateQueries( { queryKey: [ 'page-load' ] } );
+					}
+					setTab( id );
+				} }
 				items={ [
 					{ id: 'overview', label: t( 'Overview' ) },
 					{ id: 'pages', label: t( 'Slowest pages' ) },

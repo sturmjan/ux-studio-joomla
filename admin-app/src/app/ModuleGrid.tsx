@@ -2,7 +2,7 @@
  * Landing page: list of modules with search, group filter, status filter and an on/off switch per module.
  * Rows of modules that have a settings screen (meta.json settings:true or a custom Page) open it on click.
  */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { ChevronRight } from 'lucide-react';
 import { api, type DashboardWidget, type ModuleInfo } from './api';
@@ -26,6 +26,11 @@ export function groupLabels(): Record< string, string > {
 		admin: t( 'Administration' ),
 		developer: t( 'Developer' ),
 	};
+}
+
+/** Lower-case text without diacritics, so that "formular" finds "formulář". */
+function fold( text: string ): string {
+	return text.trim().normalize( 'NFD' ).replace( /[̀-ͯ]/g, '' ).toLocaleLowerCase();
 }
 
 type StatusFilter = 'all' | 'on' | 'off';
@@ -54,22 +59,24 @@ export function ModuleGrid(): JSX.Element {
 	const [ search, setSearch ] = useState( '' );
 	const { data: modules, isLoading, error } = useModules();
 	const toggle = useToggleModule();
+	const pendingIds = useRef( new Set< string >() );
 	const labels = groupLabels();
 
 	if ( isLoading ) {
 		return <Loading />;
 	}
-	if ( error || ! modules ) {
+	// A failed background refetch (for example after the session expired) keeps the modules already loaded on screen.
+	if ( ! modules ) {
 		return <p role="alert">{ error instanceof Error ? error.message : t( 'Failed to load modules.' ) }</p>;
 	}
 
-	const needle = search.trim().toLocaleLowerCase();
+	const needle = fold( search );
 	const matchesStatus = ( m: ModuleInfo ): boolean => status === 'all' || ( status === 'on' ) === m.enabled;
 	const visible = modules.filter(
 		( m ) =>
 			( group === 'all' || m.group === group ) &&
 			matchesStatus( m ) &&
-			( needle === '' || `${ m.name } ${ m.description } ${ m.id }`.toLocaleLowerCase().includes( needle ) )
+			( needle === '' || fold( `${ m.name } ${ m.description } ${ m.id }` ).includes( needle ) )
 	);
 	const groupIds = [ ...Object.keys( labels ), ...modules.map( ( m ) => m.group ).filter( ( g ) => ! ( g in labels ) ) ].filter(
 		( g, i, all ) => all.indexOf( g ) === i && modules.some( ( m ) => m.group === g )
@@ -79,7 +86,12 @@ export function ModuleGrid(): JSX.Element {
 	return (
 		<>
 			<PageHead title={ t( 'Modules' ) } />
-			<Widgets />
+			{ error ? (
+					<p role="alert" className="uxs-notice is-error">
+						{ error instanceof Error ? error.message : t( 'Failed to load modules.' ) }
+					</p>
+				) : null }
+				<Widgets />
 			<div className="uxs-modulefilter">
 				<input
 					type="search"
@@ -123,7 +135,8 @@ export function ModuleGrid(): JSX.Element {
 										tabIndex: 0,
 										onClick: open,
 										onKeyDown: ( e: React.KeyboardEvent ) => {
-											if ( e.key === 'Enter' ) {
+											// Enter on the switch inside the tile belongs to the switch, not to the tile.
+											if ( e.key === 'Enter' && e.target === e.currentTarget ) {
 												open();
 											}
 										},
@@ -145,7 +158,13 @@ export function ModuleGrid(): JSX.Element {
 										{ t( 'Boot error' ) }
 									</span>
 								) : null }
-								<ToggleSwitch checked={ m.enabled } label={ m.enabled ? t( 'Disable module' ) : t( 'Turn on module' ) } onChange={ ( enabled ) => toggle.mutate( { m, enabled } ) } />
+								<ToggleSwitch checked={ m.enabled } label={ m.enabled ? t( 'Disable module' ) : t( 'Turn on module' ) } onChange={ ( enabled ) => {
+										// Rapid repeated clicks must not queue requests computed from a stale state.
+										if ( ! ( toggle.isPending && toggle.variables?.m.id === m.id ) && ! pendingIds.current.has( m.id ) ) {
+											pendingIds.current.add( m.id );
+											toggle.mutate( { m, enabled }, { onSettled: () => pendingIds.current.delete( m.id ) } );
+										}
+									} } />
 								{ clickable ? <ChevronRight size={ 16 } className="uxs-tile__chevron" aria-hidden="true" /> : <span className="uxs-tile__chevron" aria-hidden="true" style={ { width: 16 } } /> }
 							</div>
 						</div>

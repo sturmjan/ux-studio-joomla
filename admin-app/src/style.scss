@@ -1,5 +1,5 @@
 /**
- * UX Studio for Joomla - entry stylesheet.
+ * UX1 Studio for Joomla - entry stylesheet.
  * _base.scss = tokens + shell + shared components ported from the WordPress edition; this file adds what is
  * Joomla-specific (Atum isolation, buttons helpers, overlays, toasts).
  */
@@ -12,7 +12,7 @@
 
 	*, *::before, *::after { box-sizing: border-box; }
 
-	/* Atum / Bootstrap reset: our headings and links keep the UX Studio look. */
+	/* Atum / Bootstrap reset: our headings and links keep the UX1 Studio look. */
 	h1, h2, h3, h4 { font-family: var(--uxs-font); line-height: 1.3; }
 	a { color: var(--uxs-brand-text); }
 	button { font-family: var(--uxs-font); }
@@ -35,6 +35,11 @@
 	gap: var(--uxs-sp-2);
 }
 #uxs-root .uxs-cards { display: grid; gap: var(--uxs-sp-4); grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); margin-bottom: var(--uxs-sp-5); }
+/* phones: the widget cards scroll sideways so that the module list stays near the top */
+@media (max-width: 700px) {
+	#uxs-root .uxs-cards { display: flex; overflow-x: auto; scroll-snap-type: x proximity; padding-bottom: var(--uxs-sp-2); }
+	#uxs-root .uxs-cards > .uxs-card { flex: 0 0 200px; scroll-snap-align: start; }
+}
 #uxs-root .uxs-card__num { font-size: var(--uxs-fs-l); font-weight: 700; }
 #uxs-root .uxs-card__label { font-size: var(--uxs-fs-s); color: var(--uxs-text-soft); }
 

@@ -59,7 +59,7 @@
 	"Model training": "Trénování modelů",
 	"Search and answers": "Vyhledávání a odpovědi",
 	"Your robots.txt": "Váš robots.txt",
-	"robots.txt tells crawlers what they may read. UX Studio never edits that file; here you see what it says today and can copy a suggestion into it.": "robots.txt říká crawlerům, co smějí číst. UX Studio tento soubor nikdy neupravuje; zde vidíte, co říká dnes, a můžete si zkopírovat návrh pravidel.",
+	"robots.txt tells crawlers what they may read. UX1 Studio never edits that file; here you see what it says today and can copy a suggestion into it.": "robots.txt říká crawlerům, co smějí číst. UX1 Studio tento soubor nikdy neupravuje; zde vidíte, co říká dnes, a můžete si zkopírovat návrh pravidel.",
 	"This site has no robots.txt file, so every crawler is allowed.": "Tento web nemá soubor robots.txt, takže je povolen každý crawler.",
 	"Suggested rules": "Navržená pravidla",
 	"Policy": "Politika",

@@ -81,7 +81,7 @@ export default function Page( { module }: { module: ModuleInfo } ): JSX.Element 
 				</>
 			),
 		},
-		{ key: 'shortcode', header: t( 'Shortcode' ), render: ( r ) => <code>{ r.shortcode }</code> },
+		{ key: 'shortcode', header: t( 'Shortcode' ), render: ( r ) => <code style={ { color: 'var(--uxs-text)', background: 'none' } }>{ r.shortcode }</code> },
 		{ key: 'modified', header: t( 'Changed' ), sortable: true, render: ( r ) => formatDate( r.modified ) },
 		{
 			key: 'actions',

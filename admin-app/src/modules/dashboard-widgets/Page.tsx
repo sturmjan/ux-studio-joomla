@@ -2,7 +2,7 @@
  * Dashboard widgets: cards on the Joomla administration home screen. Per-module summary cards can be hidden or limited
  * to user groups, own notes and links are managed here; a preview shows what the current user sees; plus the settings.
  */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ExternalLink, Pencil, Plus, RefreshCw, Trash2, TriangleAlert } from 'lucide-react';
 import { api, queryClient, type ModuleInfo } from '../../app/api';
@@ -47,6 +47,8 @@ interface Overview {
 type PreviewCard = { kind: string; title: string; value: string; text: string; status: string; url: string; body: string };
 
 const { t, tn } = createT( 'dashboard-widgets' );
+/** The shared .uxs-link-btn rule sets no background or border, so Atum's grey button shows through in dark mode. */
+const LINK_BTN = { background: 'none', border: 0, color: 'var(--uxs-brand-text)', cursor: 'pointer', textAlign: 'left' } as const;
 
 const refresh = (): void => void queryClient.invalidateQueries( { queryKey: [ 'dashboard-widgets' ] } );
 
@@ -122,8 +124,14 @@ function ItemModal( { item, groups, open, onClose }: { item: Partial< Item > | n
 		onClose();
 	};
 
+	// A second click can arrive before React disables the button, so a ref blocks the duplicate request.
+	const sending = useRef( false );
 	const save = useMutation( {
 		mutationFn: () => {
+			if ( sending.current ) {
+				return Promise.reject( new Error( 'busy' ) );
+			}
+			sending.current = true;
 			const payload = { kind, title: d.title ?? '', body: d.body ?? '', url: d.url ?? '', groups: d.groups ?? [], published: d.published ?? true, ordering: d.ordering ?? 0 };
 			return d.id ? api.post( `dashboard-widgets/items/${ d.id }`, payload ) : api.post( 'dashboard-widgets/items', payload );
 		},
@@ -131,7 +139,16 @@ function ItemModal( { item, groups, open, onClose }: { item: Partial< Item > | n
 			refresh();
 			close();
 		},
-		onError: ( e: Error ) => pushToast( 'error', e.message ),
+		onError: ( e: Error ) => {
+			if ( e.message !== 'busy' ) {
+				pushToast( 'error', e.message );
+			}
+		},
+		onSettled: ( _data, e ) => {
+			if ( ! e || e.message !== 'busy' ) {
+				sending.current = false;
+			}
+		},
 	} );
 
 	return (
@@ -237,7 +254,7 @@ function Cards(): JSX.Element {
 			key: 'groups',
 			header: t( 'Visible to' ),
 			render: ( c ) => (
-				<button type="button" className="uxs-link-btn" onClick={ () => setRuleFor( c ) }>
+				<button type="button" className="uxs-link-btn" style={ LINK_BTN } onClick={ () => setRuleFor( c ) }>
 					{ groupsSummary( c.groups, groups ) }
 				</button>
 			),
@@ -256,7 +273,7 @@ function Cards(): JSX.Element {
 	];
 
 	const itemColumns: Column< Item >[] = [
-		{ key: 'title', header: t( 'Title' ), render: ( i ) => <button type="button" className="uxs-link-btn" onClick={ () => setEditing( i ) }>{ i.title }</button> },
+		{ key: 'title', header: t( 'Title' ), render: ( i ) => <button type="button" className="uxs-link-btn" style={ LINK_BTN } onClick={ () => setEditing( i ) }>{ i.title }</button> },
 		{ key: 'kind', header: t( 'Type' ), render: ( i ) => ( i.kind === 'link' ? t( 'Link' ) : t( 'Note' ) ) },
 		{ key: 'groups', header: t( 'Visible to' ), render: ( i ) => groupsSummary( i.groups, groups ) },
 		{ key: 'ordering', header: t( 'Order' ), sortable: true },
@@ -291,7 +308,7 @@ function Cards(): JSX.Element {
 			{ ! cpanel.installed || ! cpanel.published ? (
 				<div className="uxs-notice">
 					<TriangleAlert size={ 14 } aria-hidden="true" />{ ' ' }
-					{ cpanel.installed ? t( 'The block is not published on the Joomla home screen.' ) : t( 'The administrator module "UX Studio - Dashboard" is not installed.' ) }{ ' ' }
+					{ cpanel.installed ? t( 'The block is not published on the Joomla home screen.' ) : t( 'The administrator module "UX1 Studio - Dashboard" is not installed.' ) }{ ' ' }
 					{ cpanel.installed ? (
 						<button type="button" className="uxs-btn uxs-btn--small" disabled={ publish.isPending } onClick={ () => publish.mutate() }>{ t( 'Publish it' ) }</button>
 					) : null }

@@ -2,11 +2,11 @@
  * Review Aggregator: list and moderate reviews (hide, edit, delete), add or import them by hand, pull them from the
  * central app, overview with rating distribution; plus the settings.
  */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { CloudDownload, Eye, EyeOff, Pencil, Plus, RefreshCw, ScanSearch, Star, Trash2, Upload } from 'lucide-react';
 import { api, queryClient, type ModuleInfo } from '../../app/api';
-import { createT, formatDate } from '../../app/i18n';
+import { createT, formatDate, intlLocale } from '../../app/i18n';
 import { SettingsPanel } from '../../app/SettingsForm';
 import { DataTable, Loading, Modal, TabPanel, Tabs, confirm, pushToast, type Column } from '../../app/ui';
 
@@ -58,6 +58,12 @@ function sourceLabel( source: string ): string {
 	return labels[ source ] ?? source;
 }
 
+const WRAP = { overflowWrap: 'anywhere', wordBreak: 'break-word', display: 'inline-block', maxWidth: 'min(420px, 60vw)' } as const;
+
+function fmtAvg( n: number, digits: number ): string {
+	return new Intl.NumberFormat( intlLocale(), { minimumFractionDigits: 1, maximumFractionDigits: digits } ).format( n );
+}
+
 function Stars( { rating }: { rating: number } ): JSX.Element {
 	return (
 		<span aria-label={ t( '{n} out of 5', { n: rating } ) } style={ { whiteSpace: 'nowrap' } }>
@@ -77,21 +83,34 @@ function ReviewForm( { draft, onClose }: { draft: Draft | null; onClose: () => v
 		setForm( draft );
 	}
 
+	const inFlight = useRef( false );
 	const save = useMutation( {
-		mutationFn: ( d: Draft ) =>
-			api.post< Review >( d.id > 0 ? `review-aggregator/reviews/${ d.id }` : 'review-aggregator/reviews', {
+		mutationFn: ( d: Draft ) => {
+			// Guard against double clicks: isPending only flips after the next render.
+			if ( inFlight.current ) {
+				return Promise.reject( new Error( '' ) );
+			}
+			inFlight.current = true;
+			return api.post< Review >( d.id > 0 ? `review-aggregator/reviews/${ d.id }` : 'review-aggregator/reviews', {
 				source: d.source,
 				author: d.author,
 				rating: Number( d.rating ),
 				text: d.text,
 				review_date: d.review_date,
-			} ),
+			} ).finally( () => {
+				inFlight.current = false;
+			} );
+		},
 		onSuccess: () => {
 			pushToast( 'success', t( 'Review saved.' ) );
 			void queryClient.invalidateQueries( { queryKey: [ 'review-aggregator' ] } );
 			onClose();
 		},
-		onError: ( e: Error ) => pushToast( 'error', e.message ),
+		onError: ( e: Error ) => {
+			if ( e.message !== '' ) {
+				pushToast( 'error', e.message );
+			}
+		},
 	} );
 
 	const set = ( patch: Partial< Draft > ): void => setForm( ( f ) => ( f ? { ...f, ...patch } : f ) );
@@ -179,12 +198,12 @@ function ReviewsTab(): JSX.Element {
 
 	const columns: Column< Review >[] = [
 		{ key: 'source', header: t( 'Platform' ), render: ( r ) => sourceLabel( r.source ) },
-		{ key: 'author', header: t( 'Author' ), render: ( r ) => r.author || <span className="uxs-muted">{ t( 'Anonymous' ) }</span> },
+		{ key: 'author', header: t( 'Author' ), render: ( r ) => r.author ? <span style={ WRAP }>{ r.author }</span> : <span className="uxs-muted">{ t( 'Anonymous' ) }</span> },
 		{ key: 'rating', header: t( 'Rating' ), render: ( r ) => <Stars rating={ r.rating } /> },
 		{
 			key: 'text',
 			header: t( 'Text' ),
-			render: ( r ) => <span title={ r.text }>{ r.text.length > 140 ? `${ r.text.slice( 0, 140 ) }…` : r.text }</span>,
+			render: ( r ) => <span title={ r.text } style={ WRAP }>{ r.text.length > 140 ? `${ r.text.slice( 0, 140 ) }…` : r.text }</span>,
 		},
 		{ key: 'review_date', header: t( 'Date' ), render: ( r ) => ( r.review_date ? formatDate( r.review_date ) : '' ) },
 		{
@@ -329,7 +348,7 @@ function OverviewTab(): JSX.Element {
 					<div className="uxs-cards">
 						<div className="uxs-card">
 							<span className="uxs-card__label">{ t( 'Average rating' ) }</span>
-							<span className="uxs-card__num">{ s.total > 0 ? s.average.toFixed( 1 ) : '-' }</span>
+							<span className="uxs-card__num">{ s.total > 0 ? fmtAvg( s.average, 1 ) : '-' }</span>
 						</div>
 						<div className="uxs-card">
 							<span className="uxs-card__label">{ t( 'Reviews' ) }</span>
@@ -367,7 +386,7 @@ function OverviewTab(): JSX.Element {
 								columns={ [
 									{ key: 'source', header: t( 'Platform' ), render: ( r: Stats[ 'by_source' ][ number ] ) => sourceLabel( r.source ) },
 									{ key: 'count', header: t( 'Reviews' ) },
-									{ key: 'average', header: t( 'Average rating' ) },
+									{ key: 'average', header: t( 'Average rating' ), render: ( r: Stats[ 'by_source' ][ number ] ) => fmtAvg( r.average, 2 ) },
 								] }
 								rows={ s.by_source }
 								rowKey={ ( r ) => r.source }
@@ -432,7 +451,7 @@ function OverviewTab(): JSX.Element {
 
 					<h3 className="uxs-section-title">{ t( 'Show reviews on the site' ) }</h3>
 					<p className="uxs-form__help">
-						{ t( 'Add the module "UX Studio - Reviews" to a position (Content - Site Modules), or put {tag} into an article or a Custom module. The tag accepts layout (grid, list, slider, badge), count, min_rating, order and platform, for example {example}.', {
+						{ t( 'Add the module "UX1 Studio - Reviews" to a position (Content - Site Modules), or put {tag} into an article or a Custom module (there turn on "Prepare Content"). The tag accepts layout (grid, list, slider, badge), count, min_rating, order and platform, for example {example}.', {
 							tag: s.shortcode,
 							example: '{uxstudio_reviews layout=slider count=6 min_rating=4}',
 						} ) }

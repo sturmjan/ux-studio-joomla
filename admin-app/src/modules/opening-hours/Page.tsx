@@ -2,7 +2,7 @@
  * Opening Hours screen: locations with the live open / closed state, quick "closed for N minutes" override,
  * editor (hours, exceptions, announcements), usage help and settings.
  */
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { DoorClosed, DoorOpen, Pencil, Plus, Trash2 } from 'lucide-react';
 import { api, ApiError, queryClient, type ModuleInfo } from '../../app/api';
@@ -12,7 +12,7 @@ import { DataTable, Loading, Modal, TabPanel, Tabs, confirm, pushToast, type Col
 import { LocationModal } from './LocationModal';
 import { EMPTY_DRAFT, type Draft, type Location } from './types';
 
-const { t } = createT( 'opening-hours' );
+const { t, tn } = createT( 'opening-hours' );
 
 const KEY = [ 'opening-hours' ];
 const DURATIONS = [ 15, 30, 60, 120, 240, 1440, 4320 ];
@@ -23,12 +23,25 @@ function errorMessage( e: unknown ): string {
 
 function durationLabel( minutes: number ): string {
 	if ( minutes < 60 ) {
-		return t( '{n} minutes', { n: minutes } );
+		return tn( '{n} minute', '{n} minutes', minutes );
 	}
 	if ( minutes < 1440 ) {
-		return t( '{n} hours', { n: minutes / 60 } );
+		return tn( '{n} hour', '{n} hours', minutes / 60 );
 	}
-	return t( '{n} days', { n: minutes / 1440 } );
+	return tn( '{n} day', '{n} days', minutes / 1440 );
+}
+
+/** True on a phone-sized viewport: the table then drops the exceptions column so the action buttons stay on screen. */
+function useNarrow(): boolean {
+	const query = '(max-width: 640px)';
+	const [ narrow, setNarrow ] = useState( () => window.matchMedia( query ).matches );
+	useEffect( () => {
+		const mq = window.matchMedia( query );
+		const on = (): void => setNarrow( mq.matches );
+		mq.addEventListener( 'change', on );
+		return () => mq.removeEventListener( 'change', on );
+	}, [] );
+	return narrow;
 }
 
 function invalidate(): void {
@@ -38,6 +51,7 @@ function invalidate(): void {
 function OverrideModal( { location, onClose }: { location: Location; onClose: () => void } ): JSX.Element {
 	const [ minutes, setMinutes ] = useState( 60 );
 	const [ reason, setReason ] = useState( '' );
+	const busy = useRef( false );
 	const close = useMutation( {
 		mutationFn: () => api.post( `opening-hours/locations/${ location.id }/override`, { minutes, reason } ),
 		onSuccess: () => {
@@ -46,6 +60,7 @@ function OverrideModal( { location, onClose }: { location: Location; onClose: ()
 			onClose();
 		},
 		onError: ( e ) => pushToast( 'error', errorMessage( e ) ),
+		onSettled: () => { busy.current = false; },
 	} );
 	return (
 		<Modal
@@ -57,13 +72,13 @@ function OverrideModal( { location, onClose }: { location: Location; onClose: ()
 					<button type="button" className="uxs-btn" onClick={ onClose }>
 						{ t( 'Cancel' ) }
 					</button>
-					<button type="button" className="uxs-btn uxs-btn--danger" disabled={ close.isPending } onClick={ () => close.mutate() }>
+					<button type="button" className="uxs-btn uxs-btn--danger" aria-busy={ close.isPending } onClick={ () => { if ( ! busy.current ) { busy.current = true; close.mutate(); } } }>
 						{ t( 'Close now' ) }
 					</button>
 				</>
 			}
 		>
-			<div className="uxs-modal__body">
+			<div className="uxs-modal__body uxs-form uxs-form--grid" style={ { border: 'none', padding: 0, background: 'transparent' } }>
 				<div className="uxs-form__row">
 					<label htmlFor="uxs-oh-minutes">{ t( 'For' ) }</label>
 					<select id="uxs-oh-minutes" value={ minutes } onChange={ ( e ) => setMinutes( Number( e.target.value ) ) }>
@@ -87,6 +102,7 @@ function OverrideModal( { location, onClose }: { location: Location; onClose: ()
 function LocationsTab(): JSX.Element {
 	const [ draft, setDraft ] = useState< Draft | null >( null );
 	const [ overriding, setOverriding ] = useState< Location | null >( null );
+	const narrow = useNarrow();
 	const list = useQuery( { queryKey: [ ...KEY, 'locations' ], queryFn: () => api.get< { items: Location[] } >( 'opening-hours/locations' ) } );
 
 	const remove = useMutation( {
@@ -106,15 +122,16 @@ function LocationsTab(): JSX.Element {
 		onError: ( e ) => pushToast( 'error', errorMessage( e ) ),
 	} );
 
-	const columns: Column< Location >[] = [
+	const allColumns: Column< Location >[] = [
 		{
 			key: 'title',
 			header: t( 'Location' ),
 			render: ( l ) => (
-				<>
+				<div style={ { overflowWrap: 'anywhere', minWidth: 0 } }>
 					<strong>{ l.title }</strong> <span className="uxs-muted">#{ l.id }</span>
 					{ l.address ? <div className="uxs-muted">{ l.address }</div> : null }
-				</>
+					{ narrow && l.exceptions.length > 0 ? <div className="uxs-muted">{ t( 'Exceptions' ) }: { l.exceptions.length }</div> : null }
+				</div>
 			),
 		},
 		{
@@ -137,7 +154,7 @@ function LocationsTab(): JSX.Element {
 			key: 'actions',
 			header: '',
 			render: ( l ) => (
-				<span style={ { whiteSpace: 'nowrap' } }>
+				<span style={ { display: 'inline-flex', flexWrap: 'wrap', gap: 6, justifyContent: 'flex-end' } }>
 					{ l.override ? (
 						<button type="button" className="uxs-btn uxs-btn--small" disabled={ reopen.isPending } onClick={ () => reopen.mutate( l.id ) }>
 							<DoorOpen size={ 14 } aria-hidden="true" /> { t( 'Reopen' ) }
@@ -146,7 +163,7 @@ function LocationsTab(): JSX.Element {
 						<button type="button" className="uxs-btn uxs-btn--small" onClick={ () => setOverriding( l ) }>
 							<DoorClosed size={ 14 } aria-hidden="true" /> { t( 'Close for…' ) }
 						</button>
-					) }{ ' ' }
+					) }
 					<button
 						type="button"
 						className="uxs-btn uxs-btn--small"
@@ -155,7 +172,7 @@ function LocationsTab(): JSX.Element {
 						onClick={ () => setDraft( { id: l.id, title: l.title, address: l.address, phone: l.phone, lat: l.lat, lng: l.lng, hours: l.hours, exceptions: l.exceptions, announcements: l.announcements } ) }
 					>
 						<Pencil size={ 14 } aria-hidden="true" />
-					</button>{ ' ' }
+					</button>
 					<button
 						type="button"
 						className="uxs-btn uxs-btn--small uxs-btn--danger"
@@ -172,6 +189,8 @@ function LocationsTab(): JSX.Element {
 		},
 	];
 
+	const columns = narrow ? allColumns.filter( ( col ) => col.key !== 'exceptions' ) : allColumns;
+
 	return (
 		<>
 			<div className="uxs-actions uxs-list-toolbar">
@@ -184,7 +203,7 @@ function LocationsTab(): JSX.Element {
 			{ list.data ? <DataTable columns={ columns } rows={ list.data.items } rowKey={ ( l ) => l.id } empty={ t( 'No locations yet.' ) } /> : null }
 			<h2 className="uxs-section-title">{ t( 'How to show it on the site' ) }</h2>
 			<ul className="uxs-muted">
-				<li>{ t( 'Joomla module "UX Studio - Opening Hours" (Content > Site Modules > New): choose the location and a template position.' ) }</li>
+				<li>{ t( 'Joomla module "UX1 Studio - Opening Hours" (Content > Site Modules > New): choose the location and a template position.' ) }</li>
 				<li>
 					{ t( 'In an article or a custom module:' ) } <code>{ '{opening-hours id=1}' }</code>, <code>{ '{opening-hours id=all}' }</code>, <code>{ '{opening-hours-status id=1}' }</code>
 				</li>

@@ -1,4 +1,4 @@
-/* UX Studio Notice Board - front end */
+/* UX1 Studio Notice Board - front end */
 .uxs-notice-board { max-width: 820px; margin: 0 auto; }
 .uxs-nb-list { list-style: none; margin: 0; padding: 0; }
 .uxs-nb-item { padding: 16px 0; border-bottom: 1px solid #d8dde3; }
@@ -29,3 +29,11 @@
 .uxs-nb-subscribe input[type=email] { padding: 6px 10px; min-width: 220px; }
 .uxs-nb-subscribe button { padding: 6px 16px; cursor: pointer; }
 .uxs-nb-subscribe__msg { margin-top: 8px; font-size: .9em; }
+
+/* long words / URLs must not stretch the page on narrow screens */
+.uxs-notice-board, .uxs-nb-detail, .uxs-nb-item { overflow-wrap: anywhere; word-break: break-word; }
+.uxs-nb-detail img, .uxs-nb-detail table, .uxs-nb-detail iframe, .uxs-nb-detail pre { max-width: 100
+/* long words / URLs must not stretch the page on narrow screens */
+.uxs-notice-board, .uxs-nb-detail, .uxs-nb-item { overflow-wrap: anywhere; word-break: break-word; }
+.uxs-nb-detail img, .uxs-nb-detail table, .uxs-nb-detail iframe, .uxs-nb-detail pre { max-width: 100%; }
+.uxs-nb-detail pre { overflow-x: auto; }

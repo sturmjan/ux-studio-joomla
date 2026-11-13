@@ -47,6 +47,7 @@
 	"Clear all": "Vyčistit vše",
 	"{n} message|{n} messages": "{n} zpráva|{n} zprávy|{n} zpráv",
 	"No mail has been sent yet.": "Zatím nebyl odeslán žádný e-mail.",
+	"No messages match the search.": "Hledání neodpovídá žádná zpráva.",
 	"Send this message again to its original recipients?": "Odeslat tuto zprávu znovu původním příjemcům?",
 	"Load remote images (the sender may see that you opened the message)": "Načíst obrázky z internetu (odesílatel uvidí, že jste zprávu otevřeli)"
 }

@@ -59,6 +59,8 @@ interface ItemList {
 }
 
 const { t, tn } = createT( 'service-requests' );
+/** The shared .uxs-link-btn rule sets no background or border, so Atum's grey button shows through in dark mode. */
+const LINK_BTN = { background: 'none', border: 0, color: 'var(--uxs-brand-text)', cursor: 'pointer', textAlign: 'left' } as const;
 
 const refresh = (): void => void queryClient.invalidateQueries( { queryKey: [ 'service-requests' ] } );
 
@@ -282,8 +284,8 @@ function Detail( { id, onClose }: { id: number; onClose: () => void } ): JSX.Ele
 			{ item.description ? <p style={ { whiteSpace: 'pre-wrap' } }>{ item.description }</p> : null }
 
 			{ env.length > 0 ? (
-				<details>
-					<summary>{ t( 'Site details sent with this request' ) }</summary>
+				<details style={ { background: 'transparent', border: 0, padding: 0 } }>
+					<summary style={ { background: 'var(--uxs-surface-2)', color: 'var(--uxs-text)', padding: 'var(--uxs-sp-3) var(--uxs-sp-4)', borderRadius: 'var(--uxs-radius-s)', cursor: 'pointer' } }>{ t( 'Site details sent with this request' ) }</summary>
 					<div className="uxs-table-wrap">
 						<table className="uxs-table">
 							<tbody>
@@ -366,7 +368,7 @@ function Requests(): JSX.Element {
 			header: t( 'Title' ),
 			render: ( r ) => (
 				<>
-					<button type="button" className="uxs-link-btn" onClick={ () => setOpenId( r.id ) }>{ r.title }</button>
+					<button type="button" className="uxs-link-btn" style={ LINK_BTN } onClick={ () => setOpenId( r.id ) }>{ r.title }</button>
 					{ r.thread.length > 0 ? <span className="uxs-muted"> · { r.thread.length }</span> : null }
 				</>
 			),

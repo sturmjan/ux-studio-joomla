@@ -72,13 +72,38 @@ export function App(): JSX.Element {
 		if ( ! drawer ) {
 			return undefined;
 		}
+		const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+		const items = (): HTMLElement[] => Array.from( shellRef.current?.querySelectorAll< HTMLElement >( '.uxs-sidebar button:not([disabled])' ) ?? [] );
+		items()[ 0 ]?.focus();
 		const onKey = ( e: KeyboardEvent ): void => {
 			if ( e.key === 'Escape' ) {
 				closeDrawer();
+			} else if ( e.key === 'Tab' ) {
+				// focus trap: the drawer is modal while it is open
+				const list = items();
+				if ( list.length === 0 ) {
+					return;
+				}
+				const first = list[ 0 ];
+				const last = list[ list.length - 1 ];
+				const active = document.activeElement;
+				if ( ! shellRef.current?.querySelector( '.uxs-sidebar' )?.contains( active ) ) {
+					e.preventDefault();
+					first.focus();
+				} else if ( e.shiftKey && active === first ) {
+					e.preventDefault();
+					last.focus();
+				} else if ( ! e.shiftKey && active === last ) {
+					e.preventDefault();
+					first.focus();
+				}
 			}
 		};
 		document.addEventListener( 'keydown', onKey );
-		return () => document.removeEventListener( 'keydown', onKey );
+		return () => {
+			document.removeEventListener( 'keydown', onKey );
+			opener?.focus();
+		};
 	}, [ drawer, closeDrawer ] );
 
 	const sidebarShown = narrow ? drawer : ! folded;
@@ -98,9 +123,9 @@ export function App(): JSX.Element {
 		<PortalProvider getContainer={ () => portalRoot }>
 			<div ref={ shellRef } className={ `uxs-shell${ narrow ? ' is-narrow' : '' }${ ! narrow && folded ? ' is-folded' : '' }${ drawer ? ' is-drawer-open' : '' }` }>
 				{ narrow && drawer ? <div className="uxs-shell__backdrop" aria-hidden="true" onClick={ closeDrawer } /> : null }
-				<aside className="uxs-sidebar" aria-label="UX Studio">
+				<aside className="uxs-sidebar" aria-label="UX1 Studio">
 					<div className="uxs-sidebar__top">
-						<span className="uxs-sidebar__brand">UX Studio</span>
+						<span className="uxs-sidebar__brand">UX1 Studio</span>
 						<button
 							type="button"
 							className="uxs-sidebar__fold"
@@ -138,7 +163,7 @@ export function App(): JSX.Element {
 						<button type="button" className="uxs-sidebar__item" onClick={ toggleTheme }>
 							{ theme === 'dark' ? <Sun size={ 20 } aria-hidden="true" /> : <Moon size={ 20 } aria-hidden="true" /> } { theme === 'dark' ? t( 'Light mode' ) : t( 'Dark mode' ) }
 						</button>
-						<span>{ t( 'UX Studio {version}', { version: opts.version } ) }</span>
+						<span>{ t( 'UX1 Studio {version}', { version: opts.version } ) }</span>
 					</div>
 				</aside>
 				<main className="uxs-content">

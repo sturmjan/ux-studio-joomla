@@ -37,6 +37,8 @@ export interface Field {
 	max?: number;
 	step?: number;
 	maxlength?: number;
+	/** textarea: the server refuses over-long input instead of cutting it (lists whose entries must stay whole) */
+	strict?: boolean;
 	placeholder?: string;
 	/** repeater: sub fields of one row, maximum number of rows and the label of the "add" button */
 	fields?: Field[];
@@ -187,7 +189,7 @@ export function FieldInput( { field, value, onChange }: { field: Field; value: V
 			);
 		}
 		case 'textarea':
-			return <textarea id={ id } rows={ 5 } maxLength={ field.maxlength } value={ String( value ?? '' ) } onChange={ ( e ) => onChange( e.target.value ) } />;
+			return <textarea id={ id } rows={ 5 } maxLength={ field.strict ? undefined : field.maxlength } value={ String( value ?? '' ) } onChange={ ( e ) => onChange( e.target.value ) } />;
 		case 'password':
 			return <PasswordField field={ field } value={ value } onChange={ onChange } />;
 		default:
@@ -403,17 +405,28 @@ export function useModuleSettings( id: string ) {
 		}
 	}, [ query.data ] );
 
+	// A second submit while a save is running (double click) joins the running request instead of posting again.
+	const inFlight = useRef< Promise< SettingsPayload > | null >( null );
 	const save = useMutation( {
-		mutationFn: async () => {
-			const toast = pushToast( 'loading', t( 'Saving…' ) );
-			try {
-				const result = await api.post< SettingsPayload >( `core/settings/${ id }`, draft );
-				pushToast( 'success', t( 'Settings saved.' ), toast );
-				return result;
-			} catch ( e ) {
-				pushToast( 'error', e instanceof Error ? e.message : t( 'Something went wrong.' ), toast );
-				throw e;
+		mutationFn: (): Promise< SettingsPayload > => {
+			if ( inFlight.current ) {
+				return inFlight.current;
 			}
+			const run = ( async (): Promise< SettingsPayload > => {
+				const toast = pushToast( 'loading', t( 'Saving…' ) );
+				try {
+					const result = await api.post< SettingsPayload >( `core/settings/${ id }`, draft );
+					pushToast( 'success', t( 'Settings saved.' ), toast );
+					return result;
+				} catch ( e ) {
+					pushToast( 'error', e instanceof Error ? e.message : t( 'Something went wrong.' ), toast );
+					throw e;
+				}
+			} )().finally( () => {
+				inFlight.current = null;
+			} );
+			inFlight.current = run;
+			return run;
 		},
 		onSuccess: ( result ) => {
 			queryClient.setQueryData( [ 'settings', id ], result );

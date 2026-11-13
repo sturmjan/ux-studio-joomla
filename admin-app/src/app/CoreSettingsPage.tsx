@@ -1,5 +1,5 @@
 /**
- * Settings of the UX Studio core (not of a module): client IP detection and other shared options.
+ * Settings of the UX1 Studio core (not of a module): client IP detection and other shared options.
  * Stored under the id "core" (core/settings/core), administrators only.
  */
 import { PageHead } from './ui/PageHead';
@@ -10,7 +10,7 @@ export function CoreSettingsPage(): JSX.Element {
 	return (
 		<>
 			<PageHead title={ t( 'Settings' ) } />
-			<p className="uxs-muted">{ t( 'Shared options of UX Studio that every module uses.' ) }</p>
+			<p className="uxs-muted">{ t( 'Shared options of UX1 Studio that every module uses.' ) }</p>
 			<SettingsPanel moduleId="core" />
 		</>
 	);

@@ -1,7 +1,7 @@
 /**
  * Notice Board screen: notices (add / edit / archive), categories, e-mail subscribers, usage help and settings.
  */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Archive, Paperclip, Pencil, Plus, Trash2 } from 'lucide-react';
 import { api, ApiError, queryClient, type ModuleInfo } from '../../app/api';
@@ -57,6 +57,8 @@ function NoticeModal( { draft, categories, onClose }: { draft: NoticeDraft; cate
 	const [ d, setD ] = useState< NoticeDraft >( draft );
 	const [ error, setError ] = useState( '' );
 
+	// Guards a double click: `isPending` only flips after a re-render, so a second click in the same tick would post twice.
+	const busy = useRef( false );
 	const save = useMutation( {
 		mutationFn: () => ( d.id ? api.post< Notice >( `notice-board/notices/${ d.id }`, d ) : api.post< Notice >( 'notice-board/notices', d ) ),
 		onSuccess: () => {
@@ -65,7 +67,17 @@ function NoticeModal( { draft, categories, onClose }: { draft: NoticeDraft; cate
 			onClose();
 		},
 		onError: ( e ) => setError( errorMessage( e ) ),
+		onSettled: () => {
+			busy.current = false;
+		},
 	} );
+	const submit = (): void => {
+		if ( busy.current ) {
+			return;
+		}
+		busy.current = true;
+		save.mutate();
+	};
 
 	const setFile = ( i: number, value: string ): void => setD( { ...d, attachments: d.attachments.map( ( p, ix ) => ( ix === i ? value : p ) ) } );
 
@@ -80,13 +92,13 @@ function NoticeModal( { draft, categories, onClose }: { draft: NoticeDraft; cate
 					<button type="button" className="uxs-btn" onClick={ onClose }>
 						{ t( 'Cancel' ) }
 					</button>
-					<button type="button" className="uxs-btn uxs-btn--primary" disabled={ ! d.title.trim() || save.isPending } onClick={ () => save.mutate() }>
+					<button type="button" className="uxs-btn uxs-btn--primary" disabled={ ! d.title.trim() } aria-busy={ save.isPending } onClick={ submit }>
 						{ t( 'Save' ) }
 					</button>
 				</>
 			}
 		>
-			<div className="uxs-modal__body">
+			<div className="uxs-modal__body uxs-form uxs-form--grid" style={ { border: 'none', padding: 0, background: 'transparent' } }>
 				<div className="uxs-form__row">
 					<label htmlFor="uxs-nb-title">{ t( 'Title' ) }</label>
 					<input id="uxs-nb-title" type="text" maxLength={ 255 } value={ d.title } onChange={ ( e ) => setD( { ...d, title: e.target.value } ) } />
@@ -279,6 +291,7 @@ function CategoriesTab(): JSX.Element {
 	const [ editing, setEditing ] = useState< Category | null >( null );
 	const list = useQuery( { queryKey: [ ...KEY, 'categories' ], queryFn: () => api.get< { items: Category[] } >( 'notice-board/categories' ) } );
 
+	const catBusy = useRef( false );
 	const add = useMutation( {
 		mutationFn: () => api.post( 'notice-board/categories', { name } ),
 		onSuccess: () => {
@@ -286,6 +299,7 @@ function CategoriesTab(): JSX.Element {
 			invalidate();
 		},
 		onError: ( e ) => pushToast( 'error', errorMessage( e ) ),
+		onSettled: () => { catBusy.current = false; },
 	} );
 	const rename = useMutation( {
 		mutationFn: ( c: Category ) => api.post( `notice-board/categories/${ c.id }`, { name: c.name, sort_order: c.sort_order } ),
@@ -346,7 +360,8 @@ function CategoriesTab(): JSX.Element {
 				className="uxs-actions uxs-list-toolbar"
 				onSubmit={ ( e ) => {
 					e.preventDefault();
-					if ( name.trim() ) {
+					if ( name.trim() && ! catBusy.current ) {
+						catBusy.current = true;
 						add.mutate();
 					}
 				} }

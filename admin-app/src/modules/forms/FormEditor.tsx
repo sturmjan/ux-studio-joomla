@@ -1,13 +1,23 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ArrowDown, ArrowLeft, ArrowUp, Copy, Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import { api, queryClient } from '../../app/api';
 import { createT } from '../../app/i18n';
-import { Loading, PageHead, TabPanel, Tabs, pushToast } from '../../app/ui';
+import { Loading, PageHead, TabPanel, Tabs, confirm, pushToast } from '../../app/ui';
 import { FieldModal, typeLabel } from './FieldModal';
 import { CHOICE_TYPES, FIELD_TYPES, type FieldType, type FormDef, type FormField, type FormSettings } from './types';
 
 const { t } = createT( 'forms' );
+
+/** A key not present in `taken`: the wanted one, or with _2, _3 ... appended (keys are the identity of a field). */
+function uniqueKey( wanted: string, taken: string[] ): string {
+	const base = wanted.slice( 0, 34 );
+	let key = wanted.slice( 0, 40 );
+	for ( let i = 2; taken.includes( key ); i++ ) {
+		key = `${ base }_${ i }`;
+	}
+	return key;
+}
 
 /** A fresh field of the given type with sensible defaults (the server sanitizes everything again). */
 function newField( type: FieldType, taken: string[] ): FormField {
@@ -55,11 +65,25 @@ export default function FormEditor( { id, hasTurnstile, onBack }: { id: number; 
 		queryFn: () => api.get< { form: FormDef } >( id > 0 ? `forms/form/${ id }` : 'forms/new' ),
 		staleTime: 0,
 	} );
+	/** JSON of the last loaded/saved form: the editor is "dirty" when the draft differs. */
+	const baseline = useRef( '' );
+	/** Synchronous guard: a double click must not fire two creates before isPending renders. */
+	const saving = useRef( false );
 	useEffect( () => {
 		if ( query.data ) {
+			baseline.current = JSON.stringify( query.data.form );
 			setDraft( query.data.form );
 		}
 	}, [ query.data ] );
+	const dirty = draft !== null && JSON.stringify( draft ) !== baseline.current;
+	useEffect( () => {
+		if ( ! dirty ) {
+			return undefined;
+		}
+		const warn = ( e: BeforeUnloadEvent ): void => e.preventDefault();
+		window.addEventListener( 'beforeunload', warn );
+		return () => window.removeEventListener( 'beforeunload', warn );
+	}, [ dirty ] );
 
 	const save = useMutation( {
 		mutationFn: async ( form: FormDef ) => {
@@ -73,7 +97,11 @@ export default function FormEditor( { id, hasTurnstile, onBack }: { id: number; 
 				throw e;
 			}
 		},
+		onSettled: () => {
+			saving.current = false;
+		},
 		onSuccess: ( res ) => {
+			baseline.current = JSON.stringify( res.form );
 			setDraft( res.form );
 			void queryClient.invalidateQueries( { queryKey: [ 'forms', 'list' ] } );
 			queryClient.setQueryData( [ 'forms', 'form', res.form.id ], res );
@@ -105,18 +133,40 @@ export default function FormEditor( { id, hasTurnstile, onBack }: { id: number; 
 		</div>
 	);
 	const check = ( value: boolean, onChange: ( v: boolean ) => void, text: string ): JSX.Element => (
-		<label style={ { display: 'inline-flex', gap: 8, alignItems: 'center' } }>
-			<input type="checkbox" checked={ value } onChange={ ( e ) => onChange( e.target.checked ) } /> { text }
-		</label>
+		<span className="uxs-checklist">
+			<label className="uxs-checklist__item">
+				<input type="checkbox" checked={ value } onChange={ ( e ) => onChange( e.target.checked ) } /> { text }
+			</label>
+		</span>
 	);
 
 	return (
 		<>
 			<PageHead title={ draft.id > 0 ? t( 'Edit form' ) : t( 'New form' ) }>
-				<button type="button" className="uxs-btn" onClick={ onBack }>
+				<button
+					type="button"
+					className="uxs-btn"
+					onClick={ () => {
+						if ( ! dirty ) {
+							onBack();
+							return;
+						}
+						void confirm( { message: t( 'You have unsaved changes. Leave without saving?' ), confirmLabel: t( 'Leave' ), danger: true } ).then( ( ok ) => {
+							if ( ok ) {
+								onBack();
+							}
+						} );
+					} }
+				>
 					<ArrowLeft size={ 14 } aria-hidden="true" /> { t( 'Back to forms' ) }
 				</button>
-				<button type="button" className="uxs-btn uxs-btn--primary" disabled={ save.isPending || draft.title.trim() === '' } onClick={ () => save.mutate( draft ) }>
+				<button type="button" className="uxs-btn uxs-btn--primary" disabled={ save.isPending || draft.title.trim() === '' } onClick={ () => {
+						if ( saving.current ) {
+							return;
+						}
+						saving.current = true;
+						save.mutate( draft );
+					} }>
 					<Save size={ 14 } aria-hidden="true" /> { t( 'Save' ) }
 				</button>
 			</PageHead>
@@ -134,12 +184,12 @@ export default function FormEditor( { id, hasTurnstile, onBack }: { id: number; 
 					? row(
 							t( 'Where to show it' ),
 							<span>
-								<code>{ draft.shortcode }</code>{ ' ' }
+								<code style={ { color: 'var(--uxs-text)', background: 'none' } }>{ draft.shortcode }</code>{ ' ' }
 								<button type="button" className="uxs-btn uxs-btn--small" onClick={ () => void navigator.clipboard?.writeText( draft.shortcode ).then( () => pushToast( 'success', t( 'Copied.' ) ) ) }>
 									<Copy size={ 14 } aria-hidden="true" /> { t( 'Copy' ) }
 								</button>
 							</span>,
-							t( 'Paste the code into an article or a Custom module, or add the module "UX Studio - Form" to a template position.' )
+							t( 'Paste the code into an article or a Custom module, or add the module "UX1 Studio - Form" to a template position.' )
 					  )
 					: null }
 			</div>
@@ -185,25 +235,25 @@ export default function FormEditor( { id, hasTurnstile, onBack }: { id: number; 
 											</td>
 											<td>{ typeLabel( f.type ) }</td>
 											<td>
-												<code>{ f.key }</code>
+												<code style={ { color: 'var(--uxs-text)', background: 'none' } }>{ f.key }</code>
 											</td>
-											<td>
-												<span className="uxs-actions">
+											<td style={ { whiteSpace: 'nowrap' } }>
+												<span className="uxs-actions" style={ { flexWrap: 'nowrap', gap: 'var(--uxs-sp-2)' } }>
 													<button type="button" className="uxs-btn uxs-btn--small" aria-label={ t( 'Move up' ) } disabled={ i === 0 } onClick={ () => move( i, -1 ) }>
 														<ArrowUp size={ 14 } aria-hidden="true" />
 													</button>
 													<button type="button" className="uxs-btn uxs-btn--small" aria-label={ t( 'Move down' ) } disabled={ i === draft.fields.length - 1 } onClick={ () => move( i, 1 ) }>
 														<ArrowDown size={ 14 } aria-hidden="true" />
 													</button>
-													<button type="button" className="uxs-btn uxs-btn--small" onClick={ () => setEditing( i ) }>
-														<Pencil size={ 14 } aria-hidden="true" /> { t( 'Edit' ) }
+													<button type="button" className="uxs-btn uxs-btn--small" aria-label={ t( 'Edit' ) } title={ t( 'Edit' ) } onClick={ () => setEditing( i ) }>
+														<Pencil size={ 14 } aria-hidden="true" />
 													</button>
 													<button
 														type="button"
 														className="uxs-btn uxs-btn--small"
 														aria-label={ t( 'Duplicate' ) }
 														onClick={ () => {
-															const copy = { ...f, key: `${ f.key.slice( 0, 34 ) }_copy` };
+															const copy = { ...f, key: uniqueKey( `${ f.key.slice( 0, 34 ) }_copy`, draft.fields.map( ( x ) => x.key ) ) };
 															setDraft( { ...draft, fields: [ ...draft.fields.slice( 0, i + 1 ), copy, ...draft.fields.slice( i + 1 ) ] } );
 														} }
 													>
@@ -251,8 +301,11 @@ export default function FormEditor( { id, hasTurnstile, onBack }: { id: number; 
 							field={ draft.fields[ editing ] as FormField }
 							siblings={ draft.fields }
 							onClose={ () => setEditing( null ) }
-							onSave={ ( next ) => {
+							onSave={ ( saved ) => {
+								let next = saved;
 								const old = draft.fields[ editing ] as FormField;
+								// A key that another field already uses would make both fields one: keep it unique.
+								next = { ...next, key: uniqueKey( next.key || old.key, draft.fields.filter( ( _, j ) => j !== editing ).map( ( x ) => x.key ) ) };
 								// Keep conditions of other fields pointing at the renamed key.
 								const fields = draft.fields.map( ( f, j ) =>
 									j === editing ? next : { ...f, conditions: f.conditions.map( ( c ) => ( c.field === old.key ? { ...c, field: next.key } : c ) ) }

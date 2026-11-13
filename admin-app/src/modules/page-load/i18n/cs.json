@@ -22,7 +22,7 @@
 	"Delete data": "Smazat data",
 	"Measuring is switched off (share of measured views is 0 %). Raise it in the settings.": "Měření je vypnuté (podíl měřených zobrazení je 0 %). Zvyšte ho v nastavení.",
 	"No measurements yet. Visit the site as an anonymous visitor (not logged in) and come back in a few seconds; with a share of {rate} % it may take several visits.": "Zatím žádná měření. Navštivte web jako anonymní návštěvník (nepřihlášený) a za pár vteřin se vraťte; při podílu {rate} % může být potřeba několik návštěv.",
-	"{n} measurements. Values are the 75th percentile: three of four visits were at least this fast.": "{n} měření. Hodnoty jsou 75. percentil: tři ze čtyř návštěv byly alespoň takto rychlé.",
+	"{n} measurement. Values are the 75th percentile: three of four visits were at least this fast.|{n} measurements. Values are the 75th percentile: three of four visits were at least this fast.": "{n} měření. Hodnoty jsou 75. percentil: tři ze čtyř návštěv byly alespoň takto rychlé.|{n} měření. Hodnoty jsou 75. percentil: tři ze čtyř návštěv byly alespoň takto rychlé.|{n} měření. Hodnoty jsou 75. percentil: tři ze čtyř návštěv byly alespoň takto rychlé.",
 	"Page load (median)": "Načtení stránky (medián)",
 	"Server response (TTFB)": "Odezva serveru (TTFB)",
 	"First contentful paint": "První vykreslení obsahu",

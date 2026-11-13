@@ -1,4 +1,4 @@
-/* UX Studio: cards on the Joomla administration home screen (module mod_uxstudio_dashboard). */
+/* UX1 Studio: cards on the Joomla administration home screen (module mod_uxstudio_dashboard). */
 .uxs-cp-cards {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));

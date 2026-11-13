@@ -1,7 +1,7 @@
 /**
  * Top Bar screen: live state of the bar, list of the further (rotating) messages with their own schedule, settings.
  */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Pencil, Plus, Trash2 } from 'lucide-react';
 import { api, ApiError, queryClient, type ModuleInfo } from '../../app/api';
@@ -43,6 +43,8 @@ function SlideModal( { draft, onClose }: { draft: Draft; onClose: () => void } )
 	const [ d, setD ] = useState< Draft >( draft );
 	const [ error, setError ] = useState( '' );
 
+	// Guards a double click: `isPending` only flips after a re-render, so a second click in the same tick would post twice.
+	const busy = useRef( false );
 	const save = useMutation( {
 		mutationFn: () => ( d.id ? api.post< Slide >( `top-bar/slides/${ d.id }`, d ) : api.post< Slide >( 'top-bar/slides', d ) ),
 		onSuccess: () => {
@@ -51,7 +53,17 @@ function SlideModal( { draft, onClose }: { draft: Draft; onClose: () => void } )
 			onClose();
 		},
 		onError: ( e ) => setError( errorMessage( e ) ),
+		onSettled: () => {
+			busy.current = false;
+		},
 	} );
+	const submit = (): void => {
+		if ( busy.current ) {
+			return;
+		}
+		busy.current = true;
+		save.mutate();
+	};
 
 	return (
 		<Modal
@@ -64,13 +76,13 @@ function SlideModal( { draft, onClose }: { draft: Draft; onClose: () => void } )
 					<button type="button" className="uxs-btn" onClick={ onClose }>
 						{ t( 'Cancel' ) }
 					</button>
-					<button type="button" className="uxs-btn uxs-btn--primary" disabled={ ! d.text.trim() || save.isPending } onClick={ () => save.mutate() }>
+					<button type="button" className="uxs-btn uxs-btn--primary" disabled={ ! d.text.trim() } aria-busy={ save.isPending } onClick={ submit }>
 						{ t( 'Save' ) }
 					</button>
 				</>
 			}
 		>
-			<div className="uxs-modal__body">
+			<div className="uxs-modal__body uxs-form uxs-form--grid" style={ { border: 'none', padding: 0, background: 'transparent' } }>
 				<div className="uxs-form__row">
 					<label htmlFor="uxs-tb-published">{ t( 'Published' ) }</label>
 					<ToggleSwitch checked={ d.published } onChange={ ( v ) => setD( { ...d, published: v } ) } label={ t( 'Published' ) } />

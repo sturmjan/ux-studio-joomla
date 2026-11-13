@@ -68,6 +68,7 @@ export function FieldModal( {
 	onClose: () => void;
 } ): JSX.Element {
 	const [ f, setF ] = useState< FormField >( field );
+	const [ error, setError ] = useState( '' );
 	const [ optionsText, setOptionsText ] = useState( optionsToText( field.options ) );
 	const set = < K extends keyof FormField >( key: K, value: FormField[ K ] ): void => setF( ( cur ) => ( { ...cur, [ key ]: value } ) );
 	const num = ( v: string ): number | null => ( v === '' || Number.isNaN( Number( v ) ) ? null : Number( v ) );
@@ -86,7 +87,24 @@ export function FieldModal( {
 	);
 
 	const save = (): void => {
-		onSave( { ...f, options: isChoice ? textToOptions( optionsText ) : f.options } );
+		const options = isChoice ? textToOptions( optionsText ) : f.options;
+		let problem = '';
+		if ( f.key !== '' && ! /^[a-z]([a-z0-9_]{0,38}[a-z0-9])?$/.test( f.key ) ) {
+			problem = t( 'The field key must start with a letter, end with a letter or digit and contain only lowercase letters, digits and underscore.' );
+		} else if ( textual && f.minlength != null && f.maxlength != null && f.minlength > f.maxlength ) {
+			problem = t( 'The minimum length cannot be greater than the maximum.' );
+		} else if ( f.type === 'number' && f.min != null && f.max != null && f.min > f.max ) {
+			problem = t( 'The minimum value cannot be greater than the maximum.' );
+		} else if ( isChoice && ( options ?? [] ).length === 0 ) {
+			problem = t( 'Add at least one option.' );
+		} else if ( f.type === 'file' && ( f.accept ?? [] ).length === 0 ) {
+			problem = t( 'Choose at least one allowed file type.' );
+		}
+		setError( problem );
+		if ( problem !== '' ) {
+			return;
+		}
+		onSave( { ...f, options } );
 	};
 
 	return (
@@ -106,7 +124,8 @@ export function FieldModal( {
 				</>
 			}
 		>
-			<div className="uxs-form uxs-form--grid" style={ { maxHeight: '60vh', overflowY: 'auto' } }>
+			{ error !== '' ? <p role="alert" style={ { color: 'var(--uxs-danger-text)', margin: '0 0 var(--uxs-sp-3)' } }>{ error }</p> : null }
+				<div className="uxs-form uxs-form--grid" style={ { maxHeight: '60vh', overflowY: 'auto' } }>
 				{ ! isLayout ? row( t( 'Label' ), <input type="text" value={ f.label } maxLength={ 200 } onChange={ ( e ) => set( 'label', e.target.value ) } /> ) : null }
 				{ row(
 					t( 'Field key' ),
@@ -124,9 +143,9 @@ export function FieldModal( {
 				{ ! isLayout && f.type !== 'hidden'
 					? row(
 							t( 'Required' ),
-							<label style={ { display: 'inline-flex', gap: 8, alignItems: 'center' } }>
+							<span className="uxs-checklist"><label className="uxs-checklist__item">
 								<input type="checkbox" checked={ f.required } onChange={ ( e ) => set( 'required', e.target.checked ) } /> { t( 'The visitor has to fill this field' ) }
-							</label>
+							</label></span>
 					  )
 					: null }
 				{ isChoice
@@ -158,9 +177,9 @@ export function FieldModal( {
 					<>
 						{ row(
 							t( 'Allowed file types' ),
-							<span className="uxs-actions" style={ { flexWrap: 'wrap' } }>
+							<span className="uxs-checklist">
 								{ FILE_EXTENSIONS.map( ( ext ) => (
-									<label key={ ext } style={ { display: 'inline-flex', gap: 4, alignItems: 'center' } }>
+									<label key={ ext } className="uxs-checklist__item">
 										<input
 											type="checkbox"
 											checked={ ( f.accept ?? [] ).includes( ext ) }
@@ -175,9 +194,9 @@ export function FieldModal( {
 						{ row( t( 'Maximum size (MB)' ), <input type="number" min={ 1 } max={ 5 } value={ f.max_size_mb ?? 2 } onChange={ ( e ) => set( 'max_size_mb', Number( e.target.value ) || 2 ) } />, t( 'At most 5 MB per file.' ) ) }
 						{ row(
 							t( 'Several files' ),
-							<label style={ { display: 'inline-flex', gap: 8, alignItems: 'center' } }>
+							<span className="uxs-checklist"><label className="uxs-checklist__item">
 								<input type="checkbox" checked={ !! f.multiple } onChange={ ( e ) => set( 'multiple', e.target.checked ) } /> { t( 'Allow up to 5 files' ) }
-							</label>
+							</label></span>
 						) }
 					</>
 				) : null }

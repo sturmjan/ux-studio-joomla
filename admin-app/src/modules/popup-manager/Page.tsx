@@ -2,7 +2,7 @@
  * Popup Manager screen: list of popups (status switch, stats, duplicate, preview, delete), an inline editor with
  * content / appearance / trigger / targeting / schedule sections and the module settings.
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Copy, ExternalLink, Pencil, Plus, RotateCcw, Trash2 } from 'lucide-react';
 import { api, ApiError, queryClient, type ModuleInfo } from '../../app/api';
@@ -37,6 +37,9 @@ interface MenuItems {
 }
 
 const KEY = [ 'popup-manager', 'popups' ];
+
+/** The shared .uxs-link-btn does not reset the browser/Joomla button background (light grey patch, unreadable in dark mode). */
+const LINK_BTN = { background: 'none', border: 0, color: 'var(--uxs-text)', textAlign: 'left' } as const;
 
 function errorMessage( e: unknown ): string {
 	return e instanceof ApiError || e instanceof Error ? e.message : t( 'Something went wrong.' );
@@ -144,6 +147,7 @@ function PopupEditor( { id, onDone }: { id: number; onDone: () => void } ): JSX.
 		setLoaded( true );
 	}, [ popup.data, loaded ] );
 
+	const busy = useRef( false );
 	const save = useMutation( {
 		mutationFn: () => api.post< Popup >( id ? `popup-manager/popups/${ id }` : 'popup-manager/popups', { ...draft, status } ),
 		onSuccess: () => {
@@ -153,6 +157,9 @@ function PopupEditor( { id, onDone }: { id: number; onDone: () => void } ): JSX.
 			onDone();
 		},
 		onError: ( e ) => pushToast( 'error', errorMessage( e ) ),
+		onSettled: () => {
+			busy.current = false;
+		},
 	} );
 
 	if ( ! loaded ) {
@@ -164,11 +171,15 @@ function PopupEditor( { id, onDone }: { id: number; onDone: () => void } ): JSX.
 		<form
 			onSubmit={ ( e ) => {
 				e.preventDefault();
+				if ( busy.current ) {
+					return;
+				}
+				busy.current = true;
 				save.mutate();
 			} }
 		>
 			<div className="uxs-actions" style={ { marginBottom: 'var(--uxs-sp-4)' } }>
-				<button type="button" className="uxs-link-btn" onClick={ onDone }>
+				<button type="button" className="uxs-link-btn" style={ LINK_BTN } onClick={ onDone }>
 					<ArrowLeft size={ 14 } aria-hidden="true" /> { t( 'Back to the list' ) }
 				</button>
 				<h2 style={ { margin: 0 } }>{ id ? t( 'Edit popup' ) : t( 'New popup' ) }</h2>
@@ -195,9 +206,13 @@ function PopupList( { onEdit }: { onEdit: ( id: number ) => void } ): JSX.Elemen
 	const meta = useQuery( { queryKey: [ 'core', 'meta' ], queryFn: () => api.get< { canAdmin: boolean } >( 'core/meta' ) } );
 	const canAdmin = meta.data?.canAdmin ?? false;
 	const refresh = (): Promise< void > => queryClient.invalidateQueries( { queryKey: KEY } );
+	const runBusy = useRef( false );
 	const run = useMutation( {
 		mutationFn: ( p: { route: string; body?: unknown } ) => api.post< unknown >( p.route, p.body ),
 		onSuccess: refresh,
+		onSettled: () => {
+			runBusy.current = false;
+		},
 		onError: ( e ) => pushToast( 'error', errorMessage( e ) ),
 	} );
 
@@ -232,7 +247,7 @@ function PopupList( { onEdit }: { onEdit: ( id: number ) => void } ): JSX.Elemen
 					: t( 'Immediately' );
 
 	const columns: Column< Popup >[] = [
-		{ key: 'title', header: t( 'Name' ), sortable: true, render: ( p ) => <button type="button" className="uxs-link-btn" onClick={ () => onEdit( p.id ) }>{ p.title }</button> },
+		{ key: 'title', header: t( 'Name' ), sortable: true, render: ( p ) => <button type="button" className="uxs-link-btn" style={ LINK_BTN } onClick={ () => onEdit( p.id ) }>{ p.title }</button> },
 		{
 			key: 'state',
 			header: t( 'Status' ),
@@ -260,7 +275,13 @@ function PopupList( { onEdit }: { onEdit: ( id: number ) => void } ): JSX.Elemen
 				<span className="uxs-actions">
 					<button type="button" className="uxs-btn uxs-btn--small" onClick={ () => onEdit( p.id ) } aria-label={ t( 'Edit' ) } title={ t( 'Edit' ) }><Pencil size={ 14 } aria-hidden="true" /></button>
 					<button type="button" className="uxs-btn uxs-btn--small" onClick={ () => void preview( p.id ) } aria-label={ t( 'Preview on the site' ) } title={ t( 'Preview on the site' ) }><ExternalLink size={ 14 } aria-hidden="true" /></button>
-					<button type="button" className="uxs-btn uxs-btn--small" onClick={ () => run.mutate( { route: `popup-manager/popups/${ p.id }/duplicate` } ) } aria-label={ t( 'Duplicate' ) } title={ t( 'Duplicate' ) }><Copy size={ 14 } aria-hidden="true" /></button>
+					<button type="button" className="uxs-btn uxs-btn--small" onClick={ () => {
+						if ( runBusy.current ) {
+							return;
+						}
+						runBusy.current = true;
+						run.mutate( { route: `popup-manager/popups/${ p.id }/duplicate` } );
+					} } aria-label={ t( 'Duplicate' ) } title={ t( 'Duplicate' ) }><Copy size={ 14 } aria-hidden="true" /></button>
 					{ canAdmin ? (
 						<>
 							<button type="button" className="uxs-btn uxs-btn--small" onClick={ () => void resetStats( p ) } aria-label={ t( 'Reset statistics' ) } title={ t( 'Reset statistics' ) }><RotateCcw size={ 14 } aria-hidden="true" /></button>

@@ -2,7 +2,7 @@
  * Redirects screen: rules (add / edit / test / hit counters), the aggregated 404 log with one-click redirect
  * suggestions, SEO audit, CSV + Joomla import / CSV export, module settings.
  */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { ArrowRight, Download, Pencil, Play, Plus, RotateCcw, Trash2, Upload } from 'lucide-react';
 import { api, ApiError, queryClient, type ModuleInfo } from '../../app/api';
@@ -230,6 +230,7 @@ function RuleModal( { draft, onClose }: { draft: Draft; onClose: () => void } ):
 	const [ d, setD ] = useState< Draft >( draft );
 	const [ result, setResult ] = useState< SaveResult | null >( null );
 	const [ error, setError ] = useState( '' );
+	const submitting = useRef( false );
 
 	const save = useMutation( {
 		mutationFn: async (): Promise< SaveResult > => {
@@ -259,7 +260,18 @@ function RuleModal( { draft, onClose }: { draft: Draft; onClose: () => void } ):
 			}
 		},
 		onError: ( e ) => setError( errorMessage( e ) ),
+		onSettled: () => {
+			submitting.current = false;
+		},
 	} );
+	// A synchronous guard: a double click fires twice before isPending re-renders the button.
+	const submit = () => {
+		if ( ! d.source || submitting.current ) {
+			return;
+		}
+		submitting.current = true;
+		save.mutate();
+	};
 
 	return (
 		<Modal
@@ -277,7 +289,7 @@ function RuleModal( { draft, onClose }: { draft: Draft; onClose: () => void } ):
 						<button type="button" className="uxs-btn" onClick={ onClose }>
 							{ t( 'Cancel' ) }
 						</button>
-						<button type="button" className="uxs-btn uxs-btn--primary" disabled={ ! d.source || save.isPending } onClick={ () => save.mutate() }>
+						<button type="button" className="uxs-btn uxs-btn--primary" disabled={ ! d.source || save.isPending } onClick={ submit }>
 							{ d.id ? t( 'Update redirect' ) : t( 'Add redirect' ) }
 						</button>
 					</>
@@ -292,7 +304,16 @@ function RuleModal( { draft, onClose }: { draft: Draft; onClose: () => void } ):
 					<Issues result={ result } />
 				</>
 			) : (
-				<div className="uxs-form uxs-form--grid" style={ { border: 'none', padding: 0 } }>
+				<div
+					className="uxs-form uxs-form--grid"
+					style={ { border: 'none', padding: 0 } }
+					onKeyDown={ ( e ) => {
+						if ( e.key === 'Enter' && e.target instanceof HTMLInputElement && e.target.type === 'text' ) {
+							e.preventDefault();
+							submit();
+						}
+					} }
+				>
 					<div className="uxs-form__row">
 						<label htmlFor="uxs-rd-source">{ t( 'Old URL' ) }</label>
 						<input id="uxs-rd-source" type="text" value={ d.source } placeholder={ d.match_type === 'regex' ? '^/blog/[0-9]+-(.*)$' : '/old-page.html' } onChange={ ( e ) => setD( { ...d, source: e.target.value } ) } />
@@ -346,7 +367,7 @@ function RuleModal( { draft, onClose }: { draft: Draft; onClose: () => void } ):
 								</select>
 							</div>
 							<div className="uxs-form__row">
-								<label htmlFor="uxs-rd-case">{ t( 'Case sensitive' ) }</label>
+								<label>{ t( 'Case sensitive' ) }</label>
 								<ToggleSwitch checked={ d.case_sensitive } onChange={ ( v ) => setD( { ...d, case_sensitive: v } ) } label={ t( 'Case sensitive' ) } />
 							</div>
 						</>
@@ -571,7 +592,9 @@ function NotFoundTab( { onRedirect }: { onRedirect: ( url: string ) => void } ):
 						<button type="button" className="uxs-btn uxs-btn--small" title={ t( 'The content is gone for good' ) } disabled={ quick.isPending } onClick={ () => quick.mutate( { row: r, target: '', code: 410 } ) }>
 							410
 						</button>
-						<button type="button" className="uxs-btn uxs-btn--small uxs-btn--danger" aria-label={ t( 'Delete' ) } title={ t( 'Delete' ) } onClick={ () => clear.mutate( [ r.id ] ) }>
+						<button type="button" className="uxs-btn uxs-btn--small uxs-btn--danger" aria-label={ t( 'Delete' ) } title={ t( 'Delete' ) } onClick={ () => {
+							void confirm( { message: t( 'Delete this URL from the 404 log?' ), confirmLabel: t( 'Delete' ), danger: true } ).then( ( ok ) => ok && clear.mutate( [ r.id ] ) );
+						} }>
 							<Trash2 size={ 14 } aria-hidden="true" />
 						</button>
 					</span>
@@ -715,7 +738,9 @@ function AuditTab(): JSX.Element {
 				<button type="button" className="uxs-btn" disabled={ audit.isPending } onClick={ () => audit.mutate( { live: true } ) }>
 					{ t( 'Audit + check targets over HTTP' ) }
 				</button>
-				<button type="button" className="uxs-btn" disabled={ audit.isPending } onClick={ () => audit.mutate( { fix_chains: true } ) }>
+				<button type="button" className="uxs-btn" disabled={ audit.isPending } onClick={ () => {
+						void confirm( { message: t( 'Rewrite the targets of rules that point into other redirects so they go straight to the final address?' ), confirmLabel: t( 'Fix chains' ) } ).then( ( ok ) => ok && audit.mutate( { fix_chains: true } ) );
+					} }>
 					{ t( 'Fix chains' ) }
 				</button>
 			</div>
