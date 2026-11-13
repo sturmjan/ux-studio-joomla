@@ -342,8 +342,8 @@ final class Processor
             if ($new !== '' && $new !== $alt) {
                 $altAttr = ' alt="' . htmlspecialchars($new, ENT_QUOTES | ENT_HTML5, 'UTF-8') . '"';
                 $tag     = $hasAlt
-                    ? (string) preg_replace('#\salt\s*=\s*(?:"[^"]*"|\'[^\']*\')#i', $altAttr, $tag, 1)
-                    : (string) preg_replace('#\s*/?>$#', $altAttr . ' />', $tag, 1);
+                    ? (string) preg_replace_callback('#\salt\s*=\s*(?:"[^"]*"|\'[^\']*\')#i', static fn (): string => $altAttr, $tag, 1)
+                    : (string) preg_replace_callback('#\s*/?>$#', static fn (): string => $altAttr . ' />', $tag, 1);
             }
         }
 

@@ -15,7 +15,7 @@ use Ux1\UxStudio\Modules\SmtpEmail\Mail\MailHub;
  * smtp-email module (SMTP / Brevo, fallback, From override) and are recorded by email-log when those modules are on.
  * Both modules are optional: with them switched off the hub passes the message to the native Joomla mailer unchanged.
  *
- *   Mail::send(['to' => $address, 'subject' => $subject, 'body' => $html, 'html' => true, 'source' => 'UX Studio: Forms']);
+ *   Mail::send(['to' => $address, 'subject' => $subject, 'body' => $html, 'html' => true, 'source' => 'UX1 Studio: Forms']);
  *   $mailer = Mail::create();   // a Joomla mailer (UxMail) for anything the array form cannot express
  */
 final class Mail

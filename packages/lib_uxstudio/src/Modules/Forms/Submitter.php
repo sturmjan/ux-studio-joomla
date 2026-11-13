@@ -247,8 +247,12 @@ final class Submitter
         if (\is_array($raw)) {
             return ['', Text::_('UXS_FORMS_ERR_INVALID')];
         }
-        $max   = $type === 'textarea' ? 10000 : 1000;
-        $value = Fields::text($raw ?? '', $f['maxlength'] ?? $max);
+        $max   = $f['maxlength'] ?? ($type === 'textarea' ? 10000 : 1000);
+        if (\is_scalar($raw) && mb_strlen(str_replace("\r\n", "\n", trim((string) $raw))) > $max) {
+            // Never cut the visitor's text silently: tell them instead.
+            return ['', Text::sprintf('UXS_FORMS_ERR_TOOLONG', $max)];
+        }
+        $value = Fields::text($raw ?? '', $max);
         if ($type !== 'textarea') {
             $value = trim((string) preg_replace('/\s*[\r\n]+\s*/', ' ', $value));
         }

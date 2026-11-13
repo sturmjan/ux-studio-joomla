@@ -122,7 +122,7 @@ final class Renderer
                 $out .= '<label for="' . $fid . '">' . $labelText . $star . '</label><textarea' . $common . ' rows="' . (int) ($f['rows'] ?? 5) . '"'
                     . ($f['placeholder'] !== '' ? ' placeholder="' . $e($f['placeholder']) . '"' : '')
                     . (!empty($f['minlength']) ? ' minlength="' . (int) $f['minlength'] . '"' : '')
-                    . (!empty($f['maxlength']) ? ' maxlength="' . (int) $f['maxlength'] . '"' : '') . '>' . $e((string) $f['default_value']) . '</textarea>';
+                    . ' maxlength="' . (!empty($f['maxlength']) ? (int) $f['maxlength'] : 10000) . '">' . $e((string) $f['default_value']) . '</textarea>';
                 break;
 
             case 'select':
@@ -173,7 +173,7 @@ final class Renderer
                     $attrs .= (isset($f['min']) ? ' min="' . $e((string) $f['min']) . '"' : '') . (isset($f['max']) ? ' max="' . $e((string) $f['max']) . '"' : '') . ' step="any"';
                 }
                 if (!\in_array($type, ['number', 'date'], true)) {
-                    $attrs .= (!empty($f['minlength']) ? ' minlength="' . (int) $f['minlength'] . '"' : '') . (!empty($f['maxlength']) ? ' maxlength="' . (int) $f['maxlength'] . '"' : '');
+                    $attrs .= (!empty($f['minlength']) ? ' minlength="' . (int) $f['minlength'] . '"' : '') . ' maxlength="' . (!empty($f['maxlength']) ? (int) $f['maxlength'] : 1000) . '"';
                 }
                 $out .= '<label for="' . $fid . '">' . $labelText . $star . '</label><input type="' . $e($type === 'text' ? 'text' : $type) . '"' . $common . $attrs
                     . ($f['placeholder'] !== '' ? ' placeholder="' . $e($f['placeholder']) . '"' : '') . ' value="' . $e((string) $f['default_value']) . '">';

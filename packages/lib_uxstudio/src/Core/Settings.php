@@ -426,6 +426,10 @@ final class Settings
     private function limit(array $field, string $value): string
     {
         $max = (int) ($field['maxlength'] ?? 0);
+        if ($max > 0 && !empty($field['strict']) && mb_strlen($value) > $max) {
+            // lists (trusted proxies) must not be cut in the middle of an entry: refuse instead
+            throw new ApiException((string) ($field['key'] ?? 'value') . ': too long (maximum ' . $max . ' characters)', 422, 'invalid_value');
+        }
 
         return $max > 0 ? mb_substr($value, 0, $max) : $value;
     }

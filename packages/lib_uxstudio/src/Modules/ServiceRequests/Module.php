@@ -397,7 +397,7 @@ final class Module extends BaseModule
                 Text::_('UXS_SERVICE_REQUESTS_MAIL_FROM') . ': ' . $row['requester_name'] . ' <' . $row['requester_email'] . '>',
             ]),
             'html'    => false,
-            'source'  => 'UX Studio: Service requests',
+            'source'  => 'UX1 Studio: Service requests',
         ]);
         if (!$ok) {
             Log::add('service-requests: notification failed: ' . Mail::lastError(), Log::WARNING, 'uxstudio');

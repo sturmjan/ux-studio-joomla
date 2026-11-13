@@ -56,16 +56,20 @@ final class ReviewStore
         $rating = $item['rating'] ?? 0;
         $date   = $item['review_date'] ?? $item['date'] ?? '';
 
-        $clean = static fn (mixed $v, int $max): string => mb_substr(trim(strip_tags(str_replace("\0", '', \is_scalar($v) ? (string) $v : ''))), 0, $max);
+        $clean = static fn (mixed $v, int $max): string => mb_substr(trim(preg_replace('~</?[a-zA-Z][a-zA-Z0-9]*(?:\s[^<>]*)?/?>~', '', str_replace("\0", '', \is_scalar($v) ? (string) $v : '')) ?? ''), 0, $max);
 
         $ts   = \is_scalar($date) && trim((string) $date) !== '' ? strtotime(trim((string) $date)) : false;
         $rate = is_numeric($rating) ? (int) round((float) $rating) : 0;
+        // Out-of-range ratings (e.g. 6 or 10 from a 10-point scale) are invalid, not "5 stars".
+        if (is_numeric($rating) && ((float) $rating < 0 || (float) $rating > 5.4999)) {
+            $rate = 0;
+        }
 
         return [
             'source'      => $source,
             'external_id' => $clean($item['external_id'] ?? '', 191),
             'author'      => $clean($author, 255),
-            'rating'      => max(0, min(5, $rate)),
+            'rating'      => $rate,
             'text'        => $clean($text, 10000),
             'review_date' => $ts ? gmdate('Y-m-d H:i:s', $ts) : null,
         ];
@@ -288,7 +292,7 @@ final class ReviewStore
     public function stats(): array
     {
         $db   = $this->db;
-        $avg  = 'AVG(NULLIF(' . $db->quoteName('rating') . ', 0))';
+        $avg  = 'AVG(CASE WHEN ' . $db->quoteName('visible') . ' = 1 AND ' . $db->quoteName('rating') . ' > 0 THEN ' . $db->quoteName('rating') . ' END)';
         $all  = $db->setQuery($db->createQuery()->select(['COUNT(*) AS c', 'COALESCE(SUM(' . $db->quoteName('visible') . '), 0) AS v', $avg . ' AS a'])->from($db->quoteName('#__uxstudio_reviews')))->loadAssoc() ?: [];
         $by   = $db->setQuery(
             $db->createQuery()->select([$db->quoteName('source'), 'COUNT(*) AS c', $avg . ' AS a'])->from($db->quoteName('#__uxstudio_reviews'))->group($db->quoteName('source'))->order('c DESC')

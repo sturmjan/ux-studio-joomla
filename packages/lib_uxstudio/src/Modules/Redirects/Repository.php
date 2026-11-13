@@ -461,7 +461,7 @@ final class Repository
             }
             if ($sourcePath === '' || ($parsed['path'] === '' && $parsed['query'] === '')) {
                 $errors[] = self::issue('invalid_source', 'UXS_REDIRECTS_E_SOURCE_INVALID');
-            } elseif ($sourceKey === '/') {
+            } elseif ($sourceKey === '/' || $sourceKey === '/index.php') {
                 $errors[] = self::issue('source_is_home', 'UXS_REDIRECTS_E_SOURCE_HOME');
             } elseif (Url::isReserved($sourcePath)) {
                 $errors[] = self::issue('source_reserved', 'UXS_REDIRECTS_E_SOURCE_RESERVED');
@@ -475,7 +475,9 @@ final class Repository
             $target = '';
         } elseif ($target === '') {
             $errors[] = self::issue('target_required', 'UXS_REDIRECTS_E_TARGET_REQUIRED');
-        } elseif (\strlen($target) > 1900 || preg_match('/[\x00-\x1f\x7f]/', $target)) {
+        } elseif (\strlen($target) > 1900) {
+            $errors[] = self::issue('invalid_target', 'UXS_REDIRECTS_E_TARGET_TOO_LONG');
+        } elseif (preg_match('/[\x00-\x1f\x7f]/', $target)) {
             $errors[] = self::issue('invalid_target', 'UXS_REDIRECTS_E_TARGET_INVALID');
         } elseif (str_starts_with($target, '//') || str_starts_with($target, '/\\')) {
             $errors[] = self::issue('invalid_target', 'UXS_REDIRECTS_E_TARGET_PROTOCOL_RELATIVE');
@@ -620,7 +622,16 @@ final class Repository
                 $data['last_hit'] = $lastHit;
             }
             $row = (object) $data;
-            $db->insertObject(self::TABLE, $row, 'id');
+            try {
+                $db->insertObject(self::TABLE, $row, 'id');
+            } catch (\Throwable $e) {
+                // A concurrent request created the same source between the duplicate check and the insert (UNIQUE index).
+                $dupe = self::findByHash($sourceHash);
+                if ($dupe) {
+                    return self::result('error', (int) $dupe['id'], $source, $targetUrl, [self::issue('duplicate', 'UXS_REDIRECTS_E_DUPLICATE', (int) $dupe['id'])], $warnings);
+                }
+                throw $e;
+            }
             $ruleId = (int) $row->id;
             $status = 'created';
         }

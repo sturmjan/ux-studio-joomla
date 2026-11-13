@@ -5,7 +5,7 @@ namespace Ux1\UxStudio\Core;
 \defined('_JEXEC') or die;
 
 /**
- * Base class of every UX Studio module (src/Modules/<Name>/Module.php).
+ * Base class of every UX1 Studio module (src/Modules/<Name>/Module.php).
  * Only boot() is mandatory; everything else has a harmless default.
  */
 abstract class BaseModule
@@ -65,7 +65,7 @@ abstract class BaseModule
 
     /**
      * Settings fields. Each: key, type (toggle|text|textarea|css|number|select|multiselect|color|media|datetime|richtext|password),
-     * label, help?, default?, options? (value => label), section?, group?, group_help?, show_if?, wide?, min?, max?, step?, maxlength?.
+     * label, help?, default?, options? (value => label), section?, group?, group_help?, show_if?, wide?, min?, max?, step?, maxlength?, strict? (textarea: refuse over-long input instead of truncating).
      * Labels may be language keys (UXS_<ID>_...), the core translates them.
      *
      * @return array<int,array<string,mixed>>
@@ -156,7 +156,7 @@ abstract class BaseModule
     }
 
     /**
-     * Optional card on the UX Studio overview: ['title' => string, 'value' => string|int, 'text' => string, 'status' => 'ok|warn|bad'].
+     * Optional card on the UX1 Studio overview: ['title' => string, 'value' => string|int, 'text' => string, 'status' => 'ok|warn|bad'].
      *
      * @return array<string,mixed>|null
      */

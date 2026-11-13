@@ -386,7 +386,7 @@ final class Module extends BaseModule
         if (mb_strlen($raw) > self::MAX_TEXT) {
             throw new ApiException(Text::sprintf('UXS_TOP_BAR_ERR_TEXT_LONG', self::MAX_TEXT), 422, 'invalid_value');
         }
-        $text = InputFilter::getInstance([], [], 1, 1)->clean($raw, 'html');
+        $text = InputFilter::getInstance([], [], 1, 1)->clean(\Ux1\UxStudio\Modules\NoticeBoard\Store::dropActiveContent($raw), 'html');
         if (trim(strip_tags($text)) === '') {
             throw new ApiException(Text::_('UXS_TOP_BAR_ERR_TEXT'), 422, 'invalid_value');
         }

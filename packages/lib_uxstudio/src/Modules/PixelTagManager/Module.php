@@ -202,7 +202,7 @@ final class Module extends BaseModule
         $detected = $this->detectConsentSolutions();
         $registry = $ctx->kernel()->registry();
         if ($registry->has('consent') && $registry->isEnabled('consent')) {
-            array_unshift($detected, 'UX Studio Consent');
+            array_unshift($detected, 'UX1 Studio Consent');
         }
 
         // In "cookie" mode a category with active tags but no usable cookie name can never be allowed: say so.

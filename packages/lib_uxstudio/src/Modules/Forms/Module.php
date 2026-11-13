@@ -312,6 +312,48 @@ final class Module extends BaseModule
         return $form;
     }
 
+    /**
+     * Rejects values the sanitizers would otherwise silently correct or drop, so the editor can tell the admin.
+     *
+     * @param array<int,mixed>                 $rawFields
+     * @param array<int,array<string,mixed>>   $fields   sanitized fields
+     * @param array<string,mixed>              $settings raw settings
+     */
+    private function assertValid(array $rawFields, array $fields, array $settings): void
+    {
+        foreach ($rawFields as $raw) {
+            $key = \is_array($raw) ? (string) ($raw['key'] ?? '') : '';
+            if ($key !== '' && !preg_match('/^[a-z]([a-z0-9_]{0,38}[a-z0-9])?$/', $key)) {
+                throw new ApiException(Text::sprintf('UXS_FORMS_ERR_FIELD_KEY', $key), 422, 'invalid_key');
+            }
+        }
+        foreach ($fields as $f) {
+            $name = $f['label'] !== '' ? $f['label'] : $f['key'];
+            if (isset($f['minlength'], $f['maxlength']) && $f['minlength'] > $f['maxlength']) {
+                throw new ApiException(Text::sprintf('UXS_FORMS_ERR_FIELD_LENGTH', $name), 422, 'invalid_length');
+            }
+            if (isset($f['min'], $f['max']) && $f['min'] > $f['max']) {
+                throw new ApiException(Text::sprintf('UXS_FORMS_ERR_FIELD_RANGE', $name), 422, 'invalid_range');
+            }
+            if (\in_array($f['type'], Fields::CHOICE, true) && empty($f['options'])) {
+                throw new ApiException(Text::sprintf('UXS_FORMS_ERR_FIELD_OPTIONS', $name), 422, 'invalid_options');
+            }
+        }
+        foreach (preg_split('/[\s,;]+/', (string) ($settings['to'] ?? '')) ?: [] as $mail) {
+            if ($mail !== '' && !filter_var($mail, FILTER_VALIDATE_EMAIL)) {
+                throw new ApiException(Text::sprintf('UXS_FORMS_ERR_SET_TO', $mail), 422, 'invalid_recipient');
+            }
+        }
+        $redirect = trim((string) ($settings['redirect_url'] ?? ''));
+        if ($redirect !== '' && (!preg_match('#^(https?://[^\s"<>]+|/[^\s"<>]*)$#i', $redirect) || str_starts_with($redirect, '//'))) {
+            throw new ApiException(Text::_('UXS_FORMS_ERR_SET_REDIRECT'), 422, 'invalid_redirect');
+        }
+        $minTime = $settings['min_time'] ?? null;
+        if ($minTime !== null && $minTime !== '' && (!is_numeric($minTime) || $minTime < 0 || $minTime > 60)) {
+            throw new ApiException(Text::_('UXS_FORMS_ERR_SET_MINTIME'), 422, 'invalid_min_time');
+        }
+    }
+
     /** @return array<string,mixed> */
     private function persist(int $id, ApiRequest $r): array
     {
@@ -324,6 +366,7 @@ final class Module extends BaseModule
         if (!array_filter($fields, static fn ($f) => !\in_array($f['type'], Fields::LAYOUT, true))) {
             throw new ApiException(Text::_('UXS_FORMS_ERR_NO_FIELDS'), 422, 'no_fields');
         }
+        $this->assertValid((array) ($input['fields'] ?? []), $fields, (array) ($input['settings'] ?? []));
         $saved = (new Forms($this->ctx()->db()))->save($id, $input);
 
         return ['form' => $this->requireForm($saved)];

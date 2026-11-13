@@ -153,7 +153,9 @@ final class Engine
                 $app->setHeader('Cache-Control', 'public, max-age=' . $ttl, true);
             }
         }
-        $app->setHeader('X-Redirect-By', 'UX Studio Redirects', true);
+        $app->setHeader('X-Redirect-By', 'UX1 Studio Redirects', true);
+        // The Location header must be ASCII (RFC 9110): percent-encode raw UTF-8 bytes of a target typed with diacritics.
+        $target = preg_replace_callback('/[\x80-\xff]+/', static fn (array $m): string => rawurlencode($m[0]), $target) ?? $target;
         $app->redirect($target, $code);
     }
 

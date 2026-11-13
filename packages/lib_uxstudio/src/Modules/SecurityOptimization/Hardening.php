@@ -151,7 +151,7 @@ final class Hardening
     public function htaccessSnippet(): string
     {
         return implode("\n", [
-            '# UX Studio - recommended Joomla hardening (review before pasting into .htaccess; UX Studio never edits this file)',
+            '# UX1 Studio - recommended Joomla hardening (review before pasting into .htaccess; UX1 Studio never edits this file)',
             '<IfModule mod_autoindex.c>',
             '    Options -Indexes',
             '</IfModule>',

@@ -256,7 +256,7 @@ final class Module extends BaseModule
 
         $app  = Factory::getApplication();
         $site = (string) $app->get('sitename', '');
-        MailHub::overrideSource('UX Studio: ' . Text::_('UXS_EMAIL_HEALTH_NAME'));
+        MailHub::overrideSource('UX1 Studio: ' . Text::_('UXS_EMAIL_HEALTH_NAME'));
         $error  = '';
         $ok     = false;
         $result = null;
@@ -297,6 +297,13 @@ final class Module extends BaseModule
     public function runDns(string $domain): array
     {
         $domain = strtolower(rtrim(trim($domain), '.'));
+        // Internationalised names (háček.cz) are looked up in their punycode form.
+        if ($domain !== '' && !mb_check_encoding($domain, 'ASCII') && \function_exists('idn_to_ascii')) {
+            $ascii = idn_to_ascii($domain, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
+            if (\is_string($ascii) && $ascii !== '') {
+                $domain = $ascii;
+            }
+        }
         if (!DnsCheck::validDomain($domain)) {
             throw new ApiException(Text::_('UXS_EMAIL_HEALTH_ERR_DOMAIN'), 422, 'invalid_domain');
         }

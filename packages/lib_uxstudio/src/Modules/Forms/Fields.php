@@ -101,7 +101,15 @@ final class Fields
                 InputFilter::ONLY_ALLOW_DEFINED_TAGS,
                 InputFilter::ONLY_ALLOW_DEFINED_ATTRIBUTES
             );
-            $field['html'] = $filter->clean((string) ($in['html'] ?? ''), 'html');
+            // Drop script/style elements together with their content, otherwise the code would show up as visible text.
+            $raw = (string) ($in['html'] ?? '');
+            // Repeat until stable (a nested "<scr<script></script>ipt>" cannot rebuild a tag), then cut an unclosed one to the end.
+            do {
+                $before = $raw;
+                $raw    = (string) preg_replace('#<(script|style|iframe|object|embed)\b[^>]*>.*?</\1\s*>#is', '', $raw);
+            } while ($raw !== $before);
+            $raw = (string) preg_replace('#<(script|style|iframe|object|embed)\b.*$#is', '', $raw);
+            $field['html'] = $filter->clean($raw, 'html');
         }
         if ($type === 'acceptance') {
             $url                = (string) ($in['terms_url'] ?? '');

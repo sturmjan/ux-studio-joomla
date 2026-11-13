@@ -141,18 +141,28 @@ final class Module extends BaseModule
         if ($row === null || ($row['author'] === '' && $row['text'] === '')) {
             throw new ApiException($this->ctx()->t('UXS_REVIEW_AGGREGATOR_ERR_EMPTY'), 422, 'empty');
         }
-        $row['review_date'] ??= $id > 0 ? ($existing['review_date'] ?? null) : Factory::getDate()->toSql();
+        if ($id === 0) {
+            $row['review_date'] ??= Factory::getDate()->toSql();
+        }
 
         $hash = ReviewStore::dedupHash($row);
         if ($store->hashExists($hash, $id)) {
             throw new ApiException($this->ctx()->t('UXS_REVIEW_AGGREGATOR_ERR_DUPLICATE'), 409, 'duplicate');
         }
 
-        if ($id > 0) {
-            $store->updateManual($id, $row, $hash);
-        } else {
-            $store->upsertMany([$row], 'manual');
-            $id = (int) $this->ctx()->db()->insertid();
+        try {
+            if ($id > 0) {
+                $store->updateManual($id, $row, $hash);
+            } else {
+                $store->upsertMany([$row], 'manual');
+                $id = (int) $this->ctx()->db()->insertid();
+            }
+        } catch (\Throwable $e) {
+            // A parallel request (double click) won the race for the unique dedup key.
+            if (stripos($e->getMessage(), 'duplicate') !== false || (int) $e->getCode() === 1062) {
+                throw new ApiException($this->ctx()->t('UXS_REVIEW_AGGREGATOR_ERR_DUPLICATE'), 409, 'duplicate');
+            }
+            throw $e;
         }
 
         return (array) $store->get($id);

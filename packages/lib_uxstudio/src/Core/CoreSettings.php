@@ -5,7 +5,7 @@ namespace Ux1\UxStudio\Core;
 \defined('_JEXEC') or die;
 
 /**
- * Settings of the core itself (module id "core" in #__uxstudio_settings, edited on the "Settings" screen of UX Studio).
+ * Settings of the core itself (module id "core" in #__uxstudio_settings, edited on the "Settings" screen of UX1 Studio).
  * Read them with CoreSettings::get('client_ip_mode').
  */
 final class CoreSettings
@@ -28,7 +28,7 @@ final class CoreSettings
                  'cloudflare' => 'UXS_CORE_SET_IP_CLOUDFLARE',
                  'xff'        => 'UXS_CORE_SET_IP_XFF',
              ]],
-            ['key' => 'trusted_proxies', 'type' => 'textarea', 'label' => 'UXS_CORE_SET_TRUSTED', 'help' => 'UXS_CORE_SET_TRUSTED_HELP', 'default' => '', 'maxlength' => 2000,
+            ['key' => 'trusted_proxies', 'type' => 'textarea', 'label' => 'UXS_CORE_SET_TRUSTED', 'help' => 'UXS_CORE_SET_TRUSTED_HELP', 'default' => '', 'maxlength' => 2000, 'strict' => true,
              'section' => 'UXS_CORE_SET_SEC_NETWORK', 'show_if' => ['key' => 'client_ip_mode', 'in' => ['cloudflare', 'xff']]],
         ];
     }

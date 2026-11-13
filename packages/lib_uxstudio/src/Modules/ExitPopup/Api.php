@@ -77,7 +77,15 @@ final class Api
             return ['success' => true];
         }
         $email = strtolower(trim($r->string('email')));
-        if ($email === '' || \strlen($email) > 254 || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        // An IDN domain (příklad.cz) is stored in its punycode form; a diacritic in the local part is allowed.
+        if (str_contains($email, '@') && \function_exists('idn_to_ascii')) {
+            [$local, $domain] = explode('@', $email, 2) + [1 => ''];
+            $ascii = $domain !== '' ? idn_to_ascii($domain, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46) : false;
+            if (\is_string($ascii) && $ascii !== '') {
+                $email = $local . '@' . $ascii;
+            }
+        }
+        if ($email === '' || \strlen($email) > 254 || !filter_var($email, FILTER_VALIDATE_EMAIL, FILTER_FLAG_EMAIL_UNICODE)) {
             throw new ApiException(Text::_('UXS_EXIT_POPUP_MSG_INVALID'), 422, 'invalid_email');
         }
         if (Support::text($s['consent_text'] ?? '', 300) !== '' && !$r->bool('consent')) {

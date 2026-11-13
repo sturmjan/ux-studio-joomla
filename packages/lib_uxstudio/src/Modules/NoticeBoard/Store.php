@@ -78,6 +78,34 @@ final class Store
 
     /* ---------------------------------------------------------------- validation helpers */
 
+    /** Removes <script>/<style> elements together with their content (the HTML filter would keep the code as visible text). */
+    public static function dropActiveContent(string $html): string
+    {
+        // Linear scan (no regex backtracking): an unclosed element swallows the rest, as a browser would treat it.
+        for ($pass = 0; $pass < 5; $pass++) {
+            $out = '';
+            $pos = 0;
+            $hit = false;
+            while (preg_match('#<(script|style)\b#i', $html, $m, PREG_OFFSET_CAPTURE, $pos) === 1) {
+                $hit  = true;
+                $out .= substr($html, $pos, $m[0][1] - $pos);
+                $end  = stripos($html, '</' . $m[1][0], $m[0][1]);
+                if ($end === false) {
+                    $pos = \strlen($html);
+                    break;
+                }
+                $gt  = strpos($html, '>', $end);
+                $pos = $gt === false ? \strlen($html) : $gt + 1;
+            }
+            $html = $out . substr($html, $pos);
+            if (!$hit) {
+                break;
+            }
+        }
+
+        return $html;
+    }
+
     public static function cleanDate(mixed $value): ?string
     {
         $value = trim((string) (\is_scalar($value) ? $value : ''));
@@ -232,14 +260,23 @@ final class Store
             $publish = $this->today();
         }
 
+        $expiry = $has('expiry_date') ? self::cleanDate($in['expiry_date']) : self::cleanDate($old['expiry_date'] ?? '');
+        if ($publish !== null && $expiry !== null && $expiry < $publish) {
+            throw new ApiException(Text::_('UXS_NOTICE_BOARD_ERR_DATES'), 422, 'invalid_value');
+        }
+        $bodyRaw = (string) (\is_scalar($get('body', '')) ? $get('body', '') : '');
+        if (mb_strlen($bodyRaw) > 200000) {
+            throw new ApiException(Text::_('UXS_NOTICE_BOARD_ERR_BODY_LONG'), 422, 'invalid_value');
+        }
+
         return [
             'title'        => $title,
-            'body'         => InputFilter::getInstance([], [], 1, 1)->clean((string) (\is_scalar($get('body', '')) ? $get('body', '') : ''), 'html'),
+            'body'         => InputFilter::getInstance([], [], 1, 1)->clean(self::dropActiveContent($bodyRaw), 'html'),
             'category'     => $category,
             'reference'    => mb_substr(trim(strip_tags((string) (\is_scalar($get('reference', '')) ? $get('reference', '') : ''))), 0, 190),
             'attachments'  => (string) json_encode(array_values($paths), JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
             'publish_date' => $publish,
-            'expiry_date'  => $has('expiry_date') ? self::cleanDate($in['expiry_date']) : self::cleanDate($old['expiry_date'] ?? ''),
+            'expiry_date'  => $expiry,
             'is_archived'  => filter_var($get('is_archived', false), FILTER_VALIDATE_BOOLEAN) ? 1 : 0,
         ];
     }

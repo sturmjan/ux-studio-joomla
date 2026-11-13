@@ -13,8 +13,8 @@ use Ux1\UxStudio\Core\HtaccessBlock;
  */
 final class Delivery
 {
-    private const BEGIN = '# BEGIN UX Studio image-optimizer';
-    private const END   = '# END UX Studio image-optimizer';
+    private const BEGIN = '# BEGIN UX1 Studio image-optimizer';
+    private const END   = '# END UX1 Studio image-optimizer';
 
     private static function file(): string
     {

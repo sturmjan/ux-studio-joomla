@@ -22,7 +22,7 @@ final class Support
     public static function text(mixed $value, int $max): string
     {
         $value = \is_scalar($value) ? (string) $value : '';
-        $value = trim(strip_tags(str_replace("\0", '', $value)));
+        $value = trim(self::stripMarkup(str_replace("\0", '', $value)));
 
         return mb_substr($value, 0, $max);
     }
@@ -31,9 +31,18 @@ final class Support
     public static function lines(mixed $value, int $max): string
     {
         $value = \is_scalar($value) ? (string) $value : '';
-        $value = trim(strip_tags(str_replace(["\0", "\r"], '', $value)));
+        $value = trim(self::stripMarkup(str_replace(["\0", "\r"], '', $value)));
 
         return mb_substr($value, 0, $max);
+    }
+
+    /** Removes real tags only (a "<" followed by a letter, "/", "!" or "?"); a plain "<" or "<50" in text survives. */
+    private static function stripMarkup(string $value): string
+    {
+        $value = preg_replace('#<(script|style)\b[^>]*>.*?</\1\s*>#is', '', $value) ?? $value;
+        $value = preg_replace('#<(script|style)\b.*$#is', '', $value) ?? $value;
+
+        return preg_replace('#</?[a-z!?][^>]*(>|$)#i', '', $value) ?? $value;
     }
 
     /** Rich text for the front end: only a whitelist of tags and attributes, no script URLs. */
@@ -44,6 +53,19 @@ final class Support
         if (trim($value) === '') {
             return '';
         }
+        // Script-like blocks go together with their content (InputFilter would keep the inner code as visible text).
+        $blocks = '#<(script|style|iframe|object|embed|noscript|template)\b[^>]*>.*?</\1\s*>#is';
+        for ($i = 0; $i < 10; $i++) {
+            $next = preg_replace($blocks, '', $value) ?? $value;
+            if ($next === $value) {
+                break;
+            }
+            $value = $next;
+        }
+        // An unclosed block (a pasted fragment) is dropped up to the end of the text.
+        $value = preg_replace('#<(script|style|iframe|object|embed|noscript|template)\b.*$#is', '', $value) ?? $value;
+        // A literal "<" (not the start of a tag) is kept as text instead of being eaten by the filter.
+        $value = preg_replace('#<(?![a-z/!?])#i', '&lt;', $value) ?? $value;
         // tagsMethod 0 / attrMethod 0 = only the listed tags / attributes survive.
         $filter = new InputFilter(self::HTML_TAGS, self::HTML_ATTRS, 0, 0);
         $clean  = (string) $filter->clean($value, 'html');

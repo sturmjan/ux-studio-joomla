@@ -690,10 +690,42 @@ final class Module extends BaseModule
         };
         $enc = static fn (mixed $v): string => (string) json_encode($v, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
+        // Reject (instead of silently fixing) input the sanitizers would otherwise drop or misread.
+        $phone = $str($get('phone', ''), 60);
+        if ($phone !== '' && (!preg_match('/^[0-9+().\/#*\s-]+$/', $phone) || preg_match_all('/\d/', $phone) < 3)) {
+            throw new ApiException(Text::_('UXS_OPENING_HOURS_ERR_PHONE'), 422, 'invalid_value');
+        }
+        $zero = static function (mixed $ranges): bool {
+            foreach (\is_array($ranges) ? $ranges : [] as $r) {
+                if (\is_array($r) && isset($r['open'], $r['close']) && $r['open'] !== '' && $r['open'] === $r['close']) {
+                    return true;
+                }
+            }
+
+            return false;
+        };
+        if (array_key_exists('hours', $in) && \is_array($in['hours'])) {
+            foreach ($in['hours'] as $ranges) {
+                if ($zero($ranges)) {
+                    throw new ApiException(Text::_('UXS_OPENING_HOURS_ERR_RANGE'), 422, 'invalid_value');
+                }
+            }
+        }
+        if (array_key_exists('exceptions', $in) && \is_array($in['exceptions'])) {
+            foreach ($in['exceptions'] as $x) {
+                if (!\is_array($x) || !self::isValidDate((string) ($x['date'] ?? ''))) {
+                    throw new ApiException(Text::_('UXS_OPENING_HOURS_ERR_EXC_DATE'), 422, 'invalid_value');
+                }
+                if ($zero($x['hours'] ?? [])) {
+                    throw new ApiException(Text::_('UXS_OPENING_HOURS_ERR_RANGE'), 422, 'invalid_value');
+                }
+            }
+        }
+
         return [
             'title'         => $title,
             'address'       => $str($get('address', ''), 255),
-            'phone'         => $str($get('phone', ''), 60),
+            'phone'         => $phone,
             'lat'           => $coord($get('lat', null), 90.0),
             'lng'           => $coord($get('lng', null), 180.0),
             'hours'         => $enc(self::sanitizeHours($get('hours', []))),
