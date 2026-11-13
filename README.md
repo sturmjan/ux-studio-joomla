@@ -1,6 +1,6 @@
-# UX Studio pro Joomla 5 a 6
+# UX1 Studio pro Joomla 5 a 6
 
-Modulární sada nástrojů pro Joomlu (port WordPress pluginu UX Studio). Architektura: `ARCHITECTURE.md`, plán: `PLAN.md`,
+Modulární sada nástrojů pro Joomlu (port WordPress pluginu UX1 Studio). Architektura: `ARCHITECTURE.md`, plán: `PLAN.md`,
 návod pro autory modulů: `docs/MODULE-GUIDE.md`.
 
 Obsah repozitáře: `packages/` (knihovna `lib_uxstudio` s jádrem a moduly, komponenta `com_uxstudio`, pluginy
@@ -38,7 +38,7 @@ D:/xampp/php/php.exe D:/xampp/htdocs/joomla6/cli/joomla.php extension:install --
 
 Instalace vytvoří tabulky jádra (`#__uxstudio_modules`, `_settings`, `_migrations`, `_ratelimit`) a zapne oba pluginy. Migrace modulů a
 úlohy plánovače (včetně retence logů) se po instalaci i po každé aktualizaci dorovnají líně při prvním požadavku do administrace nebo
-CLI (`Core\Upgrader`, s čerstvě nahranými třídami). Komponenta je v menu Komponenty - UX Studio (`index.php?option=com_uxstudio`).
+CLI (`Core\Upgrader`, s čerstvě nahranými třídami). Komponenta je v menu Komponenty - UX1 Studio (`index.php?option=com_uxstudio`).
 
 Produkční zip neobsahuje vývojové moduly (`"dev": true` v `meta.json`, např. `hello-check`); pro lokální testovací instalaci
 sestav `node bin/build.mjs --with-dev`.
