@@ -20,7 +20,7 @@ use Ux1\UxStudio\Core\ClientIp;
  * (GREEN .. RED), keeps a hard per-IP rate limit with automatic bans, an optional microcache for bots and a notification
  * when an address gets banned. Also offers Guard::exceeded() to other modules.
  *
- * Frontend only: the administrator, the UX1 Studio endpoints (com_uxstudio) and the Central App channel are never touched.
+ * Frontend only: the administrator, the UX1 Studio endpoints (com_uxstudio) and UX1 Network app channel are never touched.
  */
 final class Module extends BaseModule
 {
@@ -146,7 +146,7 @@ final class Module extends BaseModule
         if (!\in_array(strtoupper($input->getMethod()), ['GET', 'HEAD'], true)) {
             return;
         }
-        // UX1 Studio's own endpoints and the Central App channel must never be throttled.
+        // UX1 Studio's own endpoints and UX1 Network app channel must never be throttled.
         if ($input->getCmd('option') === 'com_uxstudio' || $input->get('uxstudio_node') !== null) {
             return;
         }
@@ -633,10 +633,10 @@ final class Module extends BaseModule
         return ['removed' => (new Microcache())->clear()];
     }
 
-    /* ------------------------------------------------------ Central App feed */
+    /* ------------------------------------------------------ UX1 Network app feed */
 
     /**
-     * Data for the Central App connector (docs/CA-INTEGRACE.md). Route: bot-throttle/bans (?since= cursor).
+     * Data for UX1 Network app connector (docs/CA-INTEGRACE.md). Route: bot-throttle/bans (?since= cursor).
      *
      * @param array<string,mixed> $query
      * @param array<string,mixed> $body

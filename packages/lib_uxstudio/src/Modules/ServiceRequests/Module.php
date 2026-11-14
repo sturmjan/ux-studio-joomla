@@ -14,9 +14,9 @@ use Ux1\UxStudio\Core\ModuleContext;
 \defined('_JEXEC') or die;
 
 /**
- * Service requests: the site administrator files a request (ticket) which is sent to the Central App, follows its
+ * Service requests: the site administrator files a request (ticket) which is sent to UX1 Network app, follows its
  * status and replies to the conversation. Port of the WordPress ServiceRequests module, transport via CaClient
- * (ticket_api). Works without the Central App too: requests stay "pending" locally and a notification e-mail is sent.
+ * (ticket_api). Works without UX1 Network app too: requests stay "pending" locally and a notification e-mail is sent.
  */
 final class Module extends BaseModule
 {
@@ -27,7 +27,7 @@ final class Module extends BaseModule
 
     public function boot(ModuleContext $ctx): void
     {
-        // Nothing to hook: the module lives in the administration screen, the scheduler task and the Central App feed.
+        // Nothing to hook: the module lives in the administration screen, the scheduler task and UX1 Network app feed.
     }
 
     public function settingsSchema(): array
@@ -110,9 +110,9 @@ final class Module extends BaseModule
     }
 
     /**
-     * Central App feed, route "service-requests": the legacy list the Central App mirrors (status new|in_progress|completed,
+     * UX1 Network app feed, route "service-requests": the legacy list UX1 Network app mirrors (status new|in_progress|completed,
      * subject, user_name ...), same shape as the WordPress NodeHealth::service_requests().
-     * NOTE: CaConnector\Node::FEEDS does not list this route yet (core request), so the Central App cannot reach it today.
+     * NOTE: CaConnector\Node::FEEDS does not list this route yet (core request), so UX1 Network app cannot reach it today.
      */
     public function caFeed(string $route, array $query, array $body): array
     {
@@ -151,7 +151,7 @@ final class Module extends BaseModule
 
     /* ---------------------------------------------------------------- API */
 
-    /** GET service-requests/state: is the Central App channel usable. */
+    /** GET service-requests/state: is UX1 Network app channel usable. */
     public function state(ApiRequest $r): array
     {
         return ['connected' => $this->sync()->isConfigured(), 'counts' => $this->store()->counts()];
@@ -238,14 +238,14 @@ final class Module extends BaseModule
             throw new ApiException(Text::_('UXS_SERVICE_REQUESTS_ERR_EMPTY_REPLY'), 422, 'empty_reply');
         }
         $user = $r->user();
-        // The thread is a mirror of the Central App: the text is queued and pushed, never kept as a second local copy.
+        // The thread is a mirror of UX1 Network app: the text is queued and pushed, never kept as a second local copy.
         $this->sync()->queueReply($id, mb_substr($body, 0, 20000), mb_substr((string) ($user->name !== '' ? $user->name : $user->username), 0, 255), (string) $user->email);
         $this->sync()->pullOne($id);
 
         return $this->format($this->require($id), $this->pending());
     }
 
-    /** POST service-requests/items/{id}/resync: push (if the Central App does not know it yet) or pull, and flush queued replies. */
+    /** POST service-requests/items/{id}/resync: push (if UX1 Network app does not know it yet) or pull, and flush queued replies. */
     public function resync(ApiRequest $r): array
     {
         $row  = $this->require((int) $r->param('id'));
@@ -269,7 +269,7 @@ final class Module extends BaseModule
         return $this->format($this->require($id), $this->pending()) + $out;
     }
 
-    /** POST service-requests/items/{id}/status {status}: local status of a request that never reached the Central App. */
+    /** POST service-requests/items/{id}/status {status}: local status of a request that never reached UX1 Network app. */
     public function setStatus(ApiRequest $r): array
     {
         $row    = $this->require((int) $r->param('id'));
@@ -285,7 +285,7 @@ final class Module extends BaseModule
         return $this->format($this->require((int) $row['id']), $this->pending());
     }
 
-    /** POST service-requests/items/{id}/delete: removes the local copy only (the Central App keeps the ticket). */
+    /** POST service-requests/items/{id}/delete: removes the local copy only (UX1 Network app keeps the ticket). */
     public function delete(ApiRequest $r): array
     {
         $id = (int) $r->param('id');

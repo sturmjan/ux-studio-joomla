@@ -1,5 +1,5 @@
 /**
- * Steps of the setup wizard: welcome, site type, recommended modules, basic settings, Central App (only when the
+ * Steps of the setup wizard: welcome, site type, recommended modules, basic settings, UX1 Network app (only when the
  * connector module exists) and the summary that turns the chosen modules on. Look and wording follow the WordPress
  * edition (new-site wizard); the module list always comes from the registry, nothing here names a module.
  */
@@ -306,7 +306,7 @@ function SettingsStep( { ctx }: { ctx: WizardCtx } ): JSX.Element {
 	);
 }
 
-/* ---- 5 Central App ---- */
+/* ---- 5 UX1 Network app ---- */
 
 function HeroArt(): JSX.Element {
 	return (
@@ -342,8 +342,8 @@ function CaStep( { ctx }: { ctx: WizardCtx } ): JSX.Element {
 	const already = !! ca?.enabled;
 	const how: Array< [ string, string ] > = [
 		[ t( 'Connect' ), t( 'One click on the connection page. The site proves who it is with a secret key.' ) ],
-		[ t( 'Sign in or create an account' ), t( 'You land in the central app, log in or sign up and confirm the connection.' ) ],
-		[ t( 'Done, the site is watched' ), t( 'You come back here and the central app starts keeping an eye on the site.' ) ],
+		[ t( 'Sign in or create an account' ), t( 'You land in UX1 Network app, log in or sign up and confirm the connection.' ) ],
+		[ t( 'Done, the site is watched' ), t( 'You come back here and UX1 Network app starts keeping an eye on the site.' ) ],
 	];
 	return (
 		<section className="uxs-wiz-panel uxs-wiz-ca">
@@ -352,8 +352,8 @@ function CaStep( { ctx }: { ctx: WizardCtx } ): JSX.Element {
 					<span className="uxs-wiz-ca__eyebrow">
 						<PlugZap size={ 16 } aria-hidden="true" /> { t( 'Optional step' ) }
 					</span>
-					<h2>{ t( 'Central app' ) }</h2>
-					<p>{ t( 'One place to watch over all your websites. Connect this one and the central app keeps an eye on it for you: whether it runs, whether it is safe and fast, and whether anything is about to expire.' ) }</p>
+					<h2>{ t( 'UX1 Network app' ) }</h2>
+					<p>{ t( 'One place to watch over all your websites. Connect this one and UX1 Network app keeps an eye on it for you: whether it runs, whether it is safe and fast, and whether anything is about to expire.' ) }</p>
 				</div>
 				<HeroArt />
 			</div>
@@ -395,7 +395,7 @@ function CaStep( { ctx }: { ctx: WizardCtx } ): JSX.Element {
 				<ul>
 					<li>
 						<Info size={ 18 } aria-hidden="true" />
-						<span>{ t( 'The wizard turns on the connector module. It creates a secret key that only this site and the central app share.' ) }</span>
+						<span>{ t( 'The wizard turns on the connector module. It creates a secret key that only this site and UX1 Network app share.' ) }</span>
 					</li>
 					<li>
 						<Info size={ 18 } aria-hidden="true" />
@@ -403,7 +403,7 @@ function CaStep( { ctx }: { ctx: WizardCtx } ): JSX.Element {
 					</li>
 					<li>
 						<Info size={ 18 } aria-hidden="true" />
-						<span>{ t( 'The site must be reachable from the internet: the central app checks it while connecting.' ) }</span>
+						<span>{ t( 'The site must be reachable from the internet: UX1 Network app checks it while connecting.' ) }</span>
 					</li>
 				</ul>
 			</div>
@@ -498,7 +498,7 @@ function SummaryReview( { ctx }: { ctx: WizardCtx } ): JSX.Element {
 				</div>
 				{ ctx.hasCa && (
 					<div className="uxs-wiz-box">
-						<h3>{ t( 'Central app' ) }</h3>
+						<h3>{ t( 'UX1 Network app' ) }</h3>
 						<p className="uxs-wiz-muted">
 							{ ctx.connectCa ? t( 'The connector is turned on and the connection page opens when the setup is done.' ) : t( 'Not connected now. You can do it later in the connector module.' ) }
 						</p>
@@ -585,7 +585,7 @@ function DonePanel( { ctx }: { ctx: WizardCtx } ): JSX.Element {
 					) ) }
 					{ run.profileError !== '' && <li>{ run.profileError }</li> }
 					{ run.profileApplied > 0 && <li>{ tn( 'The basic settings were filled into {n} module setting.', 'The basic settings were filled into {n} module settings.', run.profileApplied ) }</li> }
-					{ ctx.hasCa && <li>{ caReady ? t( 'The connector is ready. Finish the connection on its page.' ) : t( 'The website is not connected to the central app. You can do it later in the connector module.' ) }</li> }
+					{ ctx.hasCa && <li>{ caReady ? t( 'The connector is ready. Finish the connection on its page.' ) : t( 'The website is not connected to UX1 Network app. You can do it later in the connector module.' ) }</li> }
 					<li>{ t( 'You can run this wizard again from the Modules screen.' ) }</li>
 				</ul>
 			</div>
@@ -635,7 +635,7 @@ function SummaryStep( { ctx }: { ctx: WizardCtx } ): JSX.Element {
 	return <SummaryRun ctx={ ctx } />;
 }
 
-/** Ordered steps. The Central App step exists only when the connector module is installed (decided by the shell). */
+/** Ordered steps. UX1 Network app step exists only when the connector module is installed (decided by the shell). */
 export function getSteps( withCa: boolean ): WizardStep[] {
 	const steps: WizardStep[] = [
 		{ id: 'welcome', title: t( 'Welcome' ), render: ( ctx ) => <WelcomeStep ctx={ ctx } /> },
@@ -644,7 +644,7 @@ export function getSteps( withCa: boolean ): WizardStep[] {
 		{ id: 'settings', title: t( 'Basic settings' ), render: ( ctx ) => <SettingsStep ctx={ ctx } /> },
 	];
 	if ( withCa ) {
-		steps.push( { id: 'ca', title: t( 'Central app' ), render: ( ctx ) => <CaStep ctx={ ctx } /> } );
+		steps.push( { id: 'ca', title: t( 'UX1 Network app' ), render: ( ctx ) => <CaStep ctx={ ctx } /> } );
 	}
 	steps.push( { id: 'summary', title: t( 'Summary' ), render: ( ctx ) => <SummaryStep ctx={ ctx } /> } );
 	return steps;

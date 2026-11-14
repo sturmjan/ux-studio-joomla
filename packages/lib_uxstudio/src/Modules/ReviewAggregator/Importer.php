@@ -7,7 +7,7 @@ use Ux1\UxStudio\Core\ApiException;
 \defined('_JEXEC') or die;
 
 /**
- * Parses a pasted / uploaded CSV or JSON list of reviews (the fallback when the site is not paired with the central app).
+ * Parses a pasted / uploaded CSV or JSON list of reviews (the fallback when the site is not paired with UX1 Network app).
  * Returns raw items; ReviewStore::normalize() cleans them.
  */
 final class Importer

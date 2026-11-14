@@ -4,7 +4,7 @@ namespace Ux1\UxStudio\Modules\InstagramFeed;
 
 \defined('_JEXEC') or die;
 
-/** Normalisation and validation of one raw Graph API post (untrusted data from the central app). Pure functions. */
+/** Normalisation and validation of one raw Graph API post (untrusted data from UX1 Network app). Pure functions. */
 final class Item
 {
     public const TYPES = ['IMAGE', 'VIDEO', 'CAROUSEL_ALBUM'];

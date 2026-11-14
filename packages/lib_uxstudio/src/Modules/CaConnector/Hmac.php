@@ -5,7 +5,7 @@ namespace Ux1\UxStudio\Modules\CaConnector;
 \defined('_JEXEC') or die;
 
 /**
- * Request signing of the Central App channel (same algorithm as the WordPress ContentSync\HmacAuth, with nonce):
+ * Request signing of UX1 Network app channel (same algorithm as the WordPress ContentSync\HmacAuth, with nonce):
  *   hex( hmac_sha256( "METHOD\nURL\nTIMESTAMP\nNONCE\nsha256hex(body)", key ) )
  * Responses carry X-Content-Sync-Response-Signature = hex( hmac_sha256( nonce . "|" . sha256hex(body), key ) ).
  */

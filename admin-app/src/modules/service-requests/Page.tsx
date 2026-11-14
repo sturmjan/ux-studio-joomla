@@ -1,5 +1,5 @@
 /**
- * Service requests: file a request to the Central App, follow its status and reply to the conversation; plus the settings.
+ * Service requests: file a request to UX1 Network app, follow its status and reply to the conversation; plus the settings.
  */
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -117,7 +117,7 @@ function priorityLabel( s: string ): string {
 	}
 }
 
-/** What the administrator sees as the state of the request: the Central App's word, or the delivery state. */
+/** What the administrator sees as the state of the request: UX1 Network app's word, or the delivery state. */
 function localStatusLabel( s: string ): string {
 	switch ( s ) {
 		case 'in_progress':
@@ -139,7 +139,7 @@ function StatusBadge( { item, connected }: { item: ServiceRequest; connected: bo
 		return <span className="uxs-badge is-danger" title={ item.sync_error }>{ t( 'Not delivered' ) }</span>;
 	}
 	if ( ! connected && item.central_ticket_id === 0 ) {
-		// Without the Central App the local copy is the only record, so its own status is what counts.
+		// Without UX1 Network app the local copy is the only record, so its own status is what counts.
 		return <span className={ `uxs-badge ${ item.status === 'done' ? 'is-success' : 'is-info' }` }>{ localStatusLabel( item.status ) }</span>;
 	}
 	return <span className="uxs-badge is-warning" title={ item.sync_error }>{ t( 'Sending…' ) }</span>;
@@ -215,7 +215,7 @@ function NewRequest( { onDone }: { onDone: () => void } ): JSX.Element {
 	);
 }
 
-/** One request with its conversation, as mirrored from the Central App. */
+/** One request with its conversation, as mirrored from UX1 Network app. */
 function Detail( { id, onClose }: { id: number; onClose: () => void } ): JSX.Element {
 	const [ body, setBody ] = useState( '' );
 	const query = useQuery( { queryKey: [ 'service-requests', 'item', id ], queryFn: () => api.get< ServiceRequest >( `service-requests/items/${ id }` ) } );
@@ -241,7 +241,7 @@ function Detail( { id, onClose }: { id: number; onClose: () => void } ): JSX.Ele
 		mutationFn: () => api.post< ServiceRequest >( `service-requests/items/${ id }/resync` ),
 		onSuccess: ( r ) => {
 			if ( r.warning ) {
-				pushToast( 'error', t( 'The Central App did not answer: {reason}', { reason: r.warning } ) );
+				pushToast( 'error', t( 'UX1 Network app did not answer: {reason}', { reason: r.warning } ) );
 			}
 			refresh();
 		},
@@ -267,7 +267,7 @@ function Detail( { id, onClose }: { id: number; onClose: () => void } ): JSX.Ele
 
 			{ item.sync_state === 'error' ? (
 				<div className="uxs-notice is-error">
-					<TriangleAlert size={ 14 } aria-hidden="true" /> { t( 'This request has not reached the Central App:' ) } { item.sync_error }
+					<TriangleAlert size={ 14 } aria-hidden="true" /> { t( 'This request has not reached UX1 Network app:' ) } { item.sync_error }
 				</div>
 			) : null }
 
@@ -326,7 +326,7 @@ function Detail( { id, onClose }: { id: number; onClose: () => void } ): JSX.Ele
 					<label htmlFor="uxs-sr-reply">{ t( 'Add a message' ) }</label>
 					<textarea id="uxs-sr-reply" className="uxs-input" rows={ 3 } maxLength={ 20000 } value={ body } disabled={ item.central_ticket_id === 0 } onChange={ ( e ) => setBody( e.target.value ) } />
 					<p className="uxs-form__help">
-						{ item.central_ticket_id === 0 ? t( 'You can reply once the request reaches the Central App. Use Refresh to try again now.' ) : t( 'Your reply is added to the request and sent to the team.' ) }
+						{ item.central_ticket_id === 0 ? t( 'You can reply once the request reaches UX1 Network app. Use Refresh to try again now.' ) : t( 'Your reply is added to the request and sent to the team.' ) }
 					</p>
 				</div>
 				<div className="uxs-actions">
@@ -345,7 +345,7 @@ function Detail( { id, onClose }: { id: number; onClose: () => void } ): JSX.Ele
 function Requests(): JSX.Element {
 	const [ openId, setOpenId ] = useState< number | null >( null );
 	const [ creating, setCreating ] = useState( false );
-	// The status and the conversation live in the Central App, so the list is refreshed on a timer.
+	// The status and the conversation live in UX1 Network app, so the list is refreshed on a timer.
 	const list = useQuery( { queryKey: [ 'service-requests', 'items' ], queryFn: () => api.get< ItemList >( 'service-requests/items' ), refetchInterval: 60_000 } );
 	const remove = useMutation( {
 		mutationFn: ( id: number ) => api.post( `service-requests/items/${ id }/delete` ),
@@ -384,7 +384,7 @@ function Requests(): JSX.Element {
 					className="uxs-btn uxs-btn--small"
 					aria-label={ t( 'Delete' ) }
 					disabled={ remove.isPending }
-					onClick={ () => void confirm( { message: r.central_ticket_id > 0 ? t( 'Delete this service request? Only your local copy is removed; the request itself stays with the Central App.' ) : t( 'Delete this service request? It never reached the Central App, so this is the only copy and it will be lost.' ), danger: true, confirmLabel: t( 'Delete' ) } ).then( ( ok ) => ok && remove.mutate( r.id ) ) }
+					onClick={ () => void confirm( { message: r.central_ticket_id > 0 ? t( 'Delete this service request? Only your local copy is removed; the request itself stays with UX1 Network app.' ) : t( 'Delete this service request? It never reached UX1 Network app, so this is the only copy and it will be lost.' ), danger: true, confirmLabel: t( 'Delete' ) } ).then( ( ok ) => ok && remove.mutate( r.id ) ) }
 				>
 					<Trash2 size={ 14 } aria-hidden="true" />
 				</button>
@@ -396,7 +396,7 @@ function Requests(): JSX.Element {
 		<>
 			{ data && ! data.connected ? (
 				<div className="uxs-notice">
-					{ t( 'This site is not connected to the Central App. Requests are saved here and sent as soon as the connection is set up (Central App connector module).' ) }
+					{ t( 'This site is not connected to UX1 Network app. Requests are saved here and sent as soon as the connection is set up (UX1 Network app connector module).' ) }
 				</div>
 			) : null }
 			{ data ? (

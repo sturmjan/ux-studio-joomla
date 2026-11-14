@@ -19,7 +19,7 @@ use Ux1\UxStudio\Modules\SmtpEmail\Mail\MailHub;
 /**
  * Two questions about outgoing mail: "does a message leave the site?" (test e-mail through the same mailer as all other
  * mail, so the smtp-email connection and the e-mail log apply) and "is the sender domain set up so receivers trust it?"
- * (MX / SPF / DKIM / DMARC in DNS). Results are stored in #__uxstudio_email_health and served to the Central App.
+ * (MX / SPF / DKIM / DMARC in DNS). Results are stored in #__uxstudio_email_health and served to UX1 Network app.
  */
 final class Module extends BaseModule
 {
@@ -106,7 +106,7 @@ final class Module extends BaseModule
     }
 
     /**
-     * Central App feed for route "email-health" (shape of the WordPress endpoint plus a "dns" summary).
+     * UX1 Network app feed for route "email-health" (shape of the WordPress endpoint plus a "dns" summary).
      *
      * @return array<string,mixed>
      */

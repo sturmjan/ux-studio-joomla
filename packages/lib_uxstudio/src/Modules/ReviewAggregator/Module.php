@@ -13,7 +13,7 @@ use Ux1\UxStudio\Core\ModuleContext;
 \defined('_JEXEC') or die;
 
 /**
- * Review Aggregator: reviews from Google / Facebook / Mapy.cz pulled from the central app (CA) `reviews_api` through
+ * Review Aggregator: reviews from Google / Facebook / Mapy.cz pulled from UX1 Network app (CA) `reviews_api` through
  * the CaConnector, or entered / imported by hand, stored in #__uxstudio_reviews and shown through mod_uxstudio_reviews
  * (or the {uxstudio_reviews} tag in content) with schema.org AggregateRating.
  *
@@ -317,7 +317,7 @@ final class Module extends BaseModule
             return 'skipped (auto-fetch off or no profile)';
         }
         if (!CentralSource::available($ctx)) {
-            return 'skipped (site is not connected to the central app)';
+            return 'skipped (site is not connected to UX1 Network app)';
         }
         $hours = self::INTERVAL_HOURS[(string) $ctx->setting('fetch_interval', '24h')] ?? 24;
         $last  = strtotime($this->store()->getMeta('last_fetch_at') . ' UTC');

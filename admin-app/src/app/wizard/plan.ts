@@ -2,7 +2,7 @@
 import type { ModuleInfo } from '../api';
 import type { OnboardingData, Profile, ProfileField } from './types';
 
-/** Every module the wizard knows about (regular ones + the Central App connector). */
+/** Every module the wizard knows about (regular ones + UX1 Network app connector). */
 export function allModules( data: OnboardingData ): ModuleInfo[] {
 	return data.ca ? [ ...data.modules, data.ca ] : data.modules;
 }

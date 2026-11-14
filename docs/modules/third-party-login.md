@@ -2,7 +2,7 @@
 
 Přihlášení do administrace i na web přes **Google, Microsoft, Facebook, Seznam** a obecného poskytovatele **OpenID Connect**
 (Keycloak, Authentik, Azure B2C...). OAuth 2.0 authorization code flow s **PKCE (S256)**, `state` a `nonce`. Modul má vlastní
-přihlašovací endpoint, nejde přes Centrální aplikaci (WP verze používala CA jako OAuth proxy s HMAC; tady má web vlastní
+přihlašovací endpoint, nejde přes UX1 Network app (WP verze používala CA jako OAuth proxy s HMAC; tady má web vlastní
 `client_id`/`client_secret` u každého poskytovatele).
 
 - **Kód:** `packages/lib_uxstudio/src/Modules/ThirdPartyLogin` (`Module.php` nastavení/tlačítka/migrace, `Flow.php` start + callback + přihlášení,
@@ -82,7 +82,7 @@ jejich dokumentace; u **Seznamu** jsou názvy polí (`oauth_user_id`, `account_n
 (zkusí i `id`/`username`/`email`), ale je potřeba ho jednou ověřit s reálným účtem.
 
 ### Rozdíly proti WP verzi
-- WP: OAuth proxy přes Centrální aplikaci (HMAC `sig`, nonce v transientu, cookie vázaná na prohlížeč, role gating, link/unlink v profilu, upozornění
+- WP: OAuth proxy přes UX1 Network app (HMAC `sig`, nonce v transientu, cookie vázaná na prohlížeč, role gating, link/unlink v profilu, upozornění
   "propojte účet"). Joomla: přímý OAuth2 s PKCE (secrety poskytovatelů na webu), vazba na prohlížeč přes session, tlačítka i na webu.
 - Navíc Microsoft a obecný OIDC; **Apple není** (vyžaduje JWT client secret podepsaný ES256 klíčem, nemá smysl bez účtu Apple Developer).
 - Chybí: self-service propojení pro běžné (nesprávcovské) uživatele na webu; párují se jen podle ověřeného e-mailu.

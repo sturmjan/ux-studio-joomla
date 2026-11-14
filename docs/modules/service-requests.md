@@ -1,6 +1,6 @@
 # Modul service-requests (servisní požadavky)
 
-Správce webu z administrace zadá servisní požadavek (ticket), ten se přes `CaClient` (stránka `ticket_api` Centrální aplikace) odešle
+Správce webu z administrace zadá servisní požadavek (ticket), ten se přes `CaClient` (stránka `ticket_api` UX1 Network app) odešle
 do CA, a správce vidí jeho stav a konverzaci a může odpovídat. Vzor ve WP verzi: `includes/Modules/ServiceRequests/{Module,Sync,CentralClient}.php`
 a `ContentSync/NodeHealth::service_requests()`. Protokol CA strany: `_ca-wt-joomla/controllers/TicketApiController.php`.
 

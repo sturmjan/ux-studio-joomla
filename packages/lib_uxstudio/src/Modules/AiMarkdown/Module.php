@@ -248,7 +248,7 @@ final class Module extends BaseModule
     }
 
     /**
-     * Central App feed: route "ai-markdown" => endpoints and AI bot access summary (see docs/modules/ai-markdown.md).
+     * UX1 Network app feed: route "ai-markdown" => endpoints and AI bot access summary (see docs/modules/ai-markdown.md).
      *
      * @param array<string,mixed> $query
      * @param array<string,mixed> $body

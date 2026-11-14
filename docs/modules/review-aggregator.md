@@ -5,7 +5,7 @@
 Sbírá recenze do lokální tabulky `#__uxstudio_reviews` (cache, nikdy se nemaže ani při vypnutí modulu) a zobrazuje je přes
 Joomla modul `mod_uxstudio_reviews` nebo značku `{uxstudio_reviews ...}` v článku / modulu Vlastní.
 
-- Zdroje: (1) Centrální aplikace: `reviews_api` přes vlastní `CentralReviewsClient` (stejný protokol jako WP verze, viz níže),
+- Zdroje: (1) UX1 Network app: `reviews_api` přes vlastní `CentralReviewsClient` (stejný protokol jako WP verze, viz níže),
   stránkované po 100, úloha plánovače `review-aggregator.fetch` (hodinová, respektuje nastavení "interval stahování", používá ETag
   / If-None-Match, takže bez změny v CA nestahuje nic); (2) ruční přidání, (3) import CSV/JSON (záhlaví `rating` povinné; aliasy
   author/name, text/review, date, source; id/external_id jen v CSV nebo klíč `external_id` v JSON). Bez CA (třída chybí nebo web

@@ -5,7 +5,7 @@ namespace Ux1\UxStudio\Modules\DnsManager;
 \defined('_JEXEC') or die;
 
 /**
- * Record classification and input validation. Pure functions, no I/O: the Central App stays authoritative, this is the
+ * Record classification and input validation. Pure functions, no I/O: UX1 Network app stays authoritative, this is the
  * site-side safety net (a wrong MX silently loses mail, a deleted apex record takes the website down).
  *
  * Risk tags: mx (mail delivery), email_auth (SPF / DKIM / DMARC), web (apex, the site host and www), service (other host records).

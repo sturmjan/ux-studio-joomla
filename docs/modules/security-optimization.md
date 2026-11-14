@@ -1,7 +1,7 @@
 # Modul security-optimization (Optimalizace zabezpečení)
 
 WP předloha: `includes/Modules/SecurityOptimization` (+ `Core/Security.php`). Joomla verze je psaná nativně, přebírá logiku
-a UX firewallu, bezpečnostních hlaviček, CSP, ochrany přihlášení a monitoru pro Centrální aplikaci.
+a UX firewallu, bezpečnostních hlaviček, CSP, ochrany přihlášení a monitoru pro UX1 Network app.
 
 Soubory: `packages/lib_uxstudio/src/Modules/SecurityOptimization/` (`Module.php`, `ClientIp.php`, `IpBans.php`, `LoginGuard.php`,
 `CspPolicy.php`, `Hardening.php`, `language/`), SPA `admin-app/src/modules/security-optimization/` (`Page.tsx`, `i18n/`).

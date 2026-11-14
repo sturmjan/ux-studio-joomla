@@ -10,7 +10,7 @@ use Joomla\Database\ParameterType;
 
 /**
  * Data access of the module: the hit log (#__uxstudio_bt_log) and the ban table (#__uxstudio_bt_bans).
- * IPs are stored only as keyed hashes (GDPR); the optional fleet hash (report_hash) lets the Central App recognise the
+ * IPs are stored only as keyed hashes (GDPR); the optional fleet hash (report_hash) lets UX1 Network app recognise the
  * same offender across sites without ever seeing an address.
  */
 final class Store
@@ -194,7 +194,7 @@ final class Store
         return (int) $db->setQuery($db->createQuery()->select('COUNT(*)')->from($db->quoteName(self::BANS))->where($db->quoteName('banned_until') . ' > :n')->bind(':n', $now))->loadResult();
     }
 
-    /** Lifts a ban (the row is kept for the Central App feed, only its end moves to the past). */
+    /** Lifts a ban (the row is kept for UX1 Network app feed, only its end moves to the past). */
     public function unban(int $id): bool
     {
         $db   = $this->db;
@@ -208,7 +208,7 @@ final class Store
     }
 
     /**
-     * Reportable bans for the Central App (cursor based, ascending). Only rows with a fleet hash qualify: bans recorded
+     * Reportable bans for UX1 Network app (cursor based, ascending). Only rows with a fleet hash qualify: bans recorded
      * before a fleet secret was configured stay local forever.
      *
      * @return array<int,array{id:int,report_hash:string,context:string,created_at:string}> same shape as the WordPress node (created_at = UTC, `Y-m-d H:i:s`)

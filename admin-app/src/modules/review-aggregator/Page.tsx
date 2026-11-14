@@ -1,6 +1,6 @@
 /**
  * Review Aggregator: list and moderate reviews (hide, edit, delete), add or import them by hand, pull them from the
- * central app, overview with rating distribution; plus the settings.
+ * UX1 Network app, overview with rating distribution; plus the settings.
  */
 import { useRef, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -237,7 +237,7 @@ function ReviewsTab(): JSX.Element {
 						title={ t( 'Delete review' ) }
 						onClick={ () =>
 							void confirm( {
-								message: r.origin === 'ca' ? t( 'Delete this review? It will come back with the next fetch from the central app. To keep it off the site, hide it instead.' ) : t( 'Delete this review? This cannot be undone.' ),
+								message: r.origin === 'ca' ? t( 'Delete this review? It will come back with the next fetch from UX1 Network app. To keep it off the site, hide it instead.' ) : t( 'Delete this review? This cannot be undone.' ),
 								danger: true,
 								confirmLabel: t( 'Delete' ),
 							} ).then( ( ok ) => ok && remove.mutate( r.id ) )
@@ -290,7 +290,7 @@ function ReviewsTab(): JSX.Element {
 			{ data ? (
 				<>
 					<p className="uxs-muted uxs-list-toolbar__count">{ tn( '{n} review', '{n} reviews', data.total ) }</p>
-					<DataTable columns={ columns } rows={ data.items } rowKey={ ( r ) => r.id } page={ page } pages={ data.pages } onPage={ setPage } empty={ t( 'No reviews yet. Add one, import a file, or fetch them from the central app.' ) } />
+					<DataTable columns={ columns } rows={ data.items } rowKey={ ( r ) => r.id } page={ page } pages={ data.pages } onPage={ setPage } empty={ t( 'No reviews yet. Add one, import a file, or fetch them from UX1 Network app.' ) } />
 				</>
 			) : null }
 
@@ -394,7 +394,7 @@ function OverviewTab(): JSX.Element {
 						</>
 					) : null }
 
-					<h3 className="uxs-section-title">{ t( 'Central app' ) }</h3>
+					<h3 className="uxs-section-title">{ t( 'UX1 Network app' ) }</h3>
 					{ s.ca.available ? (
 						<p className="uxs-muted">
 							{ s.ca.profile_id > 0 ? t( 'Profile #{id}.', { id: s.ca.profile_id } ) : t( 'No profile yet: fill in the Google Maps address in the settings and request a full scan.' ) }{ ' ' }
@@ -402,14 +402,14 @@ function OverviewTab(): JSX.Element {
 						</p>
 					) : (
 						<div className="uxs-notice" role="status">
-							{ t( 'This site is not connected to the central app, so reviews are not downloaded automatically. Connect it in the Central App module, or add and import reviews by hand below.' ) }
+							{ t( 'This site is not connected to UX1 Network app, so reviews are not downloaded automatically. Connect it in UX1 Network app module, or add and import reviews by hand below.' ) }
 						</div>
 					) }
 					<div className="uxs-actions" style={ { marginBottom: 'var(--uxs-sp-5)' } }>
 						<button type="button" className="uxs-btn uxs-btn--primary" disabled={ ! s.ca.available || fetchNow.isPending } onClick={ () => fetchNow.mutate() }>
 							<CloudDownload size={ 14 } aria-hidden="true" /> { fetchNow.isPending ? t( 'Fetching…' ) : t( 'Fetch reviews' ) }
 						</button>
-						<button type="button" className="uxs-btn" disabled={ ! s.ca.available || scan.isPending } onClick={ () => scan.mutate() } title={ t( 'Asks the central app to download the whole history of your Google reviews, not only the latest ones.' ) }>
+						<button type="button" className="uxs-btn" disabled={ ! s.ca.available || scan.isPending } onClick={ () => scan.mutate() } title={ t( 'Asks UX1 Network app to download the whole history of your Google reviews, not only the latest ones.' ) }>
 							<ScanSearch size={ 14 } aria-hidden="true" /> { t( 'Request a full scan' ) }
 						</button>
 						<button type="button" className="uxs-btn" onClick={ refresh }>

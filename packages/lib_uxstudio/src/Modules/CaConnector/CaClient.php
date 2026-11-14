@@ -11,7 +11,7 @@ use Ux1\UxStudio\Core\ModuleContext;
 \defined('_JEXEC') or die;
 
 /**
- * Client for calls from this site to the Central App (security_api, ticket_api, reviews_api, ...), signed with the
+ * Client for calls from this site to UX1 Network app (security_api, ticket_api, reviews_api, ...), signed with the
  * pairing key exactly like the calls in the other direction (HMAC with nonce) and identified by site_url.
  *
  *   $client = CaClient::fromContext($ctx);   // null when the site is not paired or the connector is off
@@ -19,7 +19,7 @@ use Ux1\UxStudio\Core\ModuleContext;
  *   $data   = $client?->post('security_api', ['action' => 'inventory'], ['items' => [...]]);
  *
  * Both methods return the decoded JSON body and throw \RuntimeException on transport errors, HTTP errors (4xx / 5xx)
- * and non-JSON answers. The Central App address is typed by the administrator, so for a development CA on a private
+ * and non-JSON answers. UX1 Network app address is typed by the administrator, so for a development CA on a private
  * or loopback address the SSRF guard of core Http is lifted for this one configured host only.
  */
 final class CaClient
@@ -33,7 +33,7 @@ final class CaClient
     ) {
     }
 
-    /** null = the connector is disabled or the site is not paired with a Central App. */
+    /** null = the connector is disabled or the site is not paired with UX1 Network app. */
     public static function fromContext(ModuleContext $ctx): ?self
     {
         $kernel = $ctx->kernel();
@@ -54,7 +54,7 @@ final class CaClient
         return new self($ctx, $base, $key, self::siteUrl(), $store->get('site_uid'));
     }
 
-    /** Site address as the Central App knows it (no trailing slash). */
+    /** Site address as UX1 Network app knows it (no trailing slash). */
     public static function siteUrl(): string
     {
         $live = rtrim(Uri::root(), '/');
@@ -99,7 +99,7 @@ final class CaClient
     private function send(string $method, string $page, array $query, string $body): array
     {
         if (!preg_match('/^[a-z0-9_]+$/', $page)) {
-            throw new \RuntimeException('Invalid Central App page.');
+            throw new \RuntimeException('Invalid UX1 Network app page.');
         }
         $params = ['page' => $page] + $query;
         if (!isset($params['site_url'])) {
@@ -129,21 +129,21 @@ final class CaClient
         $res  = $method === 'POST' ? $http->post($url, $body, $options) : $http->get($url, $options);
 
         if ($res['redirect_to'] !== null) {
-            throw new \RuntimeException('Central App redirected to ' . $res['redirect_to'] . ' (check the Central App address, e.g. http vs https or www).');
+            throw new \RuntimeException('UX1 Network app redirected to ' . $res['redirect_to'] . ' (check UX1 Network app address, e.g. http vs https or www).');
         }
         $json = json_decode($res['body'], true);
         if ($res['status'] >= 400) {
             $msg = \is_array($json) ? (string) ($json['error'] ?? $json['message'] ?? '') : '';
-            throw new \RuntimeException('Central App HTTP ' . $res['status'] . ($msg !== '' ? ': ' . $msg : ''));
+            throw new \RuntimeException('UX1 Network app HTTP ' . $res['status'] . ($msg !== '' ? ': ' . $msg : ''));
         }
         if (!\is_array($json)) {
-            throw new \RuntimeException('Central App returned a non-JSON answer.');
+            throw new \RuntimeException('UX1 Network app returned a non-JSON answer.');
         }
 
         return $json;
     }
 
-    /** True when the configured Central App host is not a public address (development setup). */
+    /** True when the configured UX1 Network app host is not a public address (development setup). */
     private function hostIsPrivate(): bool
     {
         $host = trim((string) parse_url($this->baseUrl, PHP_URL_HOST), '[]');

@@ -1,6 +1,6 @@
 # Instagram Feed (`instagram-feed`)
 
-Zobrazí nejnovější příspěvky připojeného účtu na Instagramu jako mřížku nebo karusel. Příspěvky se stahují přes Centrální aplikaci
+Zobrazí nejnovější příspěvky připojeného účtu na Instagramu jako mřížku nebo karusel. Příspěvky se stahují přes UX1 Network app
 (CA, `instagram_api`), ukládají do databáze a obrázky se kopírují na server webu. Výpis na webu tedy nepotřebuje CA ani Instagram
 (funguje i u nespárovaného webu a při výpadku CA).
 
@@ -66,7 +66,7 @@ CA je proxy Graph API: web nikdy nevidí token Mety, zná jen `connection_id` (u
 
 ## Administrace
 Záložky Přehled (stav CA a účtu, Připojit / Synchronizovat / Odpojit, čísla cache, poslední synchronizace, návod), Příspěvky (náhledy, skrytí/zobrazení), Nastavení.
-Bez spárované CA je tlačítko Připojit neaktivní a stránka vysvětluje proč (s odkazem na modul Centrální aplikace).
+Bez spárované CA je tlačítko Připojit neaktivní a stránka vysvětluje proč (s odkazem na modul UX1 Network app).
 
 Routy (`administrator/index.php?option=com_uxstudio&task=api.dispatch&format=json&route=instagram-feed/...`):
 `GET status`, `POST connect`, `POST disconnect` (`core.admin`), `POST sync`, `GET media?page&per_page`, `POST media/{id}/toggle-hidden`.

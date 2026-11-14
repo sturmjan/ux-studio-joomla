@@ -1,5 +1,5 @@
 /**
- * Setup wizard (`#/wizard`): site type, recommended modules, basic settings, Central App and the summary that turns
+ * Setup wizard (`#/wizard`): site type, recommended modules, basic settings, UX1 Network app and the summary that turns
  * the chosen modules on. The module list comes from the registry (GET core/onboarding); modules are turned on one
  * request at a time through the ordinary core/modules/<id> route, so a problem in one never stops the others.
  */

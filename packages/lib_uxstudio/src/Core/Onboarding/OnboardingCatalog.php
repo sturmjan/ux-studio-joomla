@@ -11,7 +11,7 @@ namespace Ux1\UxStudio\Core\Onboarding;
  */
 final class OnboardingCatalog
 {
-    /** Id of the Central App connector module (own wizard step, not a regular choice). */
+    /** Id of UX1 Network app connector module (own wizard step, not a regular choice). */
     public const CA_MODULE = 'ca-connector';
 
     /** @return array<int,array{id:string,icon:string}> label/description come from language keys UXS_CORE_WIZ_TYPE_<ID>[_DESC] */

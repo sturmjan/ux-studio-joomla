@@ -158,7 +158,7 @@ final class Module extends BaseModule
         ];
     }
 
-    /** Data for the Central App (CaConnector serves it once a route for this module is registered there). */
+    /** Data for UX1 Network app (CaConnector serves it once a route for this module is registered there). */
     public function caFeed(string $route, array $query, array $body): array
     {
         $stats = $this->stats();

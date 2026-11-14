@@ -4,7 +4,7 @@ namespace Ux1\UxStudio\Modules\InstagramFeed;
 
 \defined('_JEXEC') or die;
 
-/** Where the posts come from (the central app in production, a fake in tests). */
+/** Where the posts come from (UX1 Network app in production, a fake in tests). */
 interface MediaSource
 {
     /**

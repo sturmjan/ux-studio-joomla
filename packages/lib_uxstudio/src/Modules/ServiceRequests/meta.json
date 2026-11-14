@@ -1,7 +1,7 @@
 {
 	"id": "service-requests",
 	"name": "Service Requests",
-	"description": "Lets the site administrator send a service request (ticket) to the Central App, follow its status and reply to the conversation.",
+	"description": "Lets the site administrator send a service request (ticket) to UX1 Network app, follow its status and reply to the conversation.",
 	"group": "admin",
 	"icon": "wrench",
 	"settings": true

@@ -179,7 +179,7 @@ final class Api
         return Robots::analyze() + ['policy' => $policy, 'snippet' => Robots::snippet($policy)];
     }
 
-    /** Payload of the Central App feed. */
+    /** Payload of UX1 Network app feed. */
     public function feed(): array
     {
         $s = $this->status();

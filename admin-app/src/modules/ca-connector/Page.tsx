@@ -1,5 +1,5 @@
 /**
- * Central App connector: pairing with the UX1 Central App, health of the connection, SSO tokens and the audit log.
+ * UX1 Network app connector: pairing with UX1 Network app, health of the connection, SSO tokens and the audit log.
  */
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
@@ -65,7 +65,7 @@ const CAPABILITY_LABELS: Record< string, string > = {
 	bot_bans: 'Bot bans',
 };
 
-/** The same cross-site form POST the browser does in the WordPress plugin: the Central App needs the visitor's session. */
+/** The same cross-site form POST the browser does in the WordPress plugin: UX1 Network app needs the visitor's session. */
 function submitForm( form: PairForm[ 'form' ] ): void {
 	const el = document.createElement( 'form' );
 	el.method = 'post';
@@ -115,18 +115,18 @@ function Overview( { status }: { status: Status } ): JSX.Element {
 		mutationFn: () => api.post( 'ca-connector/disconnect' ),
 		onSuccess: () => {
 			refresh();
-			pushToast( 'success', t( 'Disconnected. Remove the site in the Central App too.' ) );
+			pushToast( 'success', t( 'Disconnected. Remove the site in UX1 Network app too.' ) );
 		},
 		onError: ( e: Error ) => pushToast( 'error', e.message ),
 	} );
 
 	const onDisconnect = async (): Promise< void > => {
-		if ( await confirm( { message: t( 'Forget the key and the pairing on this site? The Central App will no longer be able to reach it.' ), danger: true } ) ) {
+		if ( await confirm( { message: t( 'Forget the key and the pairing on this site? UX1 Network app will no longer be able to reach it.' ), danger: true } ) ) {
 			disconnect.mutate();
 		}
 	};
 	const onReconnect = async (): Promise< void > => {
-		if ( await confirm( { message: t( 'A new key will be generated and the Central App has to confirm the pairing again. Continue?' ) } ) ) {
+		if ( await confirm( { message: t( 'A new key will be generated and UX1 Network app has to confirm the pairing again. Continue?' ) } ) ) {
 			connect.mutate( true );
 		}
 	};
@@ -137,10 +137,10 @@ function Overview( { status }: { status: Status } ): JSX.Element {
 				<div className="uxs-card">
 					<span className="uxs-card__label">{ t( 'Status' ) }</span>
 					<span className="uxs-card__num">{ status.paired ? t( 'Connected' ) : status.awaiting ? t( 'Awaiting confirmation' ) : t( 'Not connected' ) }</span>
-					<span className="uxs-muted">{ status.paired_at ? formatDate( status.paired_at ) : status.awaiting ? t( 'Waiting for the Central App to confirm the pairing.' ) : t( 'Press Connect to pair this site.' ) }</span>
+					<span className="uxs-muted">{ status.paired_at ? formatDate( status.paired_at ) : status.awaiting ? t( 'Waiting for UX1 Network app to confirm the pairing.' ) : t( 'Press Connect to pair this site.' ) }</span>
 				</div>
 				<div className="uxs-card">
-					<span className="uxs-card__label">{ t( 'Last contact from the Central App' ) }</span>
+					<span className="uxs-card__label">{ t( 'Last contact from UX1 Network app' ) }</span>
 					<span className="uxs-card__num">{ status.last_contact ? formatDate( status.last_contact ) : '-' }</span>
 				</div>
 				<div className="uxs-card">
@@ -150,14 +150,14 @@ function Overview( { status }: { status: Status } ): JSX.Element {
 			</div>
 
 			<div className="uxs-actions" style={ { marginBottom: 'var(--uxs-sp-4)' } }>
-				<label htmlFor="ca-connector-url">{ t( 'Central App address' ) }</label>
+				<label htmlFor="ca-connector-url">{ t( 'UX1 Network app address' ) }</label>
 				<input id="ca-connector-url" className="uxs-input" type="url" value={ url } placeholder={ status.default_url } onChange={ ( e ) => setUrl( e.target.value ) } />
-				<span className="uxs-muted">{ t( 'Leave empty for the production Central App ({url}).', { url: status.default_url } ) }</span>
+				<span className="uxs-muted">{ t( 'Leave empty for the production UX1 Network app ({url}).', { url: status.default_url } ) }</span>
 			</div>
 
 			<div className="uxs-actions" style={ { marginBottom: 'var(--uxs-sp-4)' } }>
 				<button type="button" className="uxs-btn uxs-btn--primary" onClick={ () => connect.mutate( false ) } disabled={ connect.isPending }>
-					<Link2 size={ 14 } aria-hidden="true" /> { status.paired ? t( 'Pair again' ) : t( 'Connect to the Central App' ) }
+					<Link2 size={ 14 } aria-hidden="true" /> { status.paired ? t( 'Pair again' ) : t( 'Connect to UX1 Network app' ) }
 				</button>
 				{ status.key_set ? (
 					<>
@@ -179,7 +179,7 @@ function Overview( { status }: { status: Status } ): JSX.Element {
 
 			{ ! status.sso.allow_admin ? (
 				<div className="uxs-notice">
-					<p>{ t( 'Single sign-on into Super User and Administrator accounts is off. Turn it on in Settings once you want to open this administration from the Central App.' ) }</p>
+					<p>{ t( 'Single sign-on into Super User and Administrator accounts is off. Turn it on in Settings once you want to open this administration from UX1 Network app.' ) }</p>
 				</div>
 			) : null }
 
@@ -192,7 +192,7 @@ function Overview( { status }: { status: Status } ): JSX.Element {
 				{ t( 'Site ID' ) }: <code>{ status.site_uid || '-' }</code>
 			</p>
 
-			<h3>{ t( 'Offered to the Central App' ) }</h3>
+			<h3>{ t( 'Offered to UX1 Network app' ) }</h3>
 			<p>
 				{ status.capabilities.map( ( c ) => (
 					<span key={ c } className="uxs-badge is-info" style={ { marginRight: 'var(--uxs-sp-2)' } }>
@@ -224,18 +224,18 @@ export default function Page( { module }: { module: ModuleInfo } ): JSX.Element 
 	const [ tab, setTab ] = useState( 'overview' );
 	const status = useQuery( { queryKey: [ 'ca-connector', 'status' ], queryFn: () => api.get< Status >( 'ca-connector/status' ) } );
 
-	// Back from the Central App: ...#/module?id=ca-connector&ux1_connected=1 (or ux1_connect_cancelled=1).
+	// Back from UX1 Network app: ...#/module?id=ca-connector&ux1_connected=1 (or ux1_connect_cancelled=1).
 	useEffect( () => {
 		const fromQuery = new URLSearchParams( window.location.search );
 		const connected = hashParam( 'ux1_connected' ) ?? fromQuery.get( 'ux1_connected' );
 		const cancelled = hashParam( 'ux1_connect_cancelled' ) ?? fromQuery.get( 'ux1_connect_cancelled' );
 		if ( connected ) {
 			void api.post< { confirmed: boolean } >( 'ca-connector/connected' ).then( ( r ) => {
-				pushToast( r.confirmed ? 'success' : 'error', r.confirmed ? t( 'The site is connected to the Central App.' ) : t( 'Waiting for the Central App to confirm the pairing.' ) );
+				pushToast( r.confirmed ? 'success' : 'error', r.confirmed ? t( 'The site is connected to UX1 Network app.' ) : t( 'Waiting for UX1 Network app to confirm the pairing.' ) );
 				void queryClient.invalidateQueries( { queryKey: [ 'ca-connector' ] } );
 			}, ( e: Error ) => pushToast( 'error', e.message ) );
 		} else if ( cancelled ) {
-			pushToast( 'error', t( 'Pairing was cancelled in the Central App.' ) );
+			pushToast( 'error', t( 'Pairing was cancelled in UX1 Network app.' ) );
 		}
 		if ( connected || cancelled ) {
 			window.history.replaceState( null, '', window.location.pathname + '?option=com_uxstudio#/module?id=ca-connector' );

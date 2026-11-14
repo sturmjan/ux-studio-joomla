@@ -12,7 +12,7 @@ use Ux1\UxStudio\Core\ApiException;
 /**
  * IP ban store: one logical ban (single IP or CIDR range, IPv4 + IPv6) expands to rows with binary start / end addresses
  * that the firewall compares against. Origin "local" bans are managed by an administrator (or by the login guard),
- * origin "central" bans are the authoritative set pushed by the Central App (ip-bans/sync) and replaced as a whole.
+ * origin "central" bans are the authoritative set pushed by UX1 Network app (ip-bans/sync) and replaced as a whole.
  */
 final class IpBans
 {
@@ -233,7 +233,7 @@ final class IpBans
         return ['items' => array_map([$this, 'present'], $items), 'total' => $total, 'page' => $page, 'pages' => max(1, (int) ceil($total / $perPage))];
     }
 
-    /** Complete report for the Central App (every ban, no paging). @return array<string,mixed> */
+    /** Complete report for UX1 Network app (every ban, no paging). @return array<string,mixed> */
     public function report(): array
     {
         $db   = $this->db;
@@ -264,7 +264,7 @@ final class IpBans
     }
 
     /**
-     * Replaces EVERY central-origin ban by the set the Central App pushed (idempotent, local bans are never touched).
+     * Replaces EVERY central-origin ban by the set UX1 Network app pushed (idempotent, local bans are never touched).
      * Items that would ban $selfIp are skipped (a central push must not lock this very request out). Runs in ONE transaction
      * (an interrupted sync leaves the previous set intact) and inserts the ranges in bulk.
      *

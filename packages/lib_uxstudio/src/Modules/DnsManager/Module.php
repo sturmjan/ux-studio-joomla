@@ -18,16 +18,16 @@ use Ux1\UxStudio\Modules\CaConnector\CaClient;
 \defined('_JEXEC') or die;
 
 /**
- * DNS management through the Central App's broker (`?page=dns_manage`). The Cloudflare token lives only in the Central App,
+ * DNS management through UX1 Network app's broker (`?page=dns_manage`). The Cloudflare token lives only in UX1 Network app,
  * which also derives the zone from the signed site_url, validates every change, keeps the authoritative log and e-mails
  * the administrators. This module is the site side: who may edit (core.admin + an explicit list), the safety net around
  * critical records (MX, the website's own records), a fresh password confirmation, the local audit log and a propagation check.
  *
- * Without a paired Central App the module still opens and explains the state (state = connector_off | not_paired | ...).
+ * Without a paired UX1 Network app the module still opens and explains the state (state = connector_off | not_paired | ...).
  */
 final class Module extends BaseModule
 {
-    /** A write needs a password confirmation younger than this (the Central App checks the same limit). */
+    /** A write needs a password confirmation younger than this (UX1 Network app checks the same limit). */
     private const REAUTH_SECONDS = 900;
 
     private const SESSION_REAUTH = 'uxs.dns.reauth';
@@ -155,7 +155,7 @@ final class Module extends BaseModule
         return ['active' => true, 'zone' => $zone, 'records' => $records, 'cached' => !empty($res['cached']), 'allow_critical' => $allow];
     }
 
-    /** GET dns-manager/log - history from the Central App (authoritative), the local copy when it is not reachable. */
+    /** GET dns-manager/log - history from UX1 Network app (authoritative), the local copy when it is not reachable. */
     public function log(ApiRequest $r): array
     {
         $conn = $this->connection();
@@ -284,7 +284,7 @@ final class Module extends BaseModule
         return $this->send($r, 'delete', ['id' => $id, 'modified_on' => $r->string('modified_on') ?: (string) ($before['modified_on'] ?? '')], $before, null);
     }
 
-    /** POST dns-manager/revert {log_id, confirm} - undoes a change from the Central App log. */
+    /** POST dns-manager/revert {log_id, confirm} - undoes a change from UX1 Network app log. */
     public function revert(ApiRequest $r): array
     {
         $this->guardWrite($r);
@@ -296,7 +296,7 @@ final class Module extends BaseModule
         $zone = $this->zone();
         $host = $this->siteHost();
         $row  = $this->logRow($logId);
-        // Same rules as for a direct change: the Central App turns the history item into a delete / create / update.
+        // Same rules as for a direct change: UX1 Network app turns the history item into a delete / create / update.
         $plan = $this->revertPlan($row, $zone, $host);
         if ($plan === null) {
             throw new ApiException(Text::_('UXS_DNS_MANAGER_ERR_NOT_REVERTABLE'), 422, 'not_revertable');
@@ -404,7 +404,7 @@ final class Module extends BaseModule
     }
 
     /**
-     * What undoing a Central App history item does, the way the Central App derives it (before null = delete the created
+     * What undoing UX1 Network app history item does, the way UX1 Network app derives it (before null = delete the created
      * record, after null = recreate the deleted one, otherwise write the old values back). Null = not revertable.
      *
      * @param array<string,mixed> $row
@@ -425,7 +425,7 @@ final class Module extends BaseModule
         return ['current' => $after, 'target' => $before] + $this->plan($after, $before, $zone, $host);
     }
 
-    /** One item of the Central App history by id (the broker has no lookup by id, so the newest 1000 items are scanned). @return array<string,mixed> */
+    /** One item of UX1 Network app history by id (the broker has no lookup by id, so the newest 1000 items are scanned). @return array<string,mixed> */
     private function logRow(int $id): array
     {
         for ($page = 1; $page <= 10; $page++) {
@@ -563,7 +563,7 @@ final class Module extends BaseModule
             ]);
         } catch (ApiException $e) {
             if ($e->errorCode() === 'reauth_required') {
-                // The Central App did not accept the confirmation: forget it so the dialog asks for the password again.
+                // UX1 Network app did not accept the confirmation: forget it so the dialog asks for the password again.
                 $this->ctx()->app()->getSession()->set(self::SESSION_REAUTH, 0);
             }
             $this->journal()->add($user, $op, $e->status() === 409 ? 'conflict' : 'error', $before, $after, '', $e->getMessage());
@@ -637,7 +637,7 @@ final class Module extends BaseModule
     }
 
     /**
-     * State of the link to the Central App, resolved once per request.
+     * State of the link to UX1 Network app, resolved once per request.
      *
      * @return array{state:string,reason:string,message:string,zone:string}
      */
@@ -707,7 +707,7 @@ final class Module extends BaseModule
     private function mapError(\RuntimeException $e): ApiException
     {
         $msg = $e->getMessage();
-        if (preg_match('/Central App HTTP (\d{3})(?:: (.*))?$/s', $msg, $m) === 1) {
+        if (preg_match('/UX1 Network app HTTP (\d{3})(?:: (.*))?$/s', $msg, $m) === 1) {
             $status = (int) $m[1];
             $detail = trim($m[2] ?? '');
             $text   = $detail !== '' ? $detail : sprintf(Text::_('UXS_DNS_MANAGER_ERR_CA_HTTP'), $status);

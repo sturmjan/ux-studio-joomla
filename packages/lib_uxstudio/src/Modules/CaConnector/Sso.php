@@ -23,7 +23,7 @@ use Ux1\UxStudio\Core\RateLimiter;
 \defined('_JEXEC') or die;
 
 /**
- * Single sign-on from the Central App into the Joomla administration.
+ * Single sign-on from UX1 Network app into the Joomla administration.
  *
  *  1. CA calls the signed node route sso/issue: we map the operator to a Joomla user and store a one-time token (60 s).
  *  2. The operator's browser opens {site}/administrator/index.php?uxstudio_sso=TOKEN: redeem() validates and consumes
@@ -378,7 +378,7 @@ final class Sso
         $options['responseType'] = $response->type;
         $dispatcher->dispatch('onUserAfterLogin', new AfterLoginEvent('onUserAfterLogin', ['options' => $options, 'subject' => (array) $response]));
 
-        // The Central App is the trusted second factor of this login: skip the Joomla MFA captive page for this session.
+        // UX1 Network app is the trusted second factor of this login: skip the Joomla MFA captive page for this session.
         $app->getSession()->set('com_users.mfa_checked', 1);
 
         return true;

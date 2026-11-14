@@ -87,7 +87,7 @@ final class Store
         return $db->getAffectedRows() > 0;
     }
 
-    /** Requests the Central App does not know yet and that may still be retried. @return array<int,array<string,mixed>> */
+    /** Requests UX1 Network app does not know yet and that may still be retried. @return array<int,array<string,mixed>> */
     public function unsynced(int $maxAttempts, int $limit): array
     {
         $db = $this->db;
@@ -161,7 +161,7 @@ final class Store
         )->execute();
     }
 
-    /** Queued replies below the attempt limit, joined with the Central App ticket id. @return array<int,array<string,mixed>> */
+    /** Queued replies below the attempt limit, joined with UX1 Network app ticket id. @return array<int,array<string,mixed>> */
     public function outbox(int $maxAttempts, int $limit): array
     {
         $db = $this->db;

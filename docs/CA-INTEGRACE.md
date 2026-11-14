@@ -1,4 +1,4 @@
-# Napojení na Centrální aplikaci (CA) - kontrakt protokolu
+# Napojení na UX1 Network app (CA) - kontrakt protokolu
 
 Cíl: Joomla weby s UX1 Studiem spravovat v CA stejně jako WordPress weby. CA repo:
 `D:\xampp\htdocs\centrani-app` (main = produkce), práce na Joomle probíhá ve worktree
@@ -28,7 +28,7 @@ mohla použít stejný transport a lišila se jen adaptérem.
   identifikuje se `site_url` (vzor `CA HmacAuth::sign` s nonce).
 
 ## Párování
-Stejné jako WP: tlačítko „Připojit k Centrální aplikaci“ v UX1 Studiu odešle z prohlížeče POST na
+Stejné jako WP: tlačítko „Připojit k UX1 Network app“ v UX1 Studiu odešle z prohlížeče POST na
 `{CA}/?page=connect_site` s `site_url, site_name, api_key, timestamp, site_type=joomla, return_url, signature`
 (`hmac_sha256(site_url|site_name|timestamp|site_type, api_key)`). CA zavolá podepsaný `ping`
 (challenge), po potvrzení web uloží. Návrat na `return_url` = stránka modulu v administraci.

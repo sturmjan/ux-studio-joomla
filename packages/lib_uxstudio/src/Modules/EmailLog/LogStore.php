@@ -99,7 +99,7 @@ final class LogStore
     }
 
     /**
-     * Rows for the Central App (status vocabulary sent | failed | pending, created_at key as in the WordPress version).
+     * Rows for UX1 Network app (status vocabulary sent | failed | pending, created_at key as in the WordPress version).
      *
      * @param array{limit?:mixed,status?:mixed,search?:mixed,date_from?:mixed,date_to?:mixed} $args
      * @return array{items:array<int,array<string,mixed>>,total:int}

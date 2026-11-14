@@ -8,7 +8,7 @@ use Ux1\UxStudio\Core\ModuleContext;
 \defined('_JEXEC') or die;
 
 /**
- * Pulls reviews from the central app (CA) `reviews_api` through the CaConnector's CaClient. CaClient may be missing (module
+ * Pulls reviews from UX1 Network app (CA) `reviews_api` through the CaConnector's CaClient. CaClient may be missing (module
  * not installed) or return null (site not paired / connector off): then the aggregator simply works from manual input.
  */
 final class CentralSource

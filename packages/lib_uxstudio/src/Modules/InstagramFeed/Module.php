@@ -16,7 +16,7 @@ use Ux1\UxStudio\Core\ModuleContext;
 /**
  * Instagram Feed: the latest posts of an Instagram account on the site (grid or carousel).
  *
- * Source: the central app (CA) `instagram_api` through CaSource. The account is connected with a browser hand-over to the
+ * Source: UX1 Network app (CA) `instagram_api` through CaSource. The account is connected with a browser hand-over to the
  * CA (`instagram_auth`); the site only stores the CA `connection_id`, never a Meta token. Posts are cached in
  * #__uxstudio_instagram_media and their images are copied to images/uxstudio-instagram/, so the front end needs neither
  * the CA nor Instagram at view time (it keeps working when the site is not paired or the CA is down).
@@ -91,7 +91,7 @@ final class Module extends BaseModule
         ];
     }
 
-    /** Public: the browser comes back here from the central app after the Instagram login. */
+    /** Public: the browser comes back here from UX1 Network app after the Instagram login. */
     public function publicRoutes(): array
     {
         return [
@@ -170,7 +170,7 @@ final class Module extends BaseModule
     }
 
     /**
-     * GET callback (public): the central app redirects the browser here with a signed payload. Verifies it, stores the
+     * GET callback (public): UX1 Network app redirects the browser here with a signed payload. Verifies it, stores the
      * connection id and sends the browser to the module screen.
      */
     public function callback(ApiRequest $r): array
@@ -228,7 +228,7 @@ final class Module extends BaseModule
         return [];
     }
 
-    /** POST disconnect: revokes the connection at the central app (best effort) and forgets everything about the account. */
+    /** POST disconnect: revokes the connection at UX1 Network app (best effort) and forgets everything about the account. */
     public function disconnect(ApiRequest $r): array
     {
         $ctx   = $this->ctx();
@@ -262,7 +262,7 @@ final class Module extends BaseModule
     }
 
     /**
-     * Pulls profile and latest posts from the central app into the cache.
+     * Pulls profile and latest posts from UX1 Network app into the cache.
      *
      * @return array{fetched:int,new:int,updated:int,images:int,removed:int,skipped:int}
      * @throws ApiException
@@ -348,7 +348,7 @@ final class Module extends BaseModule
             return 'skipped (auto sync off or no account connected)';
         }
         if (CaSource::availability($ctx) !== 'ok') {
-            return 'skipped (site is not connected to the central app)';
+            return 'skipped (site is not connected to UX1 Network app)';
         }
         $hours = self::INTERVAL_HOURS[(string) $ctx->setting('sync_interval', '6h')] ?? 6;
         $last  = strtotime($store->getMeta('last_sync_at') . ' UTC');
