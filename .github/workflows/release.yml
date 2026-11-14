@@ -1,0 +1,42 @@
+name: Release
+
+# On tag v*: build the Joomla package (admin SPA + all extensions) and attach
+# dist/pkg_uxstudio-<version>.zip to a GitHub Release.
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Check the tag matches package.json version
+        run: |
+          PKG_VERSION="$(node -p "require('./package.json').version")"
+          if [ "v${PKG_VERSION}" != "${GITHUB_REF_NAME}" ]; then
+            echo "Tag ${GITHUB_REF_NAME} does not match package.json version v${PKG_VERSION}" >&2
+            exit 1
+          fi
+
+      - run: npm run build
+
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" "dist/pkg_uxstudio-${GITHUB_REF_NAME#v}.zip" \
+            --title "UX1 Studio pro Joomlu ${GITHUB_REF_NAME}" \
+            --generate-notes
